@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <m4tDirectory>$(MSBuildThisFileDirectory)..\</m4tDirectory>
+	<IncludePath Condition="'$(ProjectGuid)'!='{E7B1E039-16AC-49ED-8FFC-7877ECBB939A}'">$(m4tDirectory)include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories Condition="'$(ProjectGuid)'=='{E7B1E039-16AC-49ED-8FFC-7877ECBB939A}'">$(m4tDirectory)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>ole32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+	  <AdditionalDependencies Condition="'$(ProjectGuid)'!='{E7B1E039-16AC-49ED-8FFC-7877ECBB939A}'">$(MSBuildThisFileName)_$(PlatformShortName)$(DebugSuffix).lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup Condition="'$(ProjectGuid)'!='{E7B1E039-16AC-49ED-8FFC-7877ECBB939A}'">
+    <ProjectReference Include="$(MSBuildThisFileDirectory)m4t\m4t.vcxproj">
+      <Project>{E7B1E039-16AC-49ED-8FFC-7877ECBB939A}</Project>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

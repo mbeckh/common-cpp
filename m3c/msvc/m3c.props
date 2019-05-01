@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <m3cDirectory>$(MSBuildThisFileDirectory)..\</m3cDirectory>
+	<IncludePath Condition="'$(ProjectGuid)'!='{823B4768-A89C-47C2-A51F-68180D4B752B}'">$(m3cDirectory)include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories Condition="'$(ProjectGuid)'=='{823B4768-A89C-47C2-A51F-68180D4B752B}'">$(m3cDirectory)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+	  <AdditionalDependencies>ole32.lib;rpcrt4.lib;propsys.lib;%(AdditionalDependencies)</AdditionalDependencies>
+	  <AdditionalDependencies Condition="'$(ProjectGuid)'!='{823B4768-A89C-47C2-A51F-68180D4B752B}'">$(MSBuildThisFileName)_$(PlatformShortName)$(DebugSuffix).lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup Condition="'$(ProjectGuid)'!='{823B4768-A89C-47C2-A51F-68180D4B752B}'">
+    <ProjectReference Include="$(MSBuildThisFileDirectory)m3c\m3c.vcxproj">
+      <Project>{823B4768-A89C-47C2-A51F-68180D4B752B}</Project>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

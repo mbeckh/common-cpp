@@ -1,0 +1,31 @@
+Language: Cpp
+BasedOnStyle: Google
+AccessModifierOffset: -4
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+BreakBeforeBinaryOperators: NonAssignment
+BreakConstructorInitializers: BeforeComma
+BreakInheritanceList: BeforeComma
+ColumnLimit: 0
+IncludeBlocks: Regroup
+IncludeCategories: 
+  - Regex:    '^<m3c/.*\.h>'
+    Priority: 2
+  - Regex:    '^<[[:alnum:]]+/.*\.h[hpx]{0,2}>'
+    Priority: 3
+  - Regex:    '^<.*\.h[hpx]{0,2}>'
+    Priority: 4
+  - Regex:    '^<.*>'
+    Priority: 5
+  - Regex:    '.*'
+    Priority: 1
+IncludeIsMainRegex: '(_Test)?$'
+IndentCaseLabels: false
+IndentWidth: 4
+MaxEmptyLinesToKeep: 2
+SpaceAfterCStyleCast: true
+SpacesBeforeTrailingComments: 2
+Standard: Cpp11
+TabWidth: 4
+UseTab: ForContinuationAndIndentation

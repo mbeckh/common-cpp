@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{823B4768-A89C-47C2-A51F-68180D4B752B}</ProjectGuid>
+    <RootNamespace>m3c</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="$(SolutionDir)msvc-common\ProjectConfiguration.props" />
+  <Import Project="$(SolutionDir)msvc\ProjectConfiguration.props" Condition="exists('$(SolutionDir)msvc\ProjectConfiguration.props')" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(SolutionDir)msvc-common\BuildConfiguration.props" />
+    <Import Project="$(SolutionDir)msvc-common\fmt.props" />
+    <Import Project="$(SolutionDir)lib\llamalog\msvc\llamalog.props" />
+    <Import Project="..\m3c.props" />
+    <Import Project="$(SolutionDir)msvc\BuildConfiguration.props" Condition="exists('$(SolutionDir)msvc\BuildConfiguration.props')" />
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemGroup>
+    <ClInclude Include="..\..\include\m3c\ClassFactory.h" />
+    <ClInclude Include="..\..\include\m3c\types_fmt.h" />
+    <ClInclude Include="..\..\include\m3c\ComObject.h" />
+    <ClInclude Include="..\..\include\m3c\types_log.h" />
+    <ClInclude Include="..\..\include\m3c\com_heap_ptr.h" />
+    <ClInclude Include="..\..\include\m3c\com_ptr.h" />
+    <ClInclude Include="..\..\include\m3c\exception.h" />
+    <ClInclude Include="..\..\include\m3c\finally.h" />
+    <ClInclude Include="..\..\include\m3c\PropVariant.h" />
+    <ClInclude Include="..\..\include\m3c\rpc_string.h" />
+    <ClInclude Include="..\..\include\m3c\string_encode.h" />
+    <ClInclude Include="..\..\include\m3c\unique_ptr.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\ClassFactory.cpp" />
+    <ClCompile Include="..\..\src\com_ptr.cpp" />
+    <ClCompile Include="..\..\src\exception.cpp" />
+    <ClCompile Include="..\..\src\types_fmt.cpp" />
+    <ClCompile Include="..\..\src\ComObject.cpp" />
+    <ClCompile Include="..\..\src\types_log.cpp" />
+    <ClCompile Include="..\..\src\PropVariant.cpp" />
+    <ClCompile Include="..\..\src\string_encode.cpp" />
+  </ItemGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>LLAMALOG_LEVEL_TRACE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>
