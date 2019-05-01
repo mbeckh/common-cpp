@@ -6,8 +6,8 @@
 [submodule "googletest"]
 	path = lib/googletest
 	url = https://github.com/google/googletest.git
-	update = merge
 	branch = master
+	update = merge
 	shallow = true
 [submodule "llamalog"]
 	path = lib/llamalog
@@ -17,12 +17,12 @@
 [submodule "fmt"]
 	path = lib/fmt
 	url = https://github.com/fmtlib/fmt.git
-	update = merge
 	branch = master
+	update = merge
 	shallow = true
 [submodule "Detours"]
 	path = lib/Detours
 	url = https://github.com/Microsoft/Detours.git
-	update = merge
 	branch = master
+	update = merge
 	shallow = true

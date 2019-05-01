@@ -18,9 +18,9 @@ limitations under the License.
 
 #include "m3c/PropVariant.h"
 
-#include <m3c/com_format.h>  // IWYU pragma: keep
-#include <m3c/com_log.h>     // IWYU pragma: keep
 #include <m3c/exception.h>
+#include <m3c/types_fmt.h>  // IWYU pragma: keep
+#include <m3c/types_log.h>  // IWYU pragma: keep
 
 #include <llamalog/custom_types.h>
 #include <llamalog/llamalog.h>
