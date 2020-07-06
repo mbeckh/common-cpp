@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-http ://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -93,7 +93,7 @@ void SafeLog(const llamalog::Priority priority, _In_z_ const char* file, std::ui
 			file, line, function,
 			[](void* /* p */, const llamalog::Priority /* priority */, _In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, const std::exception& e) {
 				try {
-					// always log as error, argment priority is ignored, use original source location
+					// always log as error, argument priority is ignored, use original source location
 					llamalog::Log(llamalog::Priority::kError, file, line, function, "{}", e);
 				} catch (...) {
 					// cannot log

@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-http ://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -87,7 +87,7 @@ namespace t = testing;
 
 /// @brief Prepare a COM mock object for use.
 /// @details Sets up basic calls for `AddRef`, `Release` and `QueryInterface`.
-/// Provide all COM interfaces as additional argments.
+/// Provide all COM interfaces as additional arguments.
 /// @brief @param name_ The name of the mock object.
 #define COM_MOCK_SETUP(name_, ...)                                            \
 	m4t::SetupComMock<decltype(name_), __VA_ARGS__>(name_, name_##RefCount_); \
@@ -191,7 +191,7 @@ ACTION(QueryInterfaceFail) {
 /// @brief Action for returning a COM object as an output argument.
 /// @details Shortcut for `DoAll(SetArgPointee<idx>(&m_object), IgnoreResult(AddRef(&m_objectRefCount)))`.
 /// Usage: `SetComObjectAndReturnOk<1>(&m_object)`. The output argument MUST NOT be null.
-/// @tparam idx 0-based index of the argment.
+/// @tparam idx 0-based index of the argument.
 /// @param pObject A pointer to a COM object.
 ACTION_TEMPLATE(SetComObject, HAS_1_TEMPLATE_PARAMS(int, idx), AND_1_VALUE_PARAMS(pObject)) {
 	typedef typename t::tuple_element<idx, args_type>::type idx_type;
@@ -204,7 +204,7 @@ ACTION_TEMPLATE(SetComObject, HAS_1_TEMPLATE_PARAMS(int, idx), AND_1_VALUE_PARAM
 
 /// @brief Action for setting a pointer to a `PROPVARIANT` to a `VARIANT_BOOL` value.
 /// @details Usage: `SetPropVariantToBool<1>(VARIANT_TRUE)`. The `PROPVARIANT` MUST NOT be null.
-/// @tparam idx 0-based index of the argment.
+/// @tparam idx 0-based index of the argument.
 /// @param variant A `VARIANT_BOOL`.
 ACTION_TEMPLATE(SetPropVariantToBool, HAS_1_TEMPLATE_PARAMS(int, idx), AND_1_VALUE_PARAMS(variantBool)) {
 	typedef typename t::tuple_element<idx, args_type>::type idx_type;
@@ -218,7 +218,7 @@ ACTION_TEMPLATE(SetPropVariantToBool, HAS_1_TEMPLATE_PARAMS(int, idx), AND_1_VAL
 
 /// @brief Action for setting a pointer to a `PROPVARIANT` to a `BSTR` value.
 /// @details Usage: `SetPropVariantToBool<1>("value")`. The `PROPVARIANT` MUST NOT be null.
-/// @tparam idx 0-based index of the argment.
+/// @tparam idx 0-based index of the argument.
 /// @param wsz A wide character string.
 ACTION_TEMPLATE(SetPropVariantToBSTR, HAS_1_TEMPLATE_PARAMS(int, idx), AND_1_VALUE_PARAMS(wsz)) {
 	typedef typename t::tuple_element<idx, args_type>::type idx_type;
@@ -232,7 +232,7 @@ ACTION_TEMPLATE(SetPropVariantToBSTR, HAS_1_TEMPLATE_PARAMS(int, idx), AND_1_VAL
 
 /// @brief Action for setting a pointer to a `PROPVARIANT` to `VT_EMPTY`.
 /// @details Usage: `SetPropVariantToEmpty<1>()`. The `PROPVARIANT` MUST NOT be null.
-/// @tparam idx 0-based index of the argment.
+/// @tparam idx 0-based index of the argument.
 ACTION_TEMPLATE(SetPropVariantToEmpty, HAS_1_TEMPLATE_PARAMS(int, idx), AND_0_VALUE_PARAMS()) {
 	typedef typename t::tuple_element<idx, args_type>::type idx_type;
 	static_assert(std::is_base_of_v<PROPVARIANT, std::remove_pointer_t<idx_type>>);
@@ -243,7 +243,7 @@ ACTION_TEMPLATE(SetPropVariantToEmpty, HAS_1_TEMPLATE_PARAMS(int, idx), AND_0_VA
 
 /// @brief Action for setting pointer to a `PROPVARIANT` to an `IStream` value.
 /// @details Usage: `SetPropVariantToBool<1>(pStream)`.  The `PROPVARIANT` MUST NOT be null.
-/// @tparam idx 0-based index of the argment.
+/// @tparam idx 0-based index of the argument.
 /// @param variant An object of type `IStream`.
 ACTION_TEMPLATE(SetPropVariantToStream, HAS_1_TEMPLATE_PARAMS(int, idx), AND_1_VALUE_PARAMS(pStream)) {
 	typedef typename t::tuple_element<idx, args_type>::type idx_type;
@@ -257,7 +257,7 @@ ACTION_TEMPLATE(SetPropVariantToStream, HAS_1_TEMPLATE_PARAMS(int, idx), AND_1_V
 
 /// @brief Action for setting pointer to a `PROPVARIANT` to an `IStream` value.
 /// @details Usage: `SetPropVariantToBool<1>(pStream)`.  The `PROPVARIANT` MUST NOT be null.
-/// @tparam idx 0-based index of the argment.
+/// @tparam idx 0-based index of the argument.
 /// @param variant An object of type `IStream`.
 ACTION_TEMPLATE(SetPropVariantToUInt32, HAS_1_TEMPLATE_PARAMS(int, idx), AND_1_VALUE_PARAMS(value)) {
 	typedef typename t::tuple_element<idx, args_type>::type idx_type;

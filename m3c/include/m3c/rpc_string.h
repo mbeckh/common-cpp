@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-http ://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -144,7 +144,7 @@ public:
 
 private:
 	/// @brief Release the memory using `RpcStringFreeA` or `RpcStringFreeW`.
-	/// @return A `RPC_STATUS` code signalling success or failure.
+	/// @return A `RPC_STATUS` code signaling success or failure.
 	[[nodiscard]] RPC_STATUS destroy() noexcept {
 		if constexpr (std::is_same_v<T, RPC_CSTR>) {
 			return RpcStringFreeA(&m_ptr);

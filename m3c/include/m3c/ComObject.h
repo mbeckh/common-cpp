@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-http ://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -61,7 +61,7 @@ public:  // IUnknown
 
 public:
 	/// @brief Query for an interface by IID.
-	/// @param iid The IID of the requsted interface.
+	/// @param iid The IID of the requested interface.
 	/// @return A pointer to the interface.
 	/// @throws `com_exception` if the interface is not supported.
 	[[nodiscard]] _Ret_notnull_ void* QueryInterface(REFIID riid);
@@ -86,7 +86,7 @@ protected:
 	/// @details Classes which implement COM interfaces which in turn have base interfaces other than IUnknown MUST implement this method.
 	/// This method checks for the base IIDs and returns the correct pointer. If the interface is not supported, `nullptr` is required.
 	/// The method is called only after all base classes have been checked.
-	/// @param riid The requsted IID.
+	/// @param riid The requested IID.
 	/// @return A pointer to the interface if found, else `nullptr`.
 	[[nodiscard]] virtual _Ret_maybenull_ void* FindBaseInterface(REFIID /* riid */) noexcept {
 		return nullptr;

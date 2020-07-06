@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-http ://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -329,7 +329,7 @@ TEST_F(com_ptrTest, opCopy_ValueToValue_ReferencedIsAdded) {
 TEST_F(com_ptrTest, opCopy_ValueToSameValue_NoChange) {
 	t::Sequence s;
 	t::ExpectationSet calls;
-	// allow woth check for same value and without
+	// allow with check for same value and without
 	calls += EXPECT_CALL(m_object, AddRef()).Times(t::Between(2, 3)).InSequence(s);
 	calls += EXPECT_CALL(m_object, Release()).Times(t::Between(0, 1)).InSequence(s);
 	t::Expectation check = EXPECT_CALL(m_check, Call()).After(calls);

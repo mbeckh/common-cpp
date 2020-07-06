@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-http ://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -389,8 +389,8 @@ template <typename T>
 /// @details This class is for use with objects based on @ref `AbstractComObject` only.
 /// @tparam T The type managed by the `com_ptr`. The interface MUST be implemented by @p C, else an exception is thrown.
 /// @tparam C The type of the object to create.
-/// @tparam Args The types of the arguments for the construcutor of @p C.
-/// @param args The arguments for the construcutor of @p C.
+/// @tparam Args The types of the arguments for the constructor of @p C.
+/// @param args The arguments for the constructor of @p C.
 /// @return A `com_ptr` holding a newly created COM object.
 template <typename T, typename C, typename... Args>
 [[nodiscard]] inline typename std::enable_if_t<std::is_base_of_v<AbstractComObject, C>, com_ptr<T>> make_com(Args&&... args) {
@@ -428,7 +428,7 @@ llamalog::LogLine& operator<<(llamalog::LogLine& logLine, m3c::com_ptr<IStream>&
 
 /// @brief Add the value of the smart pointer to a `llamalog::LogLine`.
 /// @tparam The type managed by the COM pointer.
-/// @param formatter The output target.
+/// @param logLine The output target.
 /// @param arg A `com_ptr`.
 template <typename T>
 llamalog::LogLine& operator<<(llamalog::LogLine& logLine, m3c::com_ptr<T>& arg) {

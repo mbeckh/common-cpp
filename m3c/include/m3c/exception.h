@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-http ://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -137,15 +137,15 @@ public:
 namespace internal {
 
 /// @brief Conversion function if the global log level is set to `DEBUG` or lower.
-/// @remarks The function is avalways compiled to be available for testing.
+/// @remarks The function is always compiled to be available for testing.
 /// @param message The log message pattern.
-/// @param thunk A function that receives @p log, the piority, the message and the exception and calls @p log accordingly.
+/// @param thunk A function that receives @p log, the priority, the message and the exception and calls @p log accordingly.
 /// @param log A function that logs a message at the respective level.
 /// @return The HRESULT as described for `#ExceptionToHRESULT`.
 HRESULT ExceptionToHRESULT_DEBUG(_In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, _In_ void (*thunk)(_In_opt_ void*, llamalog::Priority, _In_z_ const char*, std::uint32_t, _In_z_ const char*, const std::exception&), _In_opt_ void* log) noexcept;
 
 /// @brief Conversion function if the global log level is set higher than `DEBUG` and up to `ERROR`.
-/// @remarks The function is avalways compiled to be available for testing.
+/// @remarks The function is always compiled to be available for testing.
 /// @param message The log message pattern.
 /// @param thunk A function that receives @p log, the priority, the message and the exception and calls @p log accordingly.
 /// @param log A function that logs a message at level `llamalog::Priority::kError`.
@@ -153,7 +153,7 @@ HRESULT ExceptionToHRESULT_DEBUG(_In_z_ const char* file, std::uint32_t line, _I
 HRESULT ExceptionToHRESULT_ERROR(_In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, _In_ void (*thunk)(_In_opt_ void*, llamalog::Priority, _In_z_ const char*, std::uint32_t, _In_z_ const char*, const std::exception&), _In_opt_ void* log) noexcept;
 
 /// @brief Conversion function if the global log level is set to `FATAL`.
-/// @remarks The function is avalways compiled to be available for testing.
+/// @remarks The function is always compiled to be available for testing.
 /// @return The HRESULT as described for `#ExceptionToHRESULT`.
 HRESULT ExceptionToHRESULT_FATAL() noexcept;
 
@@ -166,7 +166,7 @@ HRESULT ExceptionToHRESULT_FATAL() noexcept;
 /// @param message The pattern for the log message. The exception is added as the **last** argument.
 /// @param args Arguments to append to log messages.
 /// @return The `HRESULT` value.
-/// @copyright The function uses a trick that allows calling a binding lamba using a function pointer. It is published
+/// @copyright The function uses a trick that allows calling a binding lambda using a function pointer. It is published
 /// by Joaquín M López Muñoz at http://bannalia.blogspot.com/2016/07/passing-capturing-c-lambda-functions-as.html.
 template <typename... T>
 [[nodiscard]] HRESULT CallExceptionToHRESULT_DEBUG(_In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, _In_z_ const char* message, T&&... args) noexcept {
@@ -187,7 +187,7 @@ template <typename... T>
 /// @param message The pattern for the log message. The exception is added as the **last** argument.
 /// @param args Arguments to append to log messages.
 /// @return The `HRESULT` value.
-/// @copyright The function uses a trick that allows calling a binding lamba using a function pointer. It is published
+/// @copyright The function uses a trick that allows calling a binding lambda using a function pointer. It is published
 /// by Joaquín M López Muñoz at http://bannalia.blogspot.com/2016/07/passing-capturing-c-lambda-functions-as.html.
 template <typename... T>
 [[nodiscard]] HRESULT CallExceptionToHRESULT_ERROR(_In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, _In_z_ const char* message, T&&... args) noexcept {

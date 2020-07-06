@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-http ://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -384,8 +384,8 @@ private:
 /// @brief Creates a new `unique_ptr` for plain objects.
 /// @remarks The sole purpose of the function is to allow template argument deduction.
 /// @tparam T The type of the pointer.
-/// @tparam Args The types of the arguments for the construcutor of @p T.
-/// @param args The arguments for the construcutor of @p T.
+/// @tparam Args The types of the arguments for the constructor of @p T.
+/// @param args The arguments for the constructor of @p T.
 template <typename T, typename... Args>
 [[nodiscard]] inline typename std::enable_if_t<!std::is_array_v<T>, unique_ptr<T>> make_unique(Args&&... args) {
 	return unique_ptr<T>(new T(std::forward<Args>(args)...));
