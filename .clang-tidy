@@ -2,28 +2,33 @@ Checks: '
   bugprone-*,
   cert-*,
   clang-analyzer-*,
+  clang-diagnostic-*,
   cppcoreguidelines-*,
     -cppcoreguidelines-avoid-c-arrays,
-    -cppcoreguidelines-avoid-magic-numbers,
     -cppcoreguidelines-owning-memory,
     -cppcoreguidelines-pro-type-reinterpret-cast,
     -cppcoreguidelines-pro-bounds-*,
-  clang-analyzer-*,
   google-*,
     -google-readability-*,
     -google-runtime-*,
+  hicpp-avoid-goto,
   hicpp-exception-baseclass,
   hicpp-multiway-paths-covered,
+  -hicpp-no-assembler,
   hicpp-signed-bitwise,
-  llvm-include-order,
-  llvm-namespace-comment,
+  llvm-*,
+    -llvm-header-guard,
+    -llvm-qualified-auto,
   misc-*,
   modernize-*,
     -modernize-avoid-c-arrays,
     -modernize-use-auto,
+    -modernize-use-trailing-return-type,
   performance-*,
   readability-*,
-    -readability-function-size'
+    -readability-function-size,
+    -readability-qualified-auto,
+    -readability-redundant-access-specifiers'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 CheckOptions:
@@ -36,6 +41,8 @@ CheckOptions:
   - key:   cppcoreguidelines-narrowing-conversions.PedanticMode
     value: '1'
   - key:   hicpp-multiway-paths-covered.WarnOnMissingElse
+    value: '1'
+  - key:   hicpp-signed-bitwise.IgnorePositiveIntegerLiterals
     value: '1'
   - key:   misc-unused-parameters.StrictMode
     value: '1'

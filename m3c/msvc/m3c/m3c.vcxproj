@@ -4,7 +4,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{823B4768-A89C-47C2-A51F-68180D4B752B}</ProjectGuid>
     <RootNamespace>m3c</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="$(SolutionDir)msvc-common\ProjectConfiguration.props" />
@@ -40,13 +40,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\ClassFactory.cpp" />
+    <ClCompile Include="..\..\src\com_heap_ptr.cpp" />
     <ClCompile Include="..\..\src\com_ptr.cpp" />
     <ClCompile Include="..\..\src\exception.cpp" />
+    <ClCompile Include="..\..\src\rpc_string.cpp" />
     <ClCompile Include="..\..\src\types_fmt.cpp" />
     <ClCompile Include="..\..\src\ComObject.cpp" />
     <ClCompile Include="..\..\src\types_log.cpp" />
     <ClCompile Include="..\..\src\PropVariant.cpp" />
     <ClCompile Include="..\..\src\string_encode.cpp" />
+    <ClCompile Include="..\..\src\unique_ptr.cpp" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <ClCompile>

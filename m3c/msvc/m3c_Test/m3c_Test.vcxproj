@@ -4,7 +4,7 @@
     <ProjectGuid>{a7a9f4c3-5be7-4e08-bc4d-9429e6bd0d16}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>m3c::test</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="$(SolutionDir)msvc-common\ProjectConfiguration.props" />

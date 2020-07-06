@@ -1,0 +1,23 @@
+engines:
+  duplication:
+    exclude_paths:
+      - 'm3c/test/**'
+      - 'msvc/m3c_Test/**'
+  metric:
+    exclude_paths:
+      - 'm3c/test/**'
+      - 'msvc/m3c_Test/**'
+  coverage:
+    exclude_paths:
+      - 'm3c/test/**'
+      - 'msvc/m3c_Test/**'
+  clang-tidy:
+    exclude_paths:
+      - '**/test/**'
+      - 'msvc/m3c_Test/**'
+languages:
+  cpp:
+    extensions:
+      - '.h'
+exclude_paths:
+  - 'lib/**'

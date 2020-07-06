@@ -38,24 +38,24 @@ public:
 	virtual ~IStream_Mock();
 
 public:  // IUnknown
-	MOCK_METHOD2_WITH_CALLTYPE(__stdcall, QueryInterface, HRESULT(REFIID riid, void** ppvObject));
-	MOCK_METHOD0_WITH_CALLTYPE(__stdcall, AddRef, ULONG());
-	MOCK_METHOD0_WITH_CALLTYPE(__stdcall, Release, ULONG());
+	MOCK_METHOD(HRESULT, QueryInterface, (REFIID riid, void** ppvObject), (Calltype(__stdcall)));
+	MOCK_METHOD(ULONG, AddRef, (), (Calltype(__stdcall)));
+	MOCK_METHOD(ULONG, Release, (), (Calltype(__stdcall)));
 
 public:  // ISequentialStream
-	MOCK_METHOD3_WITH_CALLTYPE(__stdcall, Read, HRESULT(void* pv, ULONG cb, ULONG* pcbRead));
-	MOCK_METHOD3_WITH_CALLTYPE(__stdcall, Write, HRESULT(const void* pv, ULONG cb, ULONG* pcbWritten));
+	MOCK_METHOD(HRESULT, Read, (void* pv, ULONG cb, ULONG* pcbRead), (Calltype(__stdcall)));
+	MOCK_METHOD(HRESULT, Write, (const void* pv, ULONG cb, ULONG* pcbWritten), (Calltype(__stdcall)));
 
 public:  // IStream
-	MOCK_METHOD3_WITH_CALLTYPE(__stdcall, Seek, HRESULT(LARGE_INTEGER dlibMove, DWORD dwOrigin, ULARGE_INTEGER* plibNewPosition));
-	MOCK_METHOD1_WITH_CALLTYPE(__stdcall, SetSize, HRESULT(ULARGE_INTEGER libNewSize));
-	MOCK_METHOD4_WITH_CALLTYPE(__stdcall, CopyTo, HRESULT(IStream* pstm, ULARGE_INTEGER cb, ULARGE_INTEGER* pcbRead, ULARGE_INTEGER* pcbWritten));
-	MOCK_METHOD1_WITH_CALLTYPE(__stdcall, Commit, HRESULT(DWORD grfCommitFlags));
-	MOCK_METHOD0_WITH_CALLTYPE(__stdcall, Revert, HRESULT());
-	MOCK_METHOD3_WITH_CALLTYPE(__stdcall, LockRegion, HRESULT(ULARGE_INTEGER libOffset, ULARGE_INTEGER cb, DWORD dwLockType));
-	MOCK_METHOD3_WITH_CALLTYPE(__stdcall, UnlockRegion, HRESULT(ULARGE_INTEGER libOffset, ULARGE_INTEGER cb, DWORD dwLockType));
-	MOCK_METHOD2_WITH_CALLTYPE(__stdcall, Stat, HRESULT(STATSTG* pstatstg, DWORD grfStatFlag));
-	MOCK_METHOD1_WITH_CALLTYPE(__stdcall, Clone, HRESULT(IStream** ppstm));
+	MOCK_METHOD(HRESULT, Seek, (LARGE_INTEGER dlibMove, DWORD dwOrigin, ULARGE_INTEGER* plibNewPosition), (Calltype(__stdcall)));
+	MOCK_METHOD(HRESULT, SetSize, (ULARGE_INTEGER libNewSize), (Calltype(__stdcall)));
+	MOCK_METHOD(HRESULT, CopyTo, (IStream * pstm, ULARGE_INTEGER cb, ULARGE_INTEGER* pcbRead, ULARGE_INTEGER* pcbWritten), (Calltype(__stdcall)));
+	MOCK_METHOD(HRESULT, Commit, (DWORD grfCommitFlags), (Calltype(__stdcall)));
+	MOCK_METHOD(HRESULT, Revert, (), (Calltype(__stdcall)));
+	MOCK_METHOD(HRESULT, LockRegion, (ULARGE_INTEGER libOffset, ULARGE_INTEGER cb, DWORD dwLockType), (Calltype(__stdcall)));
+	MOCK_METHOD(HRESULT, UnlockRegion, (ULARGE_INTEGER libOffset, ULARGE_INTEGER cb, DWORD dwLockType), (Calltype(__stdcall)));
+	MOCK_METHOD(HRESULT, Stat, (STATSTG * pstatstg, DWORD grfStatFlag), (Calltype(__stdcall)));
+	MOCK_METHOD(HRESULT, Clone, (IStream * *ppstm), (Calltype(__stdcall)));
 };
 
 /// @brief Default action for `IStream::Stat`.

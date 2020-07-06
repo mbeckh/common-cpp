@@ -124,34 +124,22 @@ constexpr int kInvalid = 0;  ///< @brief A variable whose address serves as a ma
 /// @brief A value to be used for marking pointer values as invalid.
 constexpr const void* kInvalidPtr = &internal::kInvalid;
 
-/// @brief Helper function to setup a mock object.
-/// @tparam M The class of the mock object.
-/// @tparam T The COM interfaces implmented by the mock object.
-/// @param mock The mock object.
-/// @param refCount The variable holding the mock reference count.
-template <class M, class... T>
-void SetupComMock(M& mock, ULONG& refCount) {
-	// allow removing expectations without removing default behavior
-	ON_CALL(mock, AddRef())
-		.WillByDefault(m4t::AddRef(&refCount));
-	ON_CALL(mock, Release())
-		.WillByDefault(m4t::Release(&refCount));
-	ON_CALL(mock, QueryInterface(t::_, t::_))
-		.WillByDefault(m4t::QueryInterfaceFail());
-	ON_CALL(mock, QueryInterface(t::AnyOf(__uuidof(IUnknown), __uuidof(T)...), t::_))
-		.WillByDefault(m4t::QueryInterface(&mock));
 
-	EXPECT_CALL(mock, AddRef()).Times(t::AtLeast(0));
-	EXPECT_CALL(mock, Release()).Times(t::AtLeast(0));
-	EXPECT_CALL(mock, QueryInterface(t::_, t::_)).Times(t::AtLeast(0));
-	EXPECT_CALL(mock, QueryInterface(t::AnyOf(__uuidof(IUnknown), __uuidof(T)...), t::_)).Times(t::AtLeast(0));
-}
-
-/// @brief Create a matcher using `std::regex` instead of the regex library of google test.
-/// @param pattern The regex pattern to use.
+/// @brief Create a matcher using `std::regex` instead of the regex library of googletest.
+/// @param pattern The regex or regex pattern to use.
 #pragma warning(suppress : 4100)
 MATCHER_P(MatchesRegex, pattern, "") {
-	return std::regex_match(arg, std::regex(pattern));
+	if constexpr (std::is_same_v<pattern_type, std::regex> || std::is_same_v<pattern_type, std::wregex>) {
+		return std::regex_match(arg, pattern);
+	} else if constexpr (std::is_same_v<pattern_type, const char*> || std::is_same_v<pattern_type, char*>) {
+		return std::regex_match(arg, std::regex(pattern));
+	} else if constexpr (std::is_same_v<pattern_type, const wchar_t*> || std::is_same_v<pattern_type, wchar_t*>) {
+		return std::regex_match(arg, std::wregex(pattern));
+	} else {
+#ifndef __clang_analyzer__
+		static_assert(false);
+#endif
+	}
 }
 
 /// @brief Action for mocking `IUnknown::AddRef`.
@@ -191,6 +179,29 @@ ACTION(QueryInterfaceFail) {
 
 	*arg1 = nullptr;
 	return E_NOINTERFACE;
+}
+
+/// @brief Helper function to setup a mock object.
+/// @tparam M The class of the mock object.
+/// @tparam T The COM interfaces implemented by the mock object.
+/// @param mock The mock object.
+/// @param refCount The variable holding the mock reference count.
+template <class M, class... T>
+void SetupComMock(M& mock, ULONG& refCount) {
+	// allow removing expectations without removing default behavior
+	ON_CALL(mock, AddRef())
+		.WillByDefault(m4t::AddRef(&refCount));
+	ON_CALL(mock, Release())
+		.WillByDefault(m4t::Release(&refCount));
+	ON_CALL(mock, QueryInterface(t::_, t::_))
+		.WillByDefault(m4t::QueryInterfaceFail());
+	ON_CALL(mock, QueryInterface(t::AnyOf(__uuidof(IUnknown), __uuidof(T)...), t::_))
+		.WillByDefault(m4t::QueryInterface(&mock));
+
+	EXPECT_CALL(mock, AddRef()).Times(t::AtLeast(0));
+	EXPECT_CALL(mock, Release()).Times(t::AtLeast(0));
+	EXPECT_CALL(mock, QueryInterface(t::_, t::_)).Times(t::AtLeast(0));
+	EXPECT_CALL(mock, QueryInterface(t::AnyOf(__uuidof(IUnknown), __uuidof(T)...), t::_)).Times(t::AtLeast(0));
 }
 
 /// @brief Action for returning a COM object as an output argument.
