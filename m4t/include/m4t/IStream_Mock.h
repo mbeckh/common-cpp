@@ -27,7 +27,7 @@ limitations under the License.
 
 #include <cstring>
 #include <cwchar>
-#include <type_traits>
+#include <type_traits>  // IWYU pragma: keep
 
 namespace m4t {
 

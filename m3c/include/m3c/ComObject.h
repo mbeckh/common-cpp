@@ -142,7 +142,7 @@ public:  // IUnknown
 	}
 
 private:
-	[[nodiscard]] _Ret_notnull_ void* FindInterface(REFIID riid) noexcept final {
+	[[nodiscard]] _Ret_maybenull_ void* FindInterface(REFIID riid) noexcept final {
 		return FindInterfaceInternal<Interfaces...>(riid);
 	}
 

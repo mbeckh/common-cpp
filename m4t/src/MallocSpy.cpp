@@ -21,7 +21,6 @@ limitations under the License.
 #include <mutex>
 #include <shared_mutex>
 #include <unordered_set>
-#include <utility>
 
 namespace m4t {
 

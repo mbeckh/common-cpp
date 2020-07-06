@@ -16,11 +16,22 @@ limitations under the License.
 
 #pragma once
 
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
 #include <objidl.h>
+#include <propidl.h>
+#include <propvarutil.h>
+#include <unknwn.h>
 #include <windows.h>
+#include <wtypes.h>
 
 #include <cstddef>
+#include <cstring>
+#include <cwchar>
 #include <mutex>
+#include <regex>
 #include <shared_mutex>
+#include <tuple>
+#include <type_traits>
 #include <unordered_set>
-#include <utility>

@@ -39,6 +39,7 @@ limitations under the License.
 #include <wtypes.h>
 
 #include <algorithm>
+#include <cassert>
 #include <iterator>
 #include <string>
 #include <string_view>
@@ -234,7 +235,7 @@ fmt::format_parse_context::iterator fmt::formatter<WICRect>::parse(fmt::format_p
 	m_format.append("} x {:");
 	m_format.append(it, end);
 	m_format.append("})");
-	assert(m_format.size() == (end - it + 3) * 4 + 13);
+	assert(m_format.size() == static_cast<std::size_t>((end - it + 3) * 4 + 13));
 	return end;
 }
 

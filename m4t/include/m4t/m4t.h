@@ -18,14 +18,19 @@ limitations under the License.
 
 #pragma once
 
+#include <m3c/exception.h>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <propidl.h>
+#include <propvarutil.h>
 #include <unknwn.h>
 #include <windows.h>
+#include <wtypes.h>
 
 #include <regex>
+#include <tuple>
 #include <type_traits>
 
 
@@ -194,7 +199,7 @@ ACTION(QueryInterfaceFail) {
 /// @tparam idx 0-based index of the argument.
 /// @param pObject A pointer to a COM object.
 ACTION_TEMPLATE(SetComObject, HAS_1_TEMPLATE_PARAMS(int, idx), AND_1_VALUE_PARAMS(pObject)) {
-	typedef typename t::tuple_element<idx, args_type>::type idx_type;
+	typedef typename std::tuple_element<idx, args_type>::type idx_type;
 	static_assert(std::is_base_of_v<IUnknown, std::remove_pointer_t<std::remove_pointer_t<idx_type>>>);
 	static_assert(std::is_base_of_v<IUnknown, std::remove_pointer_t<pObject_type>>);
 
@@ -207,7 +212,7 @@ ACTION_TEMPLATE(SetComObject, HAS_1_TEMPLATE_PARAMS(int, idx), AND_1_VALUE_PARAM
 /// @tparam idx 0-based index of the argument.
 /// @param variant A `VARIANT_BOOL`.
 ACTION_TEMPLATE(SetPropVariantToBool, HAS_1_TEMPLATE_PARAMS(int, idx), AND_1_VALUE_PARAMS(variantBool)) {
-	typedef typename t::tuple_element<idx, args_type>::type idx_type;
+	typedef typename std::tuple_element<idx, args_type>::type idx_type;
 	static_assert(std::is_base_of_v<PROPVARIANT, std::remove_pointer_t<std::remove_pointer_t<idx_type>>>);
 	static_assert(std::is_same_v<VARIANT_BOOL, variantBool_type>);
 
@@ -221,7 +226,7 @@ ACTION_TEMPLATE(SetPropVariantToBool, HAS_1_TEMPLATE_PARAMS(int, idx), AND_1_VAL
 /// @tparam idx 0-based index of the argument.
 /// @param wsz A wide character string.
 ACTION_TEMPLATE(SetPropVariantToBSTR, HAS_1_TEMPLATE_PARAMS(int, idx), AND_1_VALUE_PARAMS(wsz)) {
-	typedef typename t::tuple_element<idx, args_type>::type idx_type;
+	typedef typename std::tuple_element<idx, args_type>::type idx_type;
 	static_assert(std::is_base_of_v<PROPVARIANT, std::remove_pointer_t<std::remove_pointer_t<idx_type>>>);
 
 	PROPVARIANT* ppv = t::get<idx>(args);
@@ -234,7 +239,7 @@ ACTION_TEMPLATE(SetPropVariantToBSTR, HAS_1_TEMPLATE_PARAMS(int, idx), AND_1_VAL
 /// @details Usage: `SetPropVariantToEmpty<1>()`. The `PROPVARIANT` MUST NOT be null.
 /// @tparam idx 0-based index of the argument.
 ACTION_TEMPLATE(SetPropVariantToEmpty, HAS_1_TEMPLATE_PARAMS(int, idx), AND_0_VALUE_PARAMS()) {
-	typedef typename t::tuple_element<idx, args_type>::type idx_type;
+	typedef typename std::tuple_element<idx, args_type>::type idx_type;
 	static_assert(std::is_base_of_v<PROPVARIANT, std::remove_pointer_t<idx_type>>);
 
 	PROPVARIANT* ppv = t::get<idx>(args);
@@ -246,7 +251,7 @@ ACTION_TEMPLATE(SetPropVariantToEmpty, HAS_1_TEMPLATE_PARAMS(int, idx), AND_0_VA
 /// @tparam idx 0-based index of the argument.
 /// @param variant An object of type `IStream`.
 ACTION_TEMPLATE(SetPropVariantToStream, HAS_1_TEMPLATE_PARAMS(int, idx), AND_1_VALUE_PARAMS(pStream)) {
-	typedef typename t::tuple_element<idx, args_type>::type idx_type;
+	typedef typename std::tuple_element<idx, args_type>::type idx_type;
 	static_assert(std::is_base_of_v<PROPVARIANT, std::remove_pointer_t<idx_type>>);
 
 	PROPVARIANT* ppv = t::get<idx>(args);
@@ -260,7 +265,7 @@ ACTION_TEMPLATE(SetPropVariantToStream, HAS_1_TEMPLATE_PARAMS(int, idx), AND_1_V
 /// @tparam idx 0-based index of the argument.
 /// @param variant An object of type `IStream`.
 ACTION_TEMPLATE(SetPropVariantToUInt32, HAS_1_TEMPLATE_PARAMS(int, idx), AND_1_VALUE_PARAMS(value)) {
-	typedef typename t::tuple_element<idx, args_type>::type idx_type;
+	typedef typename std::tuple_element<idx, args_type>::type idx_type;
 	static_assert(std::is_base_of_v<PROPVARIANT, std::remove_pointer_t<idx_type>>);
 
 	PROPVARIANT* ppv = t::get<idx>(args);

@@ -29,11 +29,11 @@ namespace m3c::test {
 
 class PropVariantTest : public t::Test {
 protected:
-	PropVariantTest() {
+	void SetUp() override {
 		COM_MOCK_SETUP(m_object, IStream);
 	}
 
-	~PropVariantTest() {
+	void TearDown() override {
 		COM_MOCK_VERIFY(m_object);
 	}
 
