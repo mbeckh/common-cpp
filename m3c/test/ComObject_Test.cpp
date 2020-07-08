@@ -18,6 +18,7 @@ limitations under the License.
 
 #include "Bar.h"
 #include "Foo.h"
+
 #include "m3c/COM.h"
 #include "m3c/exception.h"
 
@@ -29,7 +30,6 @@ limitations under the License.
 #include <windows.h>
 
 #include <new>
-
 
 namespace m3c::test {
 
@@ -115,7 +115,9 @@ TEST(ComObject_Test, ReferenceCount_AddAndRelease_IsChanged) {
 
 	EXPECT_EQ(2u, pFoo->Release());
 	EXPECT_EQ(1u, pFoo->Release());
+	m4t::memory_start_tracking(pFoo);
 	EXPECT_EQ(0u, pFoo->Release());
+	m4t::memory_stop_tracking();
 	EXPECT_DELETED(pFoo);
 }
 

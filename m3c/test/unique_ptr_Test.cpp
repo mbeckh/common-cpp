@@ -809,7 +809,9 @@ TEST(unique_ptrArray_Test, ctorMove_WithValue_ValueIsMoved) {
 
 		EXPECT_EQ(arr, ptr);
 		EXPECT_NULL(oth);
+		m4t::memory_start_tracking(arr);
 	}
+	m4t::memory_stop_tracking();
 	EXPECT_DELETED(arr);
 }
 
@@ -842,7 +844,9 @@ TEST(unique_ptrArray_Test, ctorFromPointer_WithValue_HasValue) {
 		unique_ptr<int[]> ptr(arr);
 
 		EXPECT_EQ(arr, ptr);
+		m4t::memory_start_tracking(arr);
 	}
+	m4t::memory_stop_tracking();
 	EXPECT_DELETED(arr);
 }
 
@@ -857,7 +861,9 @@ TEST(unique_ptrArray_Test, dtor_Value_DeleteObject) {
 
 	{
 		unique_ptr<int[]> ptr(arr);
+		m4t::memory_start_tracking(arr);
 	}
+	m4t::memory_stop_tracking();
 	EXPECT_DELETED(arr);
 }
 
@@ -887,7 +893,9 @@ TEST(unique_ptrArray_Test, opMove_ValueToEmpty_ValueIsMoved) {
 
 		EXPECT_EQ(arr, ptr);
 		EXPECT_NULL(oth);
+		m4t::memory_start_tracking(arr);
 	}
+	m4t::memory_stop_tracking();
 	EXPECT_DELETED(arr);
 }
 
@@ -899,12 +907,15 @@ TEST(unique_ptrArray_Test, opMove_ValueToValue_ValueIsMoved) {
 		unique_ptr<int[]> ptr(arr);
 		unique_ptr<int[]> oth(other);
 
+		m4t::memory_start_tracking(arr);
 		ptr = std::move(oth);
 
 		EXPECT_EQ(other, ptr);  // value must have changed
 		EXPECT_NULL(oth);
 		EXPECT_DELETED(arr);
+		m4t::memory_start_tracking(other);
 	}
+	m4t::memory_stop_tracking();
 	EXPECT_DELETED(other);
 }
 
@@ -924,7 +935,9 @@ TEST(unique_ptrArray_Test, opAssign_NullptrToValue_ValueIsCleared) {
 	int* arr = new int[3];
 
 	unique_ptr<int[]> ptr(arr);
+	m4t::memory_start_tracking(arr);
 	ptr = nullptr;
+	m4t::memory_stop_tracking();
 
 	EXPECT_NULL(ptr);
 	EXPECT_DELETED(arr);
@@ -947,7 +960,9 @@ TEST(unique_ptrArray_Test, opAddressOf_Value_SetEmpty) {
 	int* arr = new int[3];
 
 	unique_ptr<int[]> ptr(arr);
+	m4t::memory_start_tracking(arr);
 	int** pp = &ptr;
+	m4t::memory_stop_tracking();
 
 	EXPECT_NULL(ptr);
 	EXPECT_NULL(*pp);
@@ -965,7 +980,9 @@ TEST(unique_ptrArray_Test, opAddressOf_SetValue_HasValue) {
 		*pp = arr;
 
 		EXPECT_EQ(arr, ptr);
+		m4t::memory_start_tracking(arr);
 	}
+	m4t::memory_stop_tracking();
 	EXPECT_DELETED(arr);
 }
 
@@ -1082,7 +1099,9 @@ TEST(unique_ptrArray_Test, reset_ValueWithDefault_ReferenceIsReleased) {
 
 	unique_ptr<int[]> ptr(arr);
 
+	m4t::memory_start_tracking(arr);
 	ptr.reset();
+	m4t::memory_stop_tracking();
 
 	EXPECT_NULL(ptr);
 	EXPECT_DELETED(arr);
@@ -1094,7 +1113,9 @@ TEST(unique_ptrArray_Test, reset_ValueWithValue_ReferenceIsAdded) {
 
 	unique_ptr<int[]> ptr(arr);
 
+	m4t::memory_start_tracking(arr);
 	ptr.reset(other);
+	m4t::memory_stop_tracking();
 
 	EXPECT_EQ(other, ptr);
 	EXPECT_DELETED(arr);

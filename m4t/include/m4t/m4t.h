@@ -63,21 +63,15 @@ namespace t = testing;
 // https://msdn.microsoft.com/en-us/library/aa270812(v=vs.60).aspx
 // https://msdn.microsoft.com/de-de/library/974tc9t1.aspx
 // https://en.wikipedia.org/wiki/Magic_number_(programming)
-#ifdef _DEBUG
 /// @brief Check if a memory address contains uninitialized data.
-/// @note Available in debug builds only.
+/// @note Requires the use of `INSTALL_TRACKING_NEW_DELETE()`.
 /// @param p_ The address to check.
 #define EXPECT_UNINITIALIZED(p_) __pragma(warning(suppress : 6001)) EXPECT_EQ(0xCDCDCDCD, *(unsigned int*) p_)
 
 /// @brief Check if a memory address contains deleted data.
-/// @note Available in debug builds only.
+/// @note Requires the use of `INSTALL_TRACKING_NEW_DELETE()`.
 /// @param p_ The address to check.
-#define EXPECT_DELETED(p_) EXPECT_EQ(0xDDDDDDDD, *(unsigned int*) p_)
-#else
-#define EXPECT_UNINITIALIZED(p_)
-#define EXPECT_DELETED(p_)
-#endif
-
+#define EXPECT_DELETED(p_) EXPECT_TRUE(m4t::memory_is_deleted(p_))
 
 //
 // Mock helpers
@@ -283,5 +277,9 @@ ACTION_TEMPLATE(SetPropVariantToUInt32, HAS_1_TEMPLATE_PARAMS(int, idx), AND_1_V
 	ppv->ulVal = value;
 	ppv->vt = VARENUM::VT_UI4;
 }
+
+void memory_start_tracking(const void* ptr) noexcept;
+void memory_stop_tracking() noexcept;
+bool memory_is_deleted(const void* ptr) noexcept;
 
 }  // namespace m4t

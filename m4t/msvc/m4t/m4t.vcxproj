@@ -29,10 +29,12 @@
     <ClInclude Include="..\..\include\m4t\IStream_Mock.h" />
     <ClInclude Include="..\..\include\m4t\m4t.h" />
     <ClInclude Include="..\..\include\m4t\MallocSpy.h" />
+    <ClInclude Include="..\..\include\m4t\memory.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\IStream_Mock.cpp" />
     <ClCompile Include="..\..\src\MallocSpy.cpp" />
+    <ClCompile Include="..\..\src\memory.cpp" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <ClCompile>

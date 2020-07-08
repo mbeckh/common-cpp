@@ -26,10 +26,13 @@ limitations under the License.
 #include <windows.h>
 #include <wtypes.h>
 
+#include <atomic>
 #include <cstddef>
+#include <cstdlib>
 #include <cstring>
 #include <cwchar>
 #include <mutex>
+#include <new>
 #include <regex>
 #include <shared_mutex>
 #include <tuple>

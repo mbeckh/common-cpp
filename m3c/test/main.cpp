@@ -20,6 +20,7 @@ limitations under the License.
 #include <gtest/gtest.h>
 #include <llamalog/LogWriter.h>
 #include <llamalog/llamalog.h>
+#include <m4t/memory.h>
 
 #include <objbase.h>
 
@@ -27,6 +28,9 @@ limitations under the License.
 #include <utility>
 
 namespace t = testing;
+
+// for ComObject_Test and unique_ptr_Test
+INSTALL_TRACKING_NEW_DELETE();
 
 int main(int argc, char** argv) {
 	std::unique_ptr<lg::DebugWriter> writer = std::make_unique<lg::DebugWriter>(lg::Priority::kTrace);
