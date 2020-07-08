@@ -17,6 +17,7 @@ limitations under the License.
 #include "m3c/com_ptr.h"
 
 #include "Foo.h"
+
 #include "m3c/COM.h"
 #include "m3c/ComObject.h"
 #include "m3c/exception.h"
