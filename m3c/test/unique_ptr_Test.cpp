@@ -67,7 +67,7 @@ public:
 // unique_ptr()
 //
 
-TEST(unique_ptrTest, ctor_Default_IsEmpty) {
+TEST(unique_ptr_Test, ctor_Default_IsEmpty) {
 	unique_ptr<Foo> ptr;
 
 	EXPECT_EQ(nullptr, ptr);
@@ -78,7 +78,7 @@ TEST(unique_ptrTest, ctor_Default_IsEmpty) {
 // unique_ptr(unique_ptr&&)
 //
 
-TEST(unique_ptrTest, ctorMove_WithEmpty_IsEmpty) {
+TEST(unique_ptr_Test, ctorMove_WithEmpty_IsEmpty) {
 	unique_ptr<Foo> oth;
 	unique_ptr<Foo> ptr(std::move(oth));
 
@@ -86,7 +86,7 @@ TEST(unique_ptrTest, ctorMove_WithEmpty_IsEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST(unique_ptrTest, ctorMove_WithValue_ValueIsMoved) {
+TEST(unique_ptr_Test, ctorMove_WithValue_ValueIsMoved) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> oth(pFoo);
@@ -102,7 +102,7 @@ TEST(unique_ptrTest, ctorMove_WithValue_ValueIsMoved) {
 // unique_ptr(nullptr_t)
 //
 
-TEST(unique_ptrTest, ctorFromNullptr_WithNullptr_IsEmpty) {
+TEST(unique_ptr_Test, ctorFromNullptr_WithNullptr_IsEmpty) {
 	unique_ptr<Foo> ptr(nullptr);
 
 	EXPECT_NULL(ptr);
@@ -113,14 +113,14 @@ TEST(unique_ptrTest, ctorFromNullptr_WithNullptr_IsEmpty) {
 // unique_ptr(T*)
 //
 
-TEST(unique_ptrTest, ctorFromPointer_WithNullptr_IsEmpty) {
+TEST(unique_ptr_Test, ctorFromPointer_WithNullptr_IsEmpty) {
 	Foo* p = nullptr;
 	unique_ptr<Foo> ptr(p);
 
 	EXPECT_NULL(ptr);
 }
 
-TEST(unique_ptrTest, ctorFromPointer_WithValue_HasValue) {
+TEST(unique_ptr_Test, ctorFromPointer_WithValue_HasValue) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> ptr(pFoo);
@@ -134,7 +134,7 @@ TEST(unique_ptrTest, ctorFromPointer_WithValue_HasValue) {
 // ~unique_ptr
 //
 
-TEST(unique_ptrTest, dtor_Value_DeleteObject) {
+TEST(unique_ptr_Test, dtor_Value_DeleteObject) {
 	MOCK_SETUP(pFoo);
 
 	{
@@ -148,7 +148,7 @@ TEST(unique_ptrTest, dtor_Value_DeleteObject) {
 // operator=(unique_ptr&&)
 //
 
-TEST(unique_ptrTest, opMove_EmptyToEmpty_IsEmpty) {
+TEST(unique_ptr_Test, opMove_EmptyToEmpty_IsEmpty) {
 	unique_ptr<Foo> ptr;
 	unique_ptr<Foo> oth;
 
@@ -158,7 +158,7 @@ TEST(unique_ptrTest, opMove_EmptyToEmpty_IsEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST(unique_ptrTest, opMove_ValueToEmpty_ValueIsMoved) {
+TEST(unique_ptr_Test, opMove_ValueToEmpty_ValueIsMoved) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> ptr;
@@ -171,7 +171,7 @@ TEST(unique_ptrTest, opMove_ValueToEmpty_ValueIsMoved) {
 	MOCK_EXPECT_NOT_DELETED(pFoo);
 }
 
-TEST(unique_ptrTest, opMove_ValueToValue_ValueIsMoved) {
+TEST(unique_ptr_Test, opMove_ValueToValue_ValueIsMoved) {
 	MOCK_SETUP(pFoo);
 	MOCK_SETUP(pOther);
 
@@ -191,14 +191,14 @@ TEST(unique_ptrTest, opMove_ValueToValue_ValueIsMoved) {
 // operator=(nullptr_t)
 //
 
-TEST(unique_ptrTest, opAssign_NullptrToEmpty_IsEmpty) {
+TEST(unique_ptr_Test, opAssign_NullptrToEmpty_IsEmpty) {
 	unique_ptr<Foo> ptr;
 	ptr = nullptr;
 
 	EXPECT_NULL(ptr);
 }
 
-TEST(unique_ptrTest, opAssign_NullptrToValue_ValueIsCleared) {
+TEST(unique_ptr_Test, opAssign_NullptrToValue_ValueIsCleared) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> ptr(pFoo);
@@ -213,14 +213,14 @@ TEST(unique_ptrTest, opAssign_NullptrToValue_ValueIsCleared) {
 // operator->
 //
 
-TEST(unique_ptrTest, opMemberOf_Empty_ReturnNullptr) {
+TEST(unique_ptr_Test, opMemberOf_Empty_ReturnNullptr) {
 	unique_ptr<Foo> ptr;
 	Foo* p = ptr.operator->();
 
 	EXPECT_NULL(p);
 }
 
-TEST(unique_ptrTest, opMemberOf_Value_CallObject) {
+TEST(unique_ptr_Test, opMemberOf_Value_CallObject) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> ptr(pFoo);
@@ -229,7 +229,7 @@ TEST(unique_ptrTest, opMemberOf_Value_CallObject) {
 	EXPECT_EQ(7, pFoo->m_arg);
 }
 
-TEST(unique_ptrTest, opMemberOf_ValueAndConst_CallObject) {
+TEST(unique_ptr_Test, opMemberOf_ValueAndConst_CallObject) {
 	MOCK_SETUP(pFoo);
 
 	const unique_ptr<Foo> ptr(pFoo);
@@ -243,7 +243,7 @@ TEST(unique_ptrTest, opMemberOf_ValueAndConst_CallObject) {
 // operator*
 //
 
-TEST(unique_ptrTest, opInstance_Value_CallObject) {
+TEST(unique_ptr_Test, opInstance_Value_CallObject) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> ptr(pFoo);
@@ -253,7 +253,7 @@ TEST(unique_ptrTest, opInstance_Value_CallObject) {
 	EXPECT_EQ(7, pFoo->m_arg);
 }
 
-TEST(unique_ptrTest, opInstance_ValueAndConst_CallObject) {
+TEST(unique_ptr_Test, opInstance_ValueAndConst_CallObject) {
 	MOCK_SETUP(pFoo);
 
 	const unique_ptr<Foo> ptr(pFoo);
@@ -268,7 +268,7 @@ TEST(unique_ptrTest, opInstance_ValueAndConst_CallObject) {
 // operator&
 //
 
-TEST(unique_ptrTest, opAddressOf_Empty_ReturnNullptr) {
+TEST(unique_ptr_Test, opAddressOf_Empty_ReturnNullptr) {
 	unique_ptr<Foo> ptr;
 	Foo** pp = &ptr;
 
@@ -276,7 +276,7 @@ TEST(unique_ptrTest, opAddressOf_Empty_ReturnNullptr) {
 	EXPECT_NOT_NULL(pp);
 }
 
-TEST(unique_ptrTest, opAddressOf_Value_SetEmpty) {
+TEST(unique_ptr_Test, opAddressOf_Value_SetEmpty) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> ptr(pFoo);
@@ -287,7 +287,7 @@ TEST(unique_ptrTest, opAddressOf_Value_SetEmpty) {
 	MOCK_EXPECT_DELETED(pFoo);
 }
 
-TEST(unique_ptrTest, opAddressOf_SetValue_HasValue) {
+TEST(unique_ptr_Test, opAddressOf_SetValue_HasValue) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> ptr;
@@ -304,7 +304,7 @@ TEST(unique_ptrTest, opAddressOf_SetValue_HasValue) {
 // (bool)
 //
 
-TEST(unique_ptrTest, opBool_Empty_ReturnFalse) {
+TEST(unique_ptr_Test, opBool_Empty_ReturnFalse) {
 	unique_ptr<Foo> ptr;
 
 	bool b = (bool) ptr;
@@ -312,7 +312,7 @@ TEST(unique_ptrTest, opBool_Empty_ReturnFalse) {
 	EXPECT_FALSE(b);
 }
 
-TEST(unique_ptrTest, opBool_Value_ReturnTrue) {
+TEST(unique_ptr_Test, opBool_Value_ReturnTrue) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> ptr(pFoo);
@@ -327,21 +327,21 @@ TEST(unique_ptrTest, opBool_Value_ReturnTrue) {
 // get
 //
 
-TEST(unique_ptrTest, get_Empty_ReturnNullptr) {
+TEST(unique_ptr_Test, get_Empty_ReturnNullptr) {
 	unique_ptr<Foo> ptr;
 	Foo* p = ptr.get();
 
 	EXPECT_NULL(p);
 }
 
-TEST(unique_ptrTest, get_EmptyAndConst_ReturnNullptr) {
+TEST(unique_ptr_Test, get_EmptyAndConst_ReturnNullptr) {
 	const unique_ptr<Foo> ptr;
 	const Foo* p = ptr.get();
 
 	EXPECT_NULL(p);
 }
 
-TEST(unique_ptrTest, get_Value_ReturnPointer) {
+TEST(unique_ptr_Test, get_Value_ReturnPointer) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> ptr(pFoo);
@@ -350,7 +350,7 @@ TEST(unique_ptrTest, get_Value_ReturnPointer) {
 	EXPECT_EQ(pFoo, p);
 }
 
-TEST(unique_ptrTest, get_ValueAndConst_ReturnPointer) {
+TEST(unique_ptr_Test, get_ValueAndConst_ReturnPointer) {
 	MOCK_SETUP(pFoo);
 
 	const unique_ptr<Foo> ptr(pFoo);
@@ -364,7 +364,7 @@ TEST(unique_ptrTest, get_ValueAndConst_ReturnPointer) {
 // reset
 //
 
-TEST(unique_ptrTest, reset_EmptyWithDefault_IsEmpty) {
+TEST(unique_ptr_Test, reset_EmptyWithDefault_IsEmpty) {
 	unique_ptr<Foo> ptr;
 
 	ptr.reset();
@@ -372,7 +372,7 @@ TEST(unique_ptrTest, reset_EmptyWithDefault_IsEmpty) {
 	EXPECT_NULL(ptr);
 }
 
-TEST(unique_ptrTest, reset_EmptyWithNullptr_IsEmpty) {
+TEST(unique_ptr_Test, reset_EmptyWithNullptr_IsEmpty) {
 	unique_ptr<Foo> ptr;
 
 	ptr.reset(nullptr);
@@ -380,7 +380,7 @@ TEST(unique_ptrTest, reset_EmptyWithNullptr_IsEmpty) {
 	EXPECT_NULL(ptr);
 }
 
-TEST(unique_ptrTest, reset_ValueWithDefault_ReferenceIsReleased) {
+TEST(unique_ptr_Test, reset_ValueWithDefault_ReferenceIsReleased) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> ptr(pFoo);
@@ -391,7 +391,7 @@ TEST(unique_ptrTest, reset_ValueWithDefault_ReferenceIsReleased) {
 	MOCK_EXPECT_DELETED(pFoo);
 }
 
-TEST(unique_ptrTest, reset_ValueWithValue_ReferenceIsAdded) {
+TEST(unique_ptr_Test, reset_ValueWithValue_ReferenceIsAdded) {
 	MOCK_SETUP(pFoo);
 	MOCK_SETUP(pOther);
 
@@ -404,7 +404,7 @@ TEST(unique_ptrTest, reset_ValueWithValue_ReferenceIsAdded) {
 	MOCK_EXPECT_NOT_DELETED(pOther);
 }
 
-TEST(unique_ptrTest, reset_ValueWithSameValue_NoChange) {
+TEST(unique_ptr_Test, reset_ValueWithSameValue_NoChange) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> ptr(pFoo);
@@ -420,7 +420,7 @@ TEST(unique_ptrTest, reset_ValueWithSameValue_NoChange) {
 // release
 //
 
-TEST(unique_ptrTest, release_Empty_ReturnNullptr) {
+TEST(unique_ptr_Test, release_Empty_ReturnNullptr) {
 	unique_ptr<Foo> ptr;
 	Foo* p = ptr.release();
 
@@ -428,7 +428,7 @@ TEST(unique_ptrTest, release_Empty_ReturnNullptr) {
 	EXPECT_NULL(p);
 }
 
-TEST(unique_ptrTest, release_Value_ReturnPointer) {
+TEST(unique_ptr_Test, release_Value_ReturnPointer) {
 	MOCK_SETUP(pFoo);
 
 	Foo* p;
@@ -450,7 +450,7 @@ TEST(unique_ptrTest, release_Value_ReturnPointer) {
 // swap
 //
 
-TEST(unique_ptrTest, swap_EmptyWithEmpty_AreEmpty) {
+TEST(unique_ptr_Test, swap_EmptyWithEmpty_AreEmpty) {
 	unique_ptr<Foo> ptr;
 	unique_ptr<Foo> oth;
 
@@ -460,7 +460,7 @@ TEST(unique_ptrTest, swap_EmptyWithEmpty_AreEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST(unique_ptrTest, swap_ValueWithEmpty_EmptyAndValue) {
+TEST(unique_ptr_Test, swap_ValueWithEmpty_EmptyAndValue) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> ptr(pFoo);
@@ -473,7 +473,7 @@ TEST(unique_ptrTest, swap_ValueWithEmpty_EmptyAndValue) {
 	MOCK_EXPECT_NOT_DELETED(pFoo);
 }
 
-TEST(unique_ptrTest, swap_EmptyWithValue_ValueAndEmpty) {
+TEST(unique_ptr_Test, swap_EmptyWithValue_ValueAndEmpty) {
 	MOCK_SETUP(pOther);
 
 	unique_ptr<Foo> ptr;
@@ -486,7 +486,7 @@ TEST(unique_ptrTest, swap_EmptyWithValue_ValueAndEmpty) {
 	MOCK_EXPECT_NOT_DELETED(pOther);
 }
 
-TEST(unique_ptrTest, swap_ValueWithValue_ValueAndValue) {
+TEST(unique_ptr_Test, swap_ValueWithValue_ValueAndValue) {
 	MOCK_SETUP(pFoo);
 	MOCK_SETUP(pOther);
 
@@ -506,14 +506,14 @@ TEST(unique_ptrTest, swap_ValueWithValue_ValueAndValue) {
 // hash
 //
 
-TEST(unique_ptrTest, hash_Empty_ReturnHash) {
+TEST(unique_ptr_Test, hash_Empty_ReturnHash) {
 	unique_ptr<Foo> ptr;
 	std::size_t h = ptr.hash();
 
 	EXPECT_EQ(std::hash<Foo*>{}(ptr.get()), h);
 }
 
-TEST(unique_ptrTest, hash_Value_ReturnHash) {
+TEST(unique_ptr_Test, hash_Value_ReturnHash) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> ptr(pFoo);
@@ -528,7 +528,7 @@ TEST(unique_ptrTest, hash_Value_ReturnHash) {
 // operator!=(const com_heap_ptr&, const com_heap_ptr&)
 //
 
-TEST(unique_ptrTest, opEquals_EmptyAndEmpty_Equal) {
+TEST(unique_ptr_Test, opEquals_EmptyAndEmpty_Equal) {
 	unique_ptr<Foo> ptr;
 	unique_ptr<Foo> oth;
 
@@ -539,7 +539,7 @@ TEST(unique_ptrTest, opEquals_EmptyAndEmpty_Equal) {
 	EXPECT_FALSE(oth != ptr);
 }
 
-TEST(unique_ptrTest, opEquals_EmptyAndValue_NotEqual) {
+TEST(unique_ptr_Test, opEquals_EmptyAndValue_NotEqual) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> ptr;
@@ -552,7 +552,7 @@ TEST(unique_ptrTest, opEquals_EmptyAndValue_NotEqual) {
 	EXPECT_TRUE(oth != ptr);
 }
 
-TEST(unique_ptrTest, opEquals_ValueAndValue_NotEqual) {
+TEST(unique_ptr_Test, opEquals_ValueAndValue_NotEqual) {
 	MOCK_SETUP(pFoo);
 	MOCK_SETUP(pOther);
 
@@ -566,7 +566,7 @@ TEST(unique_ptrTest, opEquals_ValueAndValue_NotEqual) {
 	EXPECT_TRUE(oth != ptr);
 }
 
-TEST(unique_ptrTest, opEquals_ValueAndSameValue_Equal) {
+TEST(unique_ptr_Test, opEquals_ValueAndSameValue_Equal) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> ptr(pFoo);
@@ -590,7 +590,7 @@ TEST(unique_ptrTest, opEquals_ValueAndSameValue_Equal) {
 // operator!=(U* p, const com_heap_ptr<T>&)
 //
 
-TEST(unique_ptrTest, opEqualsPointer_EmptyAndNullptr_Equal) {
+TEST(unique_ptr_Test, opEqualsPointer_EmptyAndNullptr_Equal) {
 	unique_ptr<Foo> ptr;
 	Foo* p = nullptr;
 
@@ -601,7 +601,7 @@ TEST(unique_ptrTest, opEqualsPointer_EmptyAndNullptr_Equal) {
 	EXPECT_FALSE(p != ptr);
 }
 
-TEST(unique_ptrTest, opEqualsPointer_EmptyAndPointer_NotEqual) {
+TEST(unique_ptr_Test, opEqualsPointer_EmptyAndPointer_NotEqual) {
 	unique_ptr<Foo> ptr;
 	Foo other;
 	Foo* p = &other;
@@ -613,7 +613,7 @@ TEST(unique_ptrTest, opEqualsPointer_EmptyAndPointer_NotEqual) {
 	EXPECT_TRUE(p != ptr);
 }
 
-TEST(unique_ptrTest, opEqualsPointer_ValueAndNullptr_NotEqual) {
+TEST(unique_ptr_Test, opEqualsPointer_ValueAndNullptr_NotEqual) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> ptr(pFoo);
@@ -626,7 +626,7 @@ TEST(unique_ptrTest, opEqualsPointer_ValueAndNullptr_NotEqual) {
 	EXPECT_TRUE(p != ptr);
 }
 
-TEST(unique_ptrTest, opEqualsPointer_ValueAndPointer_NotEqual) {
+TEST(unique_ptr_Test, opEqualsPointer_ValueAndPointer_NotEqual) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> ptr(pFoo);
@@ -640,7 +640,7 @@ TEST(unique_ptrTest, opEqualsPointer_ValueAndPointer_NotEqual) {
 	EXPECT_TRUE(p != ptr);
 }
 
-TEST(unique_ptrTest, opEqualsPointer_ValueAndSamePointer_Equal) {
+TEST(unique_ptr_Test, opEqualsPointer_ValueAndSamePointer_Equal) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> ptr(pFoo);
@@ -660,7 +660,7 @@ TEST(unique_ptrTest, opEqualsPointer_ValueAndSamePointer_Equal) {
 // operator!=(nullptr_t, const com_heap_ptr<T>&)
 //
 
-TEST(unique_ptrTest, opEqualsNullptr_Empty_Equal) {
+TEST(unique_ptr_Test, opEqualsNullptr_Empty_Equal) {
 	unique_ptr<Foo> ptr;
 
 	EXPECT_TRUE(ptr == nullptr);
@@ -670,7 +670,7 @@ TEST(unique_ptrTest, opEqualsNullptr_Empty_Equal) {
 	EXPECT_FALSE(nullptr != ptr);
 }
 
-TEST(unique_ptrTest, opEqualsNullptr_Value_NoEqual) {
+TEST(unique_ptr_Test, opEqualsNullptr_Value_NoEqual) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> ptr(pFoo);
@@ -687,13 +687,13 @@ TEST(unique_ptrTest, opEqualsNullptr_Value_NoEqual) {
 // make_unique
 //
 
-TEST(unique_ptrTest, makeUnique_Default_ObjectCreated) {
+TEST(unique_ptr_Test, makeUnique_Default_ObjectCreated) {
 	unique_ptr<Foo> ptr = make_unique<Foo>();
 
 	EXPECT_NOT_NULL(ptr);
 }
 
-TEST(unique_ptrTest, makeUnique_WithArg_ObjectCreated) {
+TEST(unique_ptr_Test, makeUnique_WithArg_ObjectCreated) {
 	unique_ptr<Foo> ptr = make_unique<Foo>(1);
 
 	EXPECT_NOT_NULL(ptr);
@@ -705,7 +705,7 @@ TEST(unique_ptrTest, makeUnique_WithArg_ObjectCreated) {
 // std::swap
 //
 
-TEST(unique_ptrTest, stdSwap_EmptyAndEmpty_AreEmpty) {
+TEST(unique_ptr_Test, stdSwap_EmptyAndEmpty_AreEmpty) {
 	unique_ptr<Foo> ptr;
 	unique_ptr<Foo> oth;
 
@@ -715,7 +715,7 @@ TEST(unique_ptrTest, stdSwap_EmptyAndEmpty_AreEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST(unique_ptrTest, stdSwap_ValueAndEmpty_EmptyAndValue) {
+TEST(unique_ptr_Test, stdSwap_ValueAndEmpty_EmptyAndValue) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> ptr(pFoo);
@@ -728,7 +728,7 @@ TEST(unique_ptrTest, stdSwap_ValueAndEmpty_EmptyAndValue) {
 	MOCK_EXPECT_NOT_DELETED(pFoo);
 }
 
-TEST(unique_ptrTest, stdSwap_EmptyAndValue_ValueAndEmpty) {
+TEST(unique_ptr_Test, stdSwap_EmptyAndValue_ValueAndEmpty) {
 	MOCK_SETUP(pOther);
 
 	unique_ptr<Foo> ptr;
@@ -741,7 +741,7 @@ TEST(unique_ptrTest, stdSwap_EmptyAndValue_ValueAndEmpty) {
 	MOCK_EXPECT_NOT_DELETED(pOther);
 }
 
-TEST(unique_ptrTest, stdSwap_ValueAndValue_ValueAndValue) {
+TEST(unique_ptr_Test, stdSwap_ValueAndValue_ValueAndValue) {
 	MOCK_SETUP(pFoo);
 	MOCK_SETUP(pOther);
 
@@ -761,14 +761,14 @@ TEST(unique_ptrTest, stdSwap_ValueAndValue_ValueAndValue) {
 // std::hash
 //
 
-TEST(unique_ptrTest, stdHash_Empty_ReturnHash) {
+TEST(unique_ptr_Test, stdHash_Empty_ReturnHash) {
 	unique_ptr<Foo> ptr;
 	std::size_t h = std::hash<unique_ptr<Foo>>{}(ptr);
 
 	EXPECT_EQ(std::hash<Foo*>{}(ptr.get()), h);
 }
 
-TEST(unique_ptrTest, stdHash_Value_ReturnHash) {
+TEST(unique_ptr_Test, stdHash_Value_ReturnHash) {
 	MOCK_SETUP(pFoo);
 
 	unique_ptr<Foo> ptr(pFoo);
@@ -782,7 +782,7 @@ TEST(unique_ptrTest, stdHash_Value_ReturnHash) {
 // unique_ptr()
 //
 
-TEST(unique_ptrArrayTest, ctor_Default_IsEmpty) {
+TEST(unique_ptrArray_Test, ctor_Default_IsEmpty) {
 	unique_ptr<int[]> ptr;
 
 	EXPECT_EQ(nullptr, ptr);
@@ -793,7 +793,7 @@ TEST(unique_ptrArrayTest, ctor_Default_IsEmpty) {
 // unique_ptr(unique_ptr&&)
 //
 
-TEST(unique_ptrArrayTest, ctorMove_WithEmpty_IsEmpty) {
+TEST(unique_ptrArray_Test, ctorMove_WithEmpty_IsEmpty) {
 	unique_ptr<int[]> oth;
 	unique_ptr<int[]> ptr(std::move(oth));
 
@@ -801,7 +801,7 @@ TEST(unique_ptrArrayTest, ctorMove_WithEmpty_IsEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST(unique_ptrArrayTest, ctorMove_WithValue_ValueIsMoved) {
+TEST(unique_ptrArray_Test, ctorMove_WithValue_ValueIsMoved) {
 	int* arr = new int[3];
 	{
 		unique_ptr<int[]> oth(arr);
@@ -818,7 +818,7 @@ TEST(unique_ptrArrayTest, ctorMove_WithValue_ValueIsMoved) {
 // unique_ptr(nullptr_t)
 //
 
-TEST(unique_ptrArrayTest, ctorFromNullptr_WithNullptr_IsEmpty) {
+TEST(unique_ptrArray_Test, ctorFromNullptr_WithNullptr_IsEmpty) {
 	unique_ptr<int[]> ptr(nullptr);
 
 	EXPECT_NULL(ptr);
@@ -829,14 +829,14 @@ TEST(unique_ptrArrayTest, ctorFromNullptr_WithNullptr_IsEmpty) {
 // unique_ptr(T*)
 //
 
-TEST(unique_ptrArrayTest, ctorFromPointer_WithNullptr_IsEmpty) {
+TEST(unique_ptrArray_Test, ctorFromPointer_WithNullptr_IsEmpty) {
 	int* arr = nullptr;
 	unique_ptr<int[]> ptr(arr);
 
 	EXPECT_NULL(ptr);
 }
 
-TEST(unique_ptrArrayTest, ctorFromPointer_WithValue_HasValue) {
+TEST(unique_ptrArray_Test, ctorFromPointer_WithValue_HasValue) {
 	int* arr = new int[3];
 	{
 		unique_ptr<int[]> ptr(arr);
@@ -851,7 +851,7 @@ TEST(unique_ptrArrayTest, ctorFromPointer_WithValue_HasValue) {
 // ~unique_ptr<T[]>
 //
 
-TEST(unique_ptrArrayTest, dtor_Value_DeleteObject) {
+TEST(unique_ptrArray_Test, dtor_Value_DeleteObject) {
 	int* arr = new int[3];
 	EXPECT_UNINITIALIZED(arr);
 
@@ -866,7 +866,7 @@ TEST(unique_ptrArrayTest, dtor_Value_DeleteObject) {
 // operator=(unique_ptr<T[]>&&)
 //
 
-TEST(unique_ptrArrayTest, opMove_EmptyToEmpty_IsEmpty) {
+TEST(unique_ptrArray_Test, opMove_EmptyToEmpty_IsEmpty) {
 	unique_ptr<int[]> ptr;
 	unique_ptr<int[]> oth;
 
@@ -876,7 +876,7 @@ TEST(unique_ptrArrayTest, opMove_EmptyToEmpty_IsEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST(unique_ptrArrayTest, opMove_ValueToEmpty_ValueIsMoved) {
+TEST(unique_ptrArray_Test, opMove_ValueToEmpty_ValueIsMoved) {
 	int* arr = new int[3];
 
 	{
@@ -891,7 +891,7 @@ TEST(unique_ptrArrayTest, opMove_ValueToEmpty_ValueIsMoved) {
 	EXPECT_DELETED(arr);
 }
 
-TEST(unique_ptrArrayTest, opMove_ValueToValue_ValueIsMoved) {
+TEST(unique_ptrArray_Test, opMove_ValueToValue_ValueIsMoved) {
 	int* arr = new int[3];
 	int* other = new int[3];
 
@@ -913,14 +913,14 @@ TEST(unique_ptrArrayTest, opMove_ValueToValue_ValueIsMoved) {
 // operator=(nullptr_t)
 //
 
-TEST(unique_ptrArrayTest, opAssign_NullptrToEmpty_IsEmpty) {
+TEST(unique_ptrArray_Test, opAssign_NullptrToEmpty_IsEmpty) {
 	unique_ptr<int[]> ptr;
 	ptr = nullptr;
 
 	EXPECT_NULL(ptr);
 }
 
-TEST(unique_ptrArrayTest, opAssign_NullptrToValue_ValueIsCleared) {
+TEST(unique_ptrArray_Test, opAssign_NullptrToValue_ValueIsCleared) {
 	int* arr = new int[3];
 
 	unique_ptr<int[]> ptr(arr);
@@ -935,7 +935,7 @@ TEST(unique_ptrArrayTest, opAssign_NullptrToValue_ValueIsCleared) {
 // operator&
 //
 
-TEST(unique_ptrArrayTest, opAddressOf_Empty_ReturnNullptr) {
+TEST(unique_ptrArray_Test, opAddressOf_Empty_ReturnNullptr) {
 	unique_ptr<int[]> ptr;
 	int** pp = &ptr;
 
@@ -943,7 +943,7 @@ TEST(unique_ptrArrayTest, opAddressOf_Empty_ReturnNullptr) {
 	EXPECT_NOT_NULL(pp);
 }
 
-TEST(unique_ptrArrayTest, opAddressOf_Value_SetEmpty) {
+TEST(unique_ptrArray_Test, opAddressOf_Value_SetEmpty) {
 	int* arr = new int[3];
 
 	unique_ptr<int[]> ptr(arr);
@@ -954,7 +954,7 @@ TEST(unique_ptrArrayTest, opAddressOf_Value_SetEmpty) {
 	EXPECT_DELETED(arr);
 }
 
-TEST(unique_ptrArrayTest, opAddressOf_SetValue_HasValue) {
+TEST(unique_ptrArray_Test, opAddressOf_SetValue_HasValue) {
 	int* arr = new int[3];
 
 	{
@@ -974,7 +974,7 @@ TEST(unique_ptrArrayTest, opAddressOf_SetValue_HasValue) {
 // operator[]
 //
 
-TEST(unique_ptrArrayTest, opIndex_ValueAndConst_ReturnValue) {
+TEST(unique_ptrArray_Test, opIndex_ValueAndConst_ReturnValue) {
 	int* arr = new int[3]{1, 2, 3};
 	const unique_ptr<int[]> ptr(arr);
 	const int& v0 = ptr[0];
@@ -986,7 +986,7 @@ TEST(unique_ptrArrayTest, opIndex_ValueAndConst_ReturnValue) {
 	EXPECT_EQ(v2, arr[2]);
 }
 
-TEST(unique_ptrArrayTest, opIndex_Value_ReturnValue) {
+TEST(unique_ptrArray_Test, opIndex_Value_ReturnValue) {
 	int* arr = new int[3]{1, 2, 3};
 	unique_ptr<int[]> ptr(arr);
 	int& v0 = ptr[0];
@@ -1003,7 +1003,7 @@ TEST(unique_ptrArrayTest, opIndex_Value_ReturnValue) {
 // (bool)
 //
 
-TEST(unique_ptrArrayTest, opBool_Empty_ReturnFalse) {
+TEST(unique_ptrArray_Test, opBool_Empty_ReturnFalse) {
 	unique_ptr<int[]> ptr;
 
 	bool b = (bool) ptr;
@@ -1011,7 +1011,7 @@ TEST(unique_ptrArrayTest, opBool_Empty_ReturnFalse) {
 	EXPECT_FALSE(b);
 }
 
-TEST(unique_ptrArrayTest, opBool_Value_ReturnTrue) {
+TEST(unique_ptrArray_Test, opBool_Value_ReturnTrue) {
 	unique_ptr<int[]> ptr(new int[3]);
 
 	bool b = (bool) ptr;
@@ -1024,21 +1024,21 @@ TEST(unique_ptrArrayTest, opBool_Value_ReturnTrue) {
 // get
 //
 
-TEST(unique_ptrArrayTest, get_Empty_ReturnNullptr) {
+TEST(unique_ptrArray_Test, get_Empty_ReturnNullptr) {
 	unique_ptr<int[]> ptr;
 	int* p = ptr.get();
 
 	EXPECT_NULL(p);
 }
 
-TEST(unique_ptrArrayTest, get_EmptyAndConst_ReturnNullptr) {
+TEST(unique_ptrArray_Test, get_EmptyAndConst_ReturnNullptr) {
 	const unique_ptr<int> ptr;
 	const int* p = ptr.get();
 
 	EXPECT_NULL(p);
 }
 
-TEST(unique_ptrArrayTest, get_Value_ReturnPointer) {
+TEST(unique_ptrArray_Test, get_Value_ReturnPointer) {
 	int* arr = new int[3];
 
 	unique_ptr<int[]> ptr(arr);
@@ -1047,7 +1047,7 @@ TEST(unique_ptrArrayTest, get_Value_ReturnPointer) {
 	EXPECT_NOT_NULL(p);
 }
 
-TEST(unique_ptrArrayTest, get_ValueAndConst_ReturnPointer) {
+TEST(unique_ptrArray_Test, get_ValueAndConst_ReturnPointer) {
 	int* arr = new int[3];
 
 	const unique_ptr<int[]> ptr(arr);
@@ -1061,7 +1061,7 @@ TEST(unique_ptrArrayTest, get_ValueAndConst_ReturnPointer) {
 // reset
 //
 
-TEST(unique_ptrArrayTest, reset_EmptyWithDefault_IsEmpty) {
+TEST(unique_ptrArray_Test, reset_EmptyWithDefault_IsEmpty) {
 	unique_ptr<int[]> ptr;
 
 	ptr.reset();
@@ -1069,7 +1069,7 @@ TEST(unique_ptrArrayTest, reset_EmptyWithDefault_IsEmpty) {
 	EXPECT_NULL(ptr);
 }
 
-TEST(unique_ptrArrayTest, reset_EmptyWithNullptr_IsEmpty) {
+TEST(unique_ptrArray_Test, reset_EmptyWithNullptr_IsEmpty) {
 	unique_ptr<int[]> ptr;
 
 	ptr.reset(nullptr);
@@ -1077,7 +1077,7 @@ TEST(unique_ptrArrayTest, reset_EmptyWithNullptr_IsEmpty) {
 	EXPECT_NULL(ptr);
 }
 
-TEST(unique_ptrArrayTest, reset_ValueWithDefault_ReferenceIsReleased) {
+TEST(unique_ptrArray_Test, reset_ValueWithDefault_ReferenceIsReleased) {
 	int* arr = new int[3];
 
 	unique_ptr<int[]> ptr(arr);
@@ -1088,7 +1088,7 @@ TEST(unique_ptrArrayTest, reset_ValueWithDefault_ReferenceIsReleased) {
 	EXPECT_DELETED(arr);
 }
 
-TEST(unique_ptrArrayTest, reset_ValueWithValue_ReferenceIsAdded) {
+TEST(unique_ptrArray_Test, reset_ValueWithValue_ReferenceIsAdded) {
 	int* arr = new int[3];
 	int* other = new int[4];
 
@@ -1100,7 +1100,7 @@ TEST(unique_ptrArrayTest, reset_ValueWithValue_ReferenceIsAdded) {
 	EXPECT_DELETED(arr);
 }
 
-TEST(unique_ptrArrayTest, reset_ValueWithSameValue_NoChange) {
+TEST(unique_ptrArray_Test, reset_ValueWithSameValue_NoChange) {
 	int* arr = new int[3];
 
 	unique_ptr<int[]> ptr(arr);
@@ -1115,7 +1115,7 @@ TEST(unique_ptrArrayTest, reset_ValueWithSameValue_NoChange) {
 // release
 //
 
-TEST(unique_ptrArrayTest, release_Empty_ReturnNullptr) {
+TEST(unique_ptrArray_Test, release_Empty_ReturnNullptr) {
 	unique_ptr<int[]> ptr;
 	int* p = ptr.release();
 
@@ -1123,7 +1123,7 @@ TEST(unique_ptrArrayTest, release_Empty_ReturnNullptr) {
 	EXPECT_NULL(p);
 }
 
-TEST(unique_ptrArrayTest, release_Value_ReturnPointer) {
+TEST(unique_ptrArray_Test, release_Value_ReturnPointer) {
 	int* arr = new int[3]{1, 2, 3};
 	int* p;
 	{
@@ -1145,7 +1145,7 @@ TEST(unique_ptrArrayTest, release_Value_ReturnPointer) {
 // swap
 //
 
-TEST(unique_ptrArrayTest, swap_EmptyWithEmpty_AreEmpty) {
+TEST(unique_ptrArray_Test, swap_EmptyWithEmpty_AreEmpty) {
 	unique_ptr<int[]> ptr;
 	unique_ptr<int[]> oth;
 
@@ -1155,7 +1155,7 @@ TEST(unique_ptrArrayTest, swap_EmptyWithEmpty_AreEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST(unique_ptrArrayTest, swap_ValueWithEmpty_EmptyAndValue) {
+TEST(unique_ptrArray_Test, swap_ValueWithEmpty_EmptyAndValue) {
 	int* arr = new int[3];
 
 	unique_ptr<int[]> ptr(arr);
@@ -1168,7 +1168,7 @@ TEST(unique_ptrArrayTest, swap_ValueWithEmpty_EmptyAndValue) {
 	EXPECT_UNINITIALIZED(arr);
 }
 
-TEST(unique_ptrArrayTest, swap_EmptyWithValue_ValueAndEmpty) {
+TEST(unique_ptrArray_Test, swap_EmptyWithValue_ValueAndEmpty) {
 	int* arr = new int[3];
 
 	unique_ptr<int[]> ptr;
@@ -1181,7 +1181,7 @@ TEST(unique_ptrArrayTest, swap_EmptyWithValue_ValueAndEmpty) {
 	EXPECT_UNINITIALIZED(arr);
 }
 
-TEST(unique_ptrArrayTest, swap_ValueWithValue_ValueAndValue) {
+TEST(unique_ptrArray_Test, swap_ValueWithValue_ValueAndValue) {
 	int* arr = new int[3];
 	int* arrOther = new int[3];
 
@@ -1201,14 +1201,14 @@ TEST(unique_ptrArrayTest, swap_ValueWithValue_ValueAndValue) {
 // hash
 //
 
-TEST(unique_ptrArrayTest, hash_Empty_ReturnHash) {
+TEST(unique_ptrArray_Test, hash_Empty_ReturnHash) {
 	unique_ptr<int[]> ptr;
 	std::size_t h = ptr.hash();
 
 	EXPECT_EQ(std::hash<void*>{}(ptr.get()), h);
 }
 
-TEST(unique_ptrArrayTest, hash_Value_ReturnHash) {
+TEST(unique_ptrArray_Test, hash_Value_ReturnHash) {
 	int* arr = new int[3];
 
 	unique_ptr<int[]> ptr(arr);
@@ -1222,7 +1222,7 @@ TEST(unique_ptrArrayTest, hash_Value_ReturnHash) {
 // make_unique
 //
 
-TEST(unique_ptrArrayTest, makeUnique_WithSize_ArrayCreated) {
+TEST(unique_ptrArray_Test, makeUnique_WithSize_ArrayCreated) {
 	unique_ptr<int[]> ptr = make_unique<int[]>(3);
 
 	EXPECT_NOT_NULL(ptr);

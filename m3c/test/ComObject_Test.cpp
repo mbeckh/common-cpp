@@ -37,11 +37,11 @@ namespace m3c::test {
 // GetObjectCount
 //
 
-TEST(ComObjectTest, GetObjectCount_Initial_Return0) {
+TEST(ComObject_Test, GetObjectCount_Initial_Return0) {
 	EXPECT_EQ(0u, COM::GetObjectCount());
 }
 
-TEST(ComObjectTest, GetObjectCount_Create1Object_Return1) {
+TEST(ComObject_Test, GetObjectCount_Create1Object_Return1) {
 	Foo* pFoo = new Foo();
 
 	EXPECT_EQ(1u, COM::GetObjectCount());
@@ -49,7 +49,7 @@ TEST(ComObjectTest, GetObjectCount_Create1Object_Return1) {
 	pFoo->Release();
 }
 
-TEST(ComObjectTest, GetObjectCount_Create2Objects_Return2) {
+TEST(ComObject_Test, GetObjectCount_Create2Objects_Return2) {
 	Foo* pFoo = new Foo();
 	Bar* pBar = new Bar();
 
@@ -59,7 +59,7 @@ TEST(ComObjectTest, GetObjectCount_Create2Objects_Return2) {
 	pBar->Release();
 }
 
-TEST(ComObjectTest, GetObjectCount_Create3Objects_Return3) {
+TEST(ComObject_Test, GetObjectCount_Create3Objects_Return3) {
 	Foo* pFoo = new Foo();
 	Bar* pBar = new Bar();
 	Foo* pBaz = new Foo();
@@ -71,7 +71,7 @@ TEST(ComObjectTest, GetObjectCount_Create3Objects_Return3) {
 	pBaz->Release();
 }
 
-TEST(ComObjectTest, GetObjectCount_AddRef_NoChange) {
+TEST(ComObject_Test, GetObjectCount_AddRef_NoChange) {
 	Foo* pFoo = new Foo();
 	pFoo->AddRef();
 
@@ -81,7 +81,7 @@ TEST(ComObjectTest, GetObjectCount_AddRef_NoChange) {
 	pFoo->Release();
 }
 
-TEST(ComObjectTest, GetObjectCount_ReleaseNonFinal_NoChange) {
+TEST(ComObject_Test, GetObjectCount_ReleaseNonFinal_NoChange) {
 	Foo* pFoo = new Foo();
 	pFoo->AddRef();
 	pFoo->Release();
@@ -91,7 +91,7 @@ TEST(ComObjectTest, GetObjectCount_ReleaseNonFinal_NoChange) {
 	pFoo->Release();
 }
 
-TEST(ComObjectTest, GetObjectCount_ReleaseFinal_Reduce) {
+TEST(ComObject_Test, GetObjectCount_ReleaseFinal_Reduce) {
 	Foo* pFoo = new Foo();
 	Bar* pBar = new Bar();
 	pFoo->Release();
@@ -107,7 +107,7 @@ TEST(ComObjectTest, GetObjectCount_ReleaseFinal_Reduce) {
 // Release
 //
 
-TEST(ComObjectTest, ReferenceCount_AddAndRelease_IsChanged) {
+TEST(ComObject_Test, ReferenceCount_AddAndRelease_IsChanged) {
 	Foo* pFoo = new Foo();
 
 	EXPECT_EQ(2u, pFoo->AddRef());
@@ -124,7 +124,7 @@ TEST(ComObjectTest, ReferenceCount_AddAndRelease_IsChanged) {
 // QueryInterface(REFIID, void**)
 //
 
-TEST(ComObjectTest, QueryInterface_IidIsNotSupported_ReturnNoInterface) {
+TEST(ComObject_Test, QueryInterface_IidIsNotSupported_ReturnNoInterface) {
 	Foo foo;
 	IFoo* pFoo = (IFoo*) m4t::kInvalidPtr;
 	HRESULT hr = foo.QueryInterface(IID_IBar, (void**) &pFoo);
@@ -133,7 +133,7 @@ TEST(ComObjectTest, QueryInterface_IidIsNotSupported_ReturnNoInterface) {
 	EXPECT_NULL(pFoo);
 }
 
-TEST(ComObjectTest, QueryInterface_ObjectIsNullptr_ReturnInvalidArgument) {
+TEST(ComObject_Test, QueryInterface_ObjectIsNullptr_ReturnInvalidArgument) {
 	Foo foo;
 #pragma warning(suppress : 6387)
 	HRESULT hr = foo.QueryInterface(IID_IUnknown, nullptr);
@@ -144,7 +144,7 @@ TEST(ComObjectTest, QueryInterface_ObjectIsNullptr_ReturnInvalidArgument) {
 	foo.Release();
 }
 
-TEST(ComObjectTest, QueryInterface_Ok_ReturnObjectAndIncrementReferenceCount) {
+TEST(ComObject_Test, QueryInterface_Ok_ReturnObjectAndIncrementReferenceCount) {
 	Foo foo;
 	IFoo* pFoo = (IFoo*) m4t::kInvalidPtr;
 	HRESULT hr = foo.QueryInterface(IID_IUnknown, (void**) &pFoo);
@@ -162,14 +162,14 @@ TEST(ComObjectTest, QueryInterface_Ok_ReturnObjectAndIncrementReferenceCount) {
 // QueryInterface(REFIID)
 //
 
-TEST(ComObjectTest, QueryInterfaceWithIID_IIDIsNotSupported_ThrowsException) {
+TEST(ComObject_Test, QueryInterfaceWithIID_IIDIsNotSupported_ThrowsException) {
 	Foo foo;
 
 #pragma warning(suppress : 4834)
 	EXPECT_THROW(foo.QueryInterface(IID_IStream), com_exception);
 }
 
-TEST(ComObjectTest, QueryInterfaceWithIID_Ok_ReturnObjectAndIncrementReferenceCount) {
+TEST(ComObject_Test, QueryInterfaceWithIID_Ok_ReturnObjectAndIncrementReferenceCount) {
 	Foo foo;
 	IFoo* pFoo = (IFoo*) foo.QueryInterface(IID_IFoo);
 

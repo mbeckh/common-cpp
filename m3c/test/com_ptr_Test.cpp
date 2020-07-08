@@ -40,9 +40,9 @@ limitations under the License.
 
 namespace m3c::test {
 
-class com_ptrTest : public t::Test {
+class com_ptr_Test : public t::Test {
 protected:
-	com_ptrTest() {
+	void SetUp() override {
 		COM_MOCK_SETUP(m_object, IStream, ISequentialStream);
 		COM_MOCK_SETUP(m_other, IStream, ISequentialStream);
 
@@ -51,7 +51,7 @@ protected:
 		t::Mock::VerifyAndClearExpectations(&m_other);
 	}
 
-	~com_ptrTest() {
+	void TearDown() override {
 		COM_MOCK_VERIFY(m_object);
 		COM_MOCK_VERIFY(m_other);
 	}
@@ -67,7 +67,7 @@ protected:
 // com_ptr()
 //
 
-TEST_F(com_ptrTest, ctor_Default_IsEmpty) {
+TEST_F(com_ptr_Test, ctor_Default_IsEmpty) {
 	com_ptr<IStream> ptr;
 
 	EXPECT_NULL(ptr);
@@ -78,7 +78,7 @@ TEST_F(com_ptrTest, ctor_Default_IsEmpty) {
 // com_ptr(const com_ptr&)
 //
 
-TEST_F(com_ptrTest, ctorCopy_WithEmpty_IsEmpty) {
+TEST_F(com_ptr_Test, ctorCopy_WithEmpty_IsEmpty) {
 	const com_ptr<IStream> oth;
 	com_ptr<IStream> ptr(oth);
 
@@ -86,7 +86,7 @@ TEST_F(com_ptrTest, ctorCopy_WithEmpty_IsEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST_F(com_ptrTest, ctorCopy_WithValue_ReferencedIsAdded) {
+TEST_F(com_ptr_Test, ctorCopy_WithValue_ReferencedIsAdded) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef()).Times(2);
 	EXPECT_CALL(m_check, Call());
@@ -107,7 +107,7 @@ TEST_F(com_ptrTest, ctorCopy_WithValue_ReferencedIsAdded) {
 //
 
 
-TEST_F(com_ptrTest, ctorCopyAndQuery_WithEmpty_IsEmpty) {
+TEST_F(com_ptr_Test, ctorCopyAndQuery_WithEmpty_IsEmpty) {
 	const com_ptr<IStream> oth;
 	com_ptr<IPersistStream> ptr(oth);
 
@@ -115,7 +115,7 @@ TEST_F(com_ptrTest, ctorCopyAndQuery_WithEmpty_IsEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST_F(com_ptrTest, ctorCopyAndQuery_WithSubInterfaceEmpty_IsEmpty) {
+TEST_F(com_ptr_Test, ctorCopyAndQuery_WithSubInterfaceEmpty_IsEmpty) {
 	const com_ptr<IStream> oth;
 	com_ptr<ISequentialStream> ptr(oth);
 
@@ -123,7 +123,7 @@ TEST_F(com_ptrTest, ctorCopyAndQuery_WithSubInterfaceEmpty_IsEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST_F(com_ptrTest, ctorCopyAndQuery_WithSubInterfaceValue_ReferencedIsAdded) {
+TEST_F(com_ptr_Test, ctorCopyAndQuery_WithSubInterfaceValue_ReferencedIsAdded) {
 	t::ExpectationSet calls;
 	calls += EXPECT_CALL(m_object, AddRef()).Times(2);
 	calls += EXPECT_CALL(m_object, QueryInterface(IID_ISequentialStream, t::_));
@@ -139,7 +139,7 @@ TEST_F(com_ptrTest, ctorCopyAndQuery_WithSubInterfaceValue_ReferencedIsAdded) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, ctorCopyAndQuery_WithBaseInterface_ReferencedIsAdded) {
+TEST_F(com_ptr_Test, ctorCopyAndQuery_WithBaseInterface_ReferencedIsAdded) {
 	t::ExpectationSet calls;
 	calls += EXPECT_CALL(m_object, AddRef()).Times(2);
 	calls += EXPECT_CALL(m_object, QueryInterface(IID_IStream, t::_));
@@ -155,7 +155,7 @@ TEST_F(com_ptrTest, ctorCopyAndQuery_WithBaseInterface_ReferencedIsAdded) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, ctorCopyAndQuery_WithUnsupportedInterfaceEmpty_IsEmpty) {
+TEST_F(com_ptr_Test, ctorCopyAndQuery_WithUnsupportedInterfaceEmpty_IsEmpty) {
 	const com_ptr<IStream> oth;
 	com_ptr<IPersistStream> ptr(oth);
 
@@ -163,7 +163,7 @@ TEST_F(com_ptrTest, ctorCopyAndQuery_WithUnsupportedInterfaceEmpty_IsEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST_F(com_ptrTest, ctorCopyAndQuery_WithUnsupportedInterfaceValue_ThrowsException) {
+TEST_F(com_ptr_Test, ctorCopyAndQuery_WithUnsupportedInterfaceValue_ThrowsException) {
 	t::ExpectationSet calls;
 	calls += EXPECT_CALL(m_object, AddRef());
 	calls += EXPECT_CALL(m_object, QueryInterface(IID_IPersistStream, t::_));
@@ -183,7 +183,7 @@ TEST_F(com_ptrTest, ctorCopyAndQuery_WithUnsupportedInterfaceValue_ThrowsExcepti
 // com_ptr(com_ptr&&)
 //
 
-TEST_F(com_ptrTest, ctorMove_WithEmpty_IsEmpty) {
+TEST_F(com_ptr_Test, ctorMove_WithEmpty_IsEmpty) {
 	const com_ptr<IStream> oth;
 	com_ptr<IStream> ptr(std::move(oth));
 
@@ -191,7 +191,7 @@ TEST_F(com_ptrTest, ctorMove_WithEmpty_IsEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST_F(com_ptrTest, ctorMove_WithValue_ReferencedIsMoved) {
+TEST_F(com_ptr_Test, ctorMove_WithValue_ReferencedIsMoved) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_check, Call());
@@ -211,7 +211,7 @@ TEST_F(com_ptrTest, ctorMove_WithValue_ReferencedIsMoved) {
 // com_ptr(std::nullptr_t)
 //
 
-TEST_F(com_ptrTest, ctorFromNullptr_WithNullptr_IsEmpty) {
+TEST_F(com_ptr_Test, ctorFromNullptr_WithNullptr_IsEmpty) {
 	com_ptr<IStream> ptr(nullptr);
 
 	EXPECT_NULL(ptr);
@@ -222,14 +222,14 @@ TEST_F(com_ptrTest, ctorFromNullptr_WithNullptr_IsEmpty) {
 // com_ptr(T*)
 //
 
-TEST_F(com_ptrTest, ctorFromPointer_WithNullptr_IsEmpty) {
+TEST_F(com_ptr_Test, ctorFromPointer_WithNullptr_IsEmpty) {
 	IStream* pStream = nullptr;
 	com_ptr<IStream> ptr(pStream);
 
 	EXPECT_NULL(ptr);
 }
 
-TEST_F(com_ptrTest, ctorFromPointer_WithValue_ReferencedIsAdded) {
+TEST_F(com_ptr_Test, ctorFromPointer_WithValue_ReferencedIsAdded) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_check, Call());
@@ -247,7 +247,7 @@ TEST_F(com_ptrTest, ctorFromPointer_WithValue_ReferencedIsAdded) {
 // ~com_ptr
 //
 
-TEST_F(com_ptrTest, dtor_Default_ReferenceIsReleased) {
+TEST_F(com_ptr_Test, dtor_Default_ReferenceIsReleased) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_object, Release());
@@ -266,7 +266,7 @@ TEST_F(com_ptrTest, dtor_Default_ReferenceIsReleased) {
 // operator=(const com_ptr&)
 //
 
-TEST_F(com_ptrTest, opCopy_EmptyToEmpty_IsEmpty) {
+TEST_F(com_ptr_Test, opCopy_EmptyToEmpty_IsEmpty) {
 	com_ptr<IStream> oth;
 	com_ptr<IStream> ptr;
 	ptr = oth;
@@ -275,7 +275,7 @@ TEST_F(com_ptrTest, opCopy_EmptyToEmpty_IsEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST_F(com_ptrTest, opCopy_ValueToEmpty_ReferencedIsAdded) {
+TEST_F(com_ptr_Test, opCopy_ValueToEmpty_ReferencedIsAdded) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef()).Times(2);
 	EXPECT_CALL(m_check, Call());
@@ -291,7 +291,7 @@ TEST_F(com_ptrTest, opCopy_ValueToEmpty_ReferencedIsAdded) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, opCopy_EmptyToValue_ReferencedIsReleased) {
+TEST_F(com_ptr_Test, opCopy_EmptyToValue_ReferencedIsReleased) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_object, Release());
@@ -307,7 +307,7 @@ TEST_F(com_ptrTest, opCopy_EmptyToValue_ReferencedIsReleased) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, opCopy_ValueToValue_ReferencedIsAdded) {
+TEST_F(com_ptr_Test, opCopy_ValueToValue_ReferencedIsAdded) {
 	t::Sequence s;
 	t::ExpectationSet calls;
 	calls += EXPECT_CALL(m_object, AddRef()).Times(2);
@@ -327,7 +327,7 @@ TEST_F(com_ptrTest, opCopy_ValueToValue_ReferencedIsAdded) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, opCopy_ValueToSameValue_NoChange) {
+TEST_F(com_ptr_Test, opCopy_ValueToSameValue_NoChange) {
 	t::Sequence s;
 	t::ExpectationSet calls;
 	// allow with check for same value and without
@@ -351,7 +351,7 @@ TEST_F(com_ptrTest, opCopy_ValueToSameValue_NoChange) {
 // operator=(const com_ptr<S>&)
 //
 
-TEST_F(com_ptrTest, opCopyAndQuery_EmptyToEmpty_IsEmpty) {
+TEST_F(com_ptr_Test, opCopyAndQuery_EmptyToEmpty_IsEmpty) {
 	com_ptr<IStream> oth;
 	com_ptr<ISequentialStream> ptr;
 	ptr = oth;
@@ -360,7 +360,7 @@ TEST_F(com_ptrTest, opCopyAndQuery_EmptyToEmpty_IsEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST_F(com_ptrTest, opCopyAndQuery_ValueToEmpty_ReferencedIsAdded) {
+TEST_F(com_ptr_Test, opCopyAndQuery_ValueToEmpty_ReferencedIsAdded) {
 	t::ExpectationSet calls;
 	calls += EXPECT_CALL(m_object, AddRef()).Times(2);
 	calls += EXPECT_CALL(m_object, QueryInterface(IID_ISequentialStream, t::_));
@@ -377,7 +377,7 @@ TEST_F(com_ptrTest, opCopyAndQuery_ValueToEmpty_ReferencedIsAdded) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, opCopyAndQuery_EmptyToValue_ReferencedIsReleased) {
+TEST_F(com_ptr_Test, opCopyAndQuery_EmptyToValue_ReferencedIsReleased) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_object, Release());
@@ -393,7 +393,7 @@ TEST_F(com_ptrTest, opCopyAndQuery_EmptyToValue_ReferencedIsReleased) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, opCopyAndQuery_ValueToValue_ReferencedIsAdded) {
+TEST_F(com_ptr_Test, opCopyAndQuery_ValueToValue_ReferencedIsAdded) {
 	t::Sequence s;
 	t::ExpectationSet calls;
 	calls += EXPECT_CALL(m_object, AddRef()).Times(2);
@@ -414,7 +414,7 @@ TEST_F(com_ptrTest, opCopyAndQuery_ValueToValue_ReferencedIsAdded) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, opCopyAndQuery_ValueToSameValue_NoChange) {
+TEST_F(com_ptr_Test, opCopyAndQuery_ValueToSameValue_NoChange) {
 	t::Sequence s;
 	t::ExpectationSet calls;
 	calls += EXPECT_CALL(m_object, AddRef()).Times(3).InSequence(s);
@@ -433,7 +433,7 @@ TEST_F(com_ptrTest, opCopyAndQuery_ValueToSameValue_NoChange) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, opCopyAndQuery_UnsupportedEmptyToEmpty_Empty) {
+TEST_F(com_ptr_Test, opCopyAndQuery_UnsupportedEmptyToEmpty_Empty) {
 	com_ptr<IStream> oth;
 	com_ptr<IPersistStream> ptr;
 	ptr = oth;
@@ -442,7 +442,7 @@ TEST_F(com_ptrTest, opCopyAndQuery_UnsupportedEmptyToEmpty_Empty) {
 	EXPECT_NULL(oth);
 }
 
-TEST_F(com_ptrTest, opCopyAndQuery_UnsupportedValueToEmpty_ThrowsException) {
+TEST_F(com_ptr_Test, opCopyAndQuery_UnsupportedValueToEmpty_ThrowsException) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_object, QueryInterface(IID_IPersistStream, t::_));
@@ -459,7 +459,7 @@ TEST_F(com_ptrTest, opCopyAndQuery_UnsupportedValueToEmpty_ThrowsException) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, opCopyAndQuery_UnsupportedValueToValue_ThrowsException) {
+TEST_F(com_ptr_Test, opCopyAndQuery_UnsupportedValueToValue_ThrowsException) {
 	t::ExpectationSet calls;
 	calls += EXPECT_CALL(m_object, AddRef());
 	calls += EXPECT_CALL(m_other, AddRef());
@@ -483,7 +483,7 @@ TEST_F(com_ptrTest, opCopyAndQuery_UnsupportedValueToValue_ThrowsException) {
 // operator=(com_ptr&&)
 //
 
-TEST_F(com_ptrTest, opMove_EmptyToEmpty_IsEmpty) {
+TEST_F(com_ptr_Test, opMove_EmptyToEmpty_IsEmpty) {
 	com_ptr<IStream> oth;
 	com_ptr<IStream> ptr;
 	ptr = std::move(oth);
@@ -492,7 +492,7 @@ TEST_F(com_ptrTest, opMove_EmptyToEmpty_IsEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST_F(com_ptrTest, opMove_ValueToEmpty_ReferencedIsMoved) {
+TEST_F(com_ptr_Test, opMove_ValueToEmpty_ReferencedIsMoved) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_check, Call());
@@ -508,7 +508,7 @@ TEST_F(com_ptrTest, opMove_ValueToEmpty_ReferencedIsMoved) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, opMove_EmptyToValue_IsEmpty) {
+TEST_F(com_ptr_Test, opMove_EmptyToValue_IsEmpty) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_object, Release());
@@ -524,7 +524,7 @@ TEST_F(com_ptrTest, opMove_EmptyToValue_IsEmpty) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, opMove_ValueToValue_ReferencedIsMoved) {
+TEST_F(com_ptr_Test, opMove_ValueToValue_ReferencedIsMoved) {
 	t::Sequence s;
 	t::ExpectationSet calls;
 	calls += EXPECT_CALL(m_object, AddRef());
@@ -544,7 +544,7 @@ TEST_F(com_ptrTest, opMove_ValueToValue_ReferencedIsMoved) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, opMove_ValueToSameValue_NoChange) {
+TEST_F(com_ptr_Test, opMove_ValueToSameValue_NoChange) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef()).Times(2);
 	EXPECT_CALL(m_object, Release());
@@ -566,14 +566,14 @@ TEST_F(com_ptrTest, opMove_ValueToSameValue_NoChange) {
 // operator=(std::nullptr_t)
 //
 
-TEST_F(com_ptrTest, opAssign_NullptrToEmpty_IsEmpty) {
+TEST_F(com_ptr_Test, opAssign_NullptrToEmpty_IsEmpty) {
 	com_ptr<IStream> ptr;
 	ptr = nullptr;
 
 	EXPECT_NULL(ptr);
 }
 
-TEST_F(com_ptrTest, opAssign_NullptrToValue_ReferencedIsReleased) {
+TEST_F(com_ptr_Test, opAssign_NullptrToValue_ReferencedIsReleased) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_object, Release());
@@ -592,14 +592,14 @@ TEST_F(com_ptrTest, opAssign_NullptrToValue_ReferencedIsReleased) {
 // operator->
 //
 
-TEST_F(com_ptrTest, opMemberOf_Empty_ReturnNullptr) {
+TEST_F(com_ptr_Test, opMemberOf_Empty_ReturnNullptr) {
 	com_ptr<IStream> ptr;
 	IStream* p = ptr.operator->();
 
 	EXPECT_NULL(p);
 }
 
-TEST_F(com_ptrTest, opMemberOf_Value_CallFunction) {
+TEST_F(com_ptr_Test, opMemberOf_Value_CallFunction) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_object, Commit(7)).WillOnce(t::Return(E_NOTIMPL));
@@ -620,7 +620,7 @@ TEST_F(com_ptrTest, opMemberOf_Value_CallFunction) {
 // operator&
 //
 
-TEST_F(com_ptrTest, opAddressOf_Empty_ReturnAddress) {
+TEST_F(com_ptr_Test, opAddressOf_Empty_ReturnAddress) {
 	com_ptr<IStream> ptr;
 	IStream** pp = &ptr;
 
@@ -628,7 +628,7 @@ TEST_F(com_ptrTest, opAddressOf_Empty_ReturnAddress) {
 	EXPECT_NOT_NULL(pp);
 }
 
-TEST_F(com_ptrTest, opAddressOf_Value_SetEmpty) {
+TEST_F(com_ptr_Test, opAddressOf_Value_SetEmpty) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_object, Release());
@@ -643,7 +643,7 @@ TEST_F(com_ptrTest, opAddressOf_Value_SetEmpty) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, opAddressOf_SetValue_HasValue) {
+TEST_F(com_ptr_Test, opAddressOf_SetValue_HasValue) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_check, Call());
@@ -666,7 +666,7 @@ TEST_F(com_ptrTest, opAddressOf_SetValue_HasValue) {
 // (bool)
 //
 
-TEST_F(com_ptrTest, opBool_Empty_ReturnFalse) {
+TEST_F(com_ptr_Test, opBool_Empty_ReturnFalse) {
 	com_ptr<IStream> ptr;
 
 	bool b = (bool) ptr;
@@ -674,7 +674,7 @@ TEST_F(com_ptrTest, opBool_Empty_ReturnFalse) {
 	EXPECT_FALSE(b);
 }
 
-TEST_F(com_ptrTest, opBool_Value_ReturnTrue) {
+TEST_F(com_ptr_Test, opBool_Value_ReturnTrue) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_check, Call());
@@ -693,21 +693,21 @@ TEST_F(com_ptrTest, opBool_Value_ReturnTrue) {
 // get
 //
 
-TEST_F(com_ptrTest, get_Empty_ReturnNullptr) {
+TEST_F(com_ptr_Test, get_Empty_ReturnNullptr) {
 	com_ptr<IStream> ptr;
 	IStream* p = ptr.get();
 
 	EXPECT_NULL(p);
 }
 
-TEST_F(com_ptrTest, get_EmptyAndConst_ReturnNullptr) {
+TEST_F(com_ptr_Test, get_EmptyAndConst_ReturnNullptr) {
 	const com_ptr<IStream> ptr;
 	IStream* p = ptr.get();
 
 	EXPECT_NULL(p);
 }
 
-TEST_F(com_ptrTest, get_Value_ReturnPointer) {
+TEST_F(com_ptr_Test, get_Value_ReturnPointer) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_check, Call());
@@ -721,7 +721,7 @@ TEST_F(com_ptrTest, get_Value_ReturnPointer) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, get_ValueAndConst_ReturnPointer) {
+TEST_F(com_ptr_Test, get_ValueAndConst_ReturnPointer) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_check, Call());
@@ -740,14 +740,14 @@ TEST_F(com_ptrTest, get_ValueAndConst_ReturnPointer) {
 // get_owner()
 //
 
-TEST_F(com_ptrTest, getOwner_Empty_ReturnNullptr) {
+TEST_F(com_ptr_Test, getOwner_Empty_ReturnNullptr) {
 	com_ptr<IStream> ptr;
 	IStream* p = ptr.get_owner();
 
 	EXPECT_NULL(p);
 }
 
-TEST_F(com_ptrTest, getOwner_Value_ReturnPointer) {
+TEST_F(com_ptr_Test, getOwner_Value_ReturnPointer) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef()).Times(2);
 	EXPECT_CALL(m_check, Call());
@@ -769,14 +769,14 @@ TEST_F(com_ptrTest, getOwner_Value_ReturnPointer) {
 // get_owner<Q>()
 //
 
-TEST_F(com_ptrTest, getOwnerAndQuery_Empty_ReturnNullptr) {
+TEST_F(com_ptr_Test, getOwnerAndQuery_Empty_ReturnNullptr) {
 	com_ptr<IStream> ptr;
 	IStream* p = ptr.get_owner();
 
 	EXPECT_NULL(p);
 }
 
-TEST_F(com_ptrTest, getOwnerAndQuery_Value_ReturnPointer) {
+TEST_F(com_ptr_Test, getOwnerAndQuery_Value_ReturnPointer) {
 	t::ExpectationSet calls;
 	calls += EXPECT_CALL(m_object, AddRef()).Times(2);
 	calls += EXPECT_CALL(m_object, QueryInterface(IID_IPersistStream, t::_))
@@ -795,7 +795,7 @@ TEST_F(com_ptrTest, getOwnerAndQuery_Value_ReturnPointer) {
 	p->Release();
 }
 
-TEST_F(com_ptrTest, getOwnerAndQuery_ValueWithUnknownInterface_ThrowsException) {
+TEST_F(com_ptr_Test, getOwnerAndQuery_ValueWithUnknownInterface_ThrowsException) {
 	t::ExpectationSet calls;
 	calls += EXPECT_CALL(m_object, AddRef());
 	calls += EXPECT_CALL(m_object, QueryInterface(IID_IPersistStream, t::_))
@@ -818,7 +818,7 @@ TEST_F(com_ptrTest, getOwnerAndQuery_ValueWithUnknownInterface_ThrowsException) 
 // reset
 //
 
-TEST_F(com_ptrTest, reset_EmptyWithDefault_IsEmpty) {
+TEST_F(com_ptr_Test, reset_EmptyWithDefault_IsEmpty) {
 	com_ptr<IStream> ptr;
 
 	ptr.reset();
@@ -826,7 +826,7 @@ TEST_F(com_ptrTest, reset_EmptyWithDefault_IsEmpty) {
 	EXPECT_NULL(ptr);
 }
 
-TEST_F(com_ptrTest, reset_EmptyWithNullptr_IsEmpty) {
+TEST_F(com_ptr_Test, reset_EmptyWithNullptr_IsEmpty) {
 	com_ptr<IStream> ptr;
 
 	ptr.reset(nullptr);
@@ -834,7 +834,7 @@ TEST_F(com_ptrTest, reset_EmptyWithNullptr_IsEmpty) {
 	EXPECT_NULL(ptr);
 }
 
-TEST_F(com_ptrTest, reset_ValueWithDefault_ReferenceIsReleased) {
+TEST_F(com_ptr_Test, reset_ValueWithDefault_ReferenceIsReleased) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_object, Release());
@@ -849,7 +849,7 @@ TEST_F(com_ptrTest, reset_ValueWithDefault_ReferenceIsReleased) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, reset_ValueWithValue_ReferenceIsAdded) {
+TEST_F(com_ptr_Test, reset_ValueWithValue_ReferenceIsAdded) {
 	t::Sequence s;
 	t::ExpectationSet calls;
 	calls += EXPECT_CALL(m_object, AddRef());
@@ -868,7 +868,7 @@ TEST_F(com_ptrTest, reset_ValueWithValue_ReferenceIsAdded) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, reset_ValueWithSameValue_NoChange) {
+TEST_F(com_ptr_Test, reset_ValueWithSameValue_NoChange) {
 	t::InSequence s;
 	// allow with check for self reset and without
 	EXPECT_CALL(m_object, AddRef()).Times(t::Between(1, 2));
@@ -890,7 +890,7 @@ TEST_F(com_ptrTest, reset_ValueWithSameValue_NoChange) {
 // release
 //
 
-TEST_F(com_ptrTest, release_Empty_ReturnNullptr) {
+TEST_F(com_ptr_Test, release_Empty_ReturnNullptr) {
 	com_ptr<IStream> ptr;
 
 	IStream* p = ptr.release();
@@ -899,7 +899,7 @@ TEST_F(com_ptrTest, release_Empty_ReturnNullptr) {
 	EXPECT_NULL(p);
 }
 
-TEST_F(com_ptrTest, release_Value_ReturnPointer) {
+TEST_F(com_ptr_Test, release_Value_ReturnPointer) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_check, Call());
@@ -922,7 +922,7 @@ TEST_F(com_ptrTest, release_Value_ReturnPointer) {
 // swap
 //
 
-TEST_F(com_ptrTest, swap_EmptyWithEmpty_AreEmpty) {
+TEST_F(com_ptr_Test, swap_EmptyWithEmpty_AreEmpty) {
 	com_ptr<IStream> ptr;
 	com_ptr<IStream> oth;
 
@@ -932,7 +932,7 @@ TEST_F(com_ptrTest, swap_EmptyWithEmpty_AreEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST_F(com_ptrTest, swap_ValueWithEmpty_EmptyAndValue) {
+TEST_F(com_ptr_Test, swap_ValueWithEmpty_EmptyAndValue) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_check, Call());
@@ -949,7 +949,7 @@ TEST_F(com_ptrTest, swap_ValueWithEmpty_EmptyAndValue) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, swap_EmptyWithValue_ValueAndEmpty) {
+TEST_F(com_ptr_Test, swap_EmptyWithValue_ValueAndEmpty) {
 	t::InSequence s;
 	EXPECT_CALL(m_other, AddRef());
 	EXPECT_CALL(m_check, Call());
@@ -966,7 +966,7 @@ TEST_F(com_ptrTest, swap_EmptyWithValue_ValueAndEmpty) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, swap_ValueWithValue_ValueAndValue) {
+TEST_F(com_ptr_Test, swap_ValueWithValue_ValueAndValue) {
 	t::ExpectationSet calls;
 	calls += EXPECT_CALL(m_object, AddRef());
 	calls += EXPECT_CALL(m_other, AddRef());
@@ -991,14 +991,14 @@ TEST_F(com_ptrTest, swap_ValueWithValue_ValueAndValue) {
 // hash
 //
 
-TEST_F(com_ptrTest, hash_Empty_ReturnHash) {
+TEST_F(com_ptr_Test, hash_Empty_ReturnHash) {
 	com_ptr<IStream> ptr;
 	size_t h = ptr.hash();
 
 	EXPECT_EQ(std::hash<IStream*>{}(ptr.get()), h);
 }
 
-TEST_F(com_ptrTest, hash_Value_ReturnHash) {
+TEST_F(com_ptr_Test, hash_Value_ReturnHash) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_check, Call());
@@ -1017,7 +1017,7 @@ TEST_F(com_ptrTest, hash_Value_ReturnHash) {
 // operator!=(const com_ptr<T>&, const com_ptr<U>&)
 //
 
-TEST_F(com_ptrTest, opEquals_EmptyAndEmpty_Equal) {
+TEST_F(com_ptr_Test, opEquals_EmptyAndEmpty_Equal) {
 	com_ptr<IStream> ptr;
 	com_ptr<IStream> oth;
 
@@ -1028,7 +1028,7 @@ TEST_F(com_ptrTest, opEquals_EmptyAndEmpty_Equal) {
 	EXPECT_FALSE(oth != ptr);
 }
 
-TEST_F(com_ptrTest, opEquals_EmptyAndValue_NotEqual) {
+TEST_F(com_ptr_Test, opEquals_EmptyAndValue_NotEqual) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_check, Call());
@@ -1046,7 +1046,7 @@ TEST_F(com_ptrTest, opEquals_EmptyAndValue_NotEqual) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, opEquals_ValueAndValue_NotEqual) {
+TEST_F(com_ptr_Test, opEquals_ValueAndValue_NotEqual) {
 	t::ExpectationSet calls;
 	calls += EXPECT_CALL(m_object, AddRef());
 	calls += EXPECT_CALL(m_other, AddRef());
@@ -1066,7 +1066,7 @@ TEST_F(com_ptrTest, opEquals_ValueAndValue_NotEqual) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, opEquals_ValueAndSameValue_Equal) {
+TEST_F(com_ptr_Test, opEquals_ValueAndSameValue_Equal) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef()).Times(2);
 	EXPECT_CALL(m_check, Call());
@@ -1084,7 +1084,7 @@ TEST_F(com_ptrTest, opEquals_ValueAndSameValue_Equal) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, opEquals_ValueAndValueOfDifferentType_NotEqual) {
+TEST_F(com_ptr_Test, opEquals_ValueAndValueOfDifferentType_NotEqual) {
 	t::ExpectationSet calls;
 	calls += EXPECT_CALL(m_object, AddRef());
 	calls += EXPECT_CALL(m_other, AddRef());
@@ -1104,7 +1104,7 @@ TEST_F(com_ptrTest, opEquals_ValueAndValueOfDifferentType_NotEqual) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, opEquals_ValueAndSameValueOfDifferentType_ReturnTrue) {
+TEST_F(com_ptr_Test, opEquals_ValueAndSameValueOfDifferentType_ReturnTrue) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef()).Times(2);
 	EXPECT_CALL(m_check, Call());
@@ -1130,7 +1130,7 @@ TEST_F(com_ptrTest, opEquals_ValueAndSameValueOfDifferentType_ReturnTrue) {
 // operator!=(U* p, const com_ptr<T>&)
 //
 
-TEST_F(com_ptrTest, opEqualsPointer_EmptyAndNullptr_Equal) {
+TEST_F(com_ptr_Test, opEqualsPointer_EmptyAndNullptr_Equal) {
 	com_ptr<IStream> ptr;
 	IStream* p = nullptr;
 
@@ -1141,7 +1141,7 @@ TEST_F(com_ptrTest, opEqualsPointer_EmptyAndNullptr_Equal) {
 	EXPECT_FALSE(p != ptr);
 }
 
-TEST_F(com_ptrTest, opEqualsPointer_EmptyAndPointer_NotEqual) {
+TEST_F(com_ptr_Test, opEqualsPointer_EmptyAndPointer_NotEqual) {
 	com_ptr<IStream> ptr;
 	IStream* p = &m_other;
 
@@ -1152,7 +1152,7 @@ TEST_F(com_ptrTest, opEqualsPointer_EmptyAndPointer_NotEqual) {
 	EXPECT_TRUE(p != ptr);
 }
 
-TEST_F(com_ptrTest, opEqualsPointer_ValueAndNullptr_NotEqual) {
+TEST_F(com_ptr_Test, opEqualsPointer_ValueAndNullptr_NotEqual) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_check, Call());
@@ -1170,7 +1170,7 @@ TEST_F(com_ptrTest, opEqualsPointer_ValueAndNullptr_NotEqual) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, opEqualsPointer_ValueAndPointer_NotEqual) {
+TEST_F(com_ptr_Test, opEqualsPointer_ValueAndPointer_NotEqual) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_check, Call());
@@ -1188,7 +1188,7 @@ TEST_F(com_ptrTest, opEqualsPointer_ValueAndPointer_NotEqual) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, opEqualsPointer_ValueAndSamePointer_Equal) {
+TEST_F(com_ptr_Test, opEqualsPointer_ValueAndSamePointer_Equal) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_check, Call());
@@ -1206,7 +1206,7 @@ TEST_F(com_ptrTest, opEqualsPointer_ValueAndSamePointer_Equal) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, opEqualsPointer_ValueAndSamePointerOfDifferentType_Equal) {
+TEST_F(com_ptr_Test, opEqualsPointer_ValueAndSamePointerOfDifferentType_Equal) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_check, Call());
@@ -1232,7 +1232,7 @@ TEST_F(com_ptrTest, opEqualsPointer_ValueAndSamePointerOfDifferentType_Equal) {
 // operator!=(std::nullptr_t, const com_ptr<T>&)
 //
 
-TEST_F(com_ptrTest, opEqualsNullptr_Empty_Equal) {
+TEST_F(com_ptr_Test, opEqualsNullptr_Empty_Equal) {
 	com_ptr<IStream> ptr;
 
 	EXPECT_TRUE(ptr == nullptr);
@@ -1242,7 +1242,7 @@ TEST_F(com_ptrTest, opEqualsNullptr_Empty_Equal) {
 	EXPECT_FALSE(nullptr != ptr);
 }
 
-TEST_F(com_ptrTest, opEqualsNullptr_Value_NotEqual) {
+TEST_F(com_ptr_Test, opEqualsNullptr_Value_NotEqual) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_check, Call());
@@ -1264,7 +1264,7 @@ TEST_F(com_ptrTest, opEqualsNullptr_Value_NotEqual) {
 // std::swap
 //
 
-TEST_F(com_ptrTest, stdSwap_EmptyWithEmpty_AreEmpty) {
+TEST_F(com_ptr_Test, stdSwap_EmptyWithEmpty_AreEmpty) {
 	com_ptr<IStream> ptr;
 	com_ptr<IStream> oth;
 
@@ -1274,7 +1274,7 @@ TEST_F(com_ptrTest, stdSwap_EmptyWithEmpty_AreEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST_F(com_ptrTest, stdSwap_ValueWithEmpty_EmptyAndValue) {
+TEST_F(com_ptr_Test, stdSwap_ValueWithEmpty_EmptyAndValue) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_check, Call());
@@ -1291,7 +1291,7 @@ TEST_F(com_ptrTest, stdSwap_ValueWithEmpty_EmptyAndValue) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, stdSwap_EmptyWithValue_ValueAndEmpty) {
+TEST_F(com_ptr_Test, stdSwap_EmptyWithValue_ValueAndEmpty) {
 	t::InSequence s;
 	EXPECT_CALL(m_other, AddRef());
 	EXPECT_CALL(m_check, Call());
@@ -1308,7 +1308,7 @@ TEST_F(com_ptrTest, stdSwap_EmptyWithValue_ValueAndEmpty) {
 	m_check.Call();
 }
 
-TEST_F(com_ptrTest, stdSwap_ValueWithValue_ValueAndValue) {
+TEST_F(com_ptr_Test, stdSwap_ValueWithValue_ValueAndValue) {
 	t::ExpectationSet calls;
 	calls += EXPECT_CALL(m_object, AddRef());
 	calls += EXPECT_CALL(m_other, AddRef());
@@ -1333,14 +1333,14 @@ TEST_F(com_ptrTest, stdSwap_ValueWithValue_ValueAndValue) {
 // hash
 //
 
-TEST_F(com_ptrTest, stdHash_Empty_ReturnHash) {
+TEST_F(com_ptr_Test, stdHash_Empty_ReturnHash) {
 	com_ptr<IStream> ptr;
 	size_t h = std::hash<com_ptr<IStream>>{}(ptr);
 
 	EXPECT_EQ(std::hash<IStream*>{}(ptr.get()), h);
 }
 
-TEST_F(com_ptrTest, stdHash_Value_ReturnHash) {
+TEST_F(com_ptr_Test, stdHash_Value_ReturnHash) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_check, Call());
@@ -1358,7 +1358,7 @@ TEST_F(com_ptrTest, stdHash_Value_ReturnHash) {
 // make_com
 //
 
-TEST_F(com_ptrTest, makeCom_Interface_ReturnObject) {
+TEST_F(com_ptr_Test, makeCom_Interface_ReturnObject) {
 	const ULONG objectCount = COM::GetObjectCount();
 
 	com_ptr<IFoo> ptr = make_com<IFoo, Foo>();
@@ -1368,7 +1368,7 @@ TEST_F(com_ptrTest, makeCom_Interface_ReturnObject) {
 	EXPECT_EQ(objectCount + 1, COM::GetObjectCount());
 }
 
-TEST_F(com_ptrTest, makeCom_InterfaceWithArgs_ReturnObject) {
+TEST_F(com_ptr_Test, makeCom_InterfaceWithArgs_ReturnObject) {
 	const ULONG objectCount = COM::GetObjectCount();
 
 	com_ptr<IFoo> ptr = make_com<IFoo, Foo>(7);

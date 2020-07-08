@@ -39,7 +39,7 @@ namespace m3c::test {
 // UUID
 //
 
-TEST(types_fmtTest, UUID_Default_PrintValue) {
+TEST(types_fmt_Test, UUID_Default_PrintValue) {
 	std::string str;
 	{
 		const UUID arg = {0xa5063846, 0xd67, 0x4140, {0x85, 0x62, 0xaf, 0x1a, 0xaf, 0x99, 0xa3, 0x41}};
@@ -54,7 +54,7 @@ TEST(types_fmtTest, UUID_Default_PrintValue) {
 // PROPVARIANT
 //
 
-TEST(types_fmtTest, PROPVARIANT_IsBooleanTrue_PrintMinus1) {
+TEST(types_fmt_Test, PROPVARIANT_IsBooleanTrue_PrintMinus1) {
 	std::string str;
 	{
 		PROPVARIANT arg;
@@ -65,7 +65,7 @@ TEST(types_fmtTest, PROPVARIANT_IsBooleanTrue_PrintMinus1) {
 	EXPECT_EQ(str, "(BOOL: -1)");
 }
 
-TEST(types_fmtTest, PROPVARIANT_IsInt16_PrintI2) {
+TEST(types_fmt_Test, PROPVARIANT_IsInt16_PrintI2) {
 	std::string str;
 	{
 		PROPVARIANT arg;
@@ -77,7 +77,7 @@ TEST(types_fmtTest, PROPVARIANT_IsInt16_PrintI2) {
 }
 
 
-TEST(types_fmtTest, PROPVARIANT_IsStringVector_PrintVector) {
+TEST(types_fmt_Test, PROPVARIANT_IsStringVector_PrintVector) {
 	std::string str;
 	{
 		PROPVARIANT arg;
@@ -93,7 +93,7 @@ TEST(types_fmtTest, PROPVARIANT_IsStringVector_PrintVector) {
 // PropVariant
 //
 
-TEST(types_fmtTest, PropVariant_IsBooleanTrue_PrintMinus1) {
+TEST(types_fmt_Test, PropVariant_IsBooleanTrue_PrintMinus1) {
 	std::string str;
 	{
 		PropVariant arg;
@@ -104,7 +104,7 @@ TEST(types_fmtTest, PropVariant_IsBooleanTrue_PrintMinus1) {
 	EXPECT_EQ(str, "(BOOL: -1)");
 }
 
-TEST(types_fmtTest, PropVariant_IsInt16_PrintI2) {
+TEST(types_fmt_Test, PropVariant_IsInt16_PrintI2) {
 	std::string str;
 	{
 		PropVariant arg;
@@ -115,7 +115,7 @@ TEST(types_fmtTest, PropVariant_IsInt16_PrintI2) {
 	EXPECT_EQ(str, "(I2: 37)");
 }
 
-TEST(types_fmtTest, PropVariant_IsStringVector_PrintVector) {
+TEST(types_fmt_Test, PropVariant_IsStringVector_PrintVector) {
 	std::string str;
 	{
 		PropVariant arg;
@@ -131,7 +131,7 @@ TEST(types_fmtTest, PropVariant_IsStringVector_PrintVector) {
 // IUnknown
 //
 
-TEST(types_fmtTest, IUnknown_Empty_PrintNull) {
+TEST(types_fmt_Test, IUnknown_Empty_PrintNull) {
 	std::string str;
 	{
 		com_ptr<IUnknown> ptr;
@@ -141,7 +141,7 @@ TEST(types_fmtTest, IUnknown_Empty_PrintNull) {
 	EXPECT_EQ("0x0", str);
 }
 
-TEST(types_fmtTest, IUnknown_Value_PrintDefault) {
+TEST(types_fmt_Test, IUnknown_Value_PrintDefault) {
 	COM_MOCK_DECLARE(object, t::StrictMock<m4t::IStream_Mock>);
 	COM_MOCK_SETUP(object, IStream, ISequentialStream);
 
@@ -157,7 +157,7 @@ TEST(types_fmtTest, IUnknown_Value_PrintDefault) {
 	COM_MOCK_VERIFY(object);
 }
 
-TEST(types_fmtTest, comptrIUnknown_Empty_PrintNull) {
+TEST(types_fmt_Test, comptrIUnknown_Empty_PrintNull) {
 	std::string str;
 	{
 		com_ptr<IUnknown> ptr;
@@ -167,7 +167,7 @@ TEST(types_fmtTest, comptrIUnknown_Empty_PrintNull) {
 	EXPECT_EQ("0x0", str);
 }
 
-TEST(types_fmtTest, comptrIUnknown_Value_PrintDefault) {
+TEST(types_fmt_Test, comptrIUnknown_Value_PrintDefault) {
 	COM_MOCK_DECLARE(object, t::StrictMock<m4t::IStream_Mock>);
 	COM_MOCK_SETUP(object, IStream, ISequentialStream);
 
@@ -189,7 +189,7 @@ TEST(types_fmtTest, comptrIUnknown_Value_PrintDefault) {
 // IStream
 //
 
-TEST(types_fmtTest, IStream_Empty_PrintNull) {
+TEST(types_fmt_Test, IStream_Empty_PrintNull) {
 	std::string str;
 	{
 		com_ptr<IStream> ptr;
@@ -199,7 +199,7 @@ TEST(types_fmtTest, IStream_Empty_PrintNull) {
 	EXPECT_EQ("0x0", str);
 }
 
-TEST(types_fmtTest, IStream_Value_PrintName) {
+TEST(types_fmt_Test, IStream_Value_PrintName) {
 	COM_MOCK_DECLARE(object, t::StrictMock<m4t::IStream_Mock>);
 	COM_MOCK_SETUP(object, IStream, ISequentialStream);
 
@@ -217,7 +217,7 @@ TEST(types_fmtTest, IStream_Value_PrintName) {
 	COM_MOCK_VERIFY(object);
 }
 
-TEST(types_fmtTest, comptrIStream_Empty_PrintNull) {
+TEST(types_fmt_Test, comptrIStream_Empty_PrintNull) {
 	std::string str;
 	{
 		com_ptr<IStream> ptr;
@@ -227,7 +227,7 @@ TEST(types_fmtTest, comptrIStream_Empty_PrintNull) {
 	EXPECT_EQ("0x0", str);
 }
 
-TEST(types_fmtTest, comptrIStream_Value_PrintName) {
+TEST(types_fmt_Test, comptrIStream_Value_PrintName) {
 	COM_MOCK_DECLARE(object, t::StrictMock<m4t::IStream_Mock>);
 	COM_MOCK_SETUP(object, IStream, ISequentialStream);
 
@@ -250,7 +250,7 @@ TEST(types_fmtTest, comptrIStream_Value_PrintName) {
 // PROPERTYKEY
 //
 
-TEST(types_fmtTest, PROPERTYKEY_IsValue_PrintName) {
+TEST(types_fmt_Test, PROPERTYKEY_IsValue_PrintName) {
 	std::string str;
 	{
 		REFPROPERTYKEY arg = PKEY_Contact_BusinessAddress;
@@ -265,7 +265,7 @@ TEST(types_fmtTest, PROPERTYKEY_IsValue_PrintName) {
 // WICRect
 //
 
-TEST(types_fmtTest, WICRect_Default_PrintDimensions) {
+TEST(types_fmt_Test, WICRect_Default_PrintDimensions) {
 	std::string str;
 	{
 		WICRect arg = {10, 20, 320, 160};
@@ -275,7 +275,7 @@ TEST(types_fmtTest, WICRect_Default_PrintDimensions) {
 	EXPECT_EQ("(@(10, 20) / 320 x 160)", str);
 }
 
-TEST(types_fmtTest, WICRect_AsHex_PrintDimensions) {
+TEST(types_fmt_Test, WICRect_AsHex_PrintDimensions) {
 	std::string str;
 	{
 		WICRect arg = {10, 20, 320, 160};
