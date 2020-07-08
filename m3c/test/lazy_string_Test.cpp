@@ -16,8 +16,6 @@ limitations under the License.
 
 #include "m3c/lazy_string.h"
 
-#include "m3c/string_old.h"
-
 #include <gtest/gtest.h>
 #include <m4t/m4t.h>
 
