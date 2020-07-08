@@ -65,8 +65,19 @@ llamalog::LogLine& operator<<(llamalog::LogLine& logLine, IUnknown* arg);
 
 llamalog::LogLine& operator<<(llamalog::LogLine& logLine, IStream* arg);
 
+
 //
 // PROPERTYKEY
 //
 
 llamalog::LogLine& operator<<(llamalog::LogLine& logLine, const PROPERTYKEY& arg);
+
+
+//
+// FILE_ID_128
+//
+
+inline llamalog::LogLine& operator<<(llamalog::LogLine& logLine, const FILE_ID_128& arg) {
+	static_assert(sizeof(FILE_ID_128) == sizeof(UUID));
+	return operator<<(logLine, *reinterpret_cast<const UUID*>(&arg));
+}

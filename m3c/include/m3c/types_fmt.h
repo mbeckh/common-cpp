@@ -227,3 +227,17 @@ public:
 private:
 	std::string m_format;  ///< @brief The format pattern for all four values.
 };
+
+
+/// @brief Specialization of `fmt::formatter` for a `FILE_ID_128`.
+template <>
+struct fmt::formatter<FILE_ID_128> : public fmt::formatter<UUID> {
+	/// @brief Format the `FILE_ID_128`.
+	/// @param arg A `FILE_ID_128`.
+	/// @param ctx see `fmt::formatter::format`.
+	/// @return see `fmt::formatter::format`.
+	fmt::format_context::iterator format(const FILE_ID_128& arg, fmt::format_context& ctx) {
+		static_assert(sizeof(FILE_ID_128) == sizeof(UUID));
+		__super::format(*reinterpret_cast<const UUID*>(&arg), ctx);
+	}
+};
