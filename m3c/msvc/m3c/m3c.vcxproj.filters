@@ -16,6 +16,12 @@
     <Filter Include="Header Files\m3c">
       <UniqueIdentifier>{74076a42-d3eb-437a-8e2a-fe70ab6a0559}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{55b6cbb9-c57f-41d5-84e7-647bb588cffb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Documentation">
+      <UniqueIdentifier>{8d06a240-e35f-4ee2-b644-f360260ad077}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -98,5 +104,28 @@
     <ClCompile Include="..\..\src\ClassFactory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\CHANGES.md">
+      <Filter>Documentation</Filter>
+    </None>
+    <None Include="..\..\..\README.md">
+      <Filter>Documentation</Filter>
+    </None>
+    <None Include="..\..\..\.clang-format">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="..\..\..\.clang-tidy">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="..\..\..\.codacy.yml">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="..\..\..\.editorconfig">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="..\..\..\.github\workflows\build.yml">
+      <Filter>Configuration</Filter>
+    </None>
   </ItemGroup>
 </Project>

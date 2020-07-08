@@ -52,6 +52,15 @@
     <ClCompile Include="..\..\src\string_encode.cpp" />
     <ClCompile Include="..\..\src\unique_ptr.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\.clang-format" />
+    <None Include="..\..\..\.clang-tidy" />
+    <None Include="..\..\..\.codacy.yml" />
+    <None Include="..\..\..\.editorconfig" />
+    <None Include="..\..\..\.github\workflows\build.yml" />
+    <None Include="..\..\..\CHANGES.md" />
+    <None Include="..\..\..\README.md" />
+  </ItemGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <PreprocessorDefinitions>LLAMALOG_LEVEL_TRACE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
