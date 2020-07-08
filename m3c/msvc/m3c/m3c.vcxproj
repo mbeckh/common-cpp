@@ -26,6 +26,7 @@
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClInclude Include="..\..\include\m3c\ClassFactory.h" />
+    <ClInclude Include="..\..\include\m3c\COM.h" />
     <ClInclude Include="..\..\include\m3c\types_fmt.h" />
     <ClInclude Include="..\..\include\m3c\ComObject.h" />
     <ClInclude Include="..\..\include\m3c\types_log.h" />

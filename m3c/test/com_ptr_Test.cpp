@@ -17,6 +17,7 @@ limitations under the License.
 #include "m3c/com_ptr.h"
 
 #include "Foo.h"
+#include "m3c/COM.h"
 #include "m3c/ComObject.h"
 #include "m3c/exception.h"
 
@@ -1358,23 +1359,23 @@ TEST_F(com_ptrTest, stdHash_Value_ReturnHash) {
 //
 
 TEST_F(com_ptrTest, makeCom_Interface_ReturnObject) {
-	const ULONG objectCount = AbstractComObject::GetObjectCount();
+	const ULONG objectCount = COM::GetObjectCount();
 
 	com_ptr<IFoo> ptr = make_com<IFoo, Foo>();
 
 	EXPECT_NOT_NULL(ptr);
 	EXPECT_EQ(0, ptr->GetValue());
-	EXPECT_EQ(objectCount + 1, AbstractComObject::GetObjectCount());
+	EXPECT_EQ(objectCount + 1, COM::GetObjectCount());
 }
 
 TEST_F(com_ptrTest, makeCom_InterfaceWithArgs_ReturnObject) {
-	const ULONG objectCount = AbstractComObject::GetObjectCount();
+	const ULONG objectCount = COM::GetObjectCount();
 
 	com_ptr<IFoo> ptr = make_com<IFoo, Foo>(7);
 
 	EXPECT_NOT_NULL(ptr);
 	EXPECT_EQ(7, ptr->GetValue());
-	EXPECT_EQ(objectCount + 1, AbstractComObject::GetObjectCount());
+	EXPECT_EQ(objectCount + 1, COM::GetObjectCount());
 }
 
 }  // namespace m3c::test

@@ -18,6 +18,7 @@ limitations under the License.
 
 #include "m3c/ClassFactory.h"
 
+#include "m3c/COM.h"
 #include "m3c/ComObject.h"
 #include "m3c/exception.h"
 #include "m3c/finally.h"
@@ -25,7 +26,7 @@ limitations under the License.
 
 #include <llamalog/llamalog.h>
 
-namespace m3c {
+namespace m3c::internal {
 
 //
 // IClassFactory
@@ -57,8 +58,8 @@ HRESULT AbstractClassFactory::CreateInstance(_In_opt_ IUnknown* pOuter, REFIID r
 }
 
 HRESULT AbstractClassFactory::LockServer(BOOL lock) noexcept {
-	LOG_TRACE_RESULT(lock ? InterlockedIncrement(&m_lockCount) : InterlockedDecrement(&m_lockCount), "lock={1}, locks={0}");
+	LOG_TRACE_RESULT(lock ? InterlockedIncrement(&COM::m_lockCount) : InterlockedDecrement(&COM::m_lockCount), "lock={1}, locks={0}");
 	return S_OK;
 }
 
-}  // namespace m3c
+}  // namespace m3c::internal

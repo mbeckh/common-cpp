@@ -37,7 +37,7 @@ limitations under the License.
 struct IStream;
 
 namespace llamalog {
-class LogLine;
+class LogLine;  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 }  // namespace llamalog
 
 
@@ -54,7 +54,7 @@ private:
 	static_assert(std::is_base_of_v<IUnknown, T>);
 
 	/// @brief A helper class to block access to the methods of `IUnknown`.
-	class Restricted : public T {
+	class restricted_ptr : public T {
 	private:
 		using T::AddRef;
 		using T::QueryInterface;
@@ -66,7 +66,7 @@ public:
 	constexpr com_ptr() noexcept = default;
 
 	/// @brief Creates a new instance increasing the reference count.
-	/// @param c Another `com_ptr`.
+	/// @param ptr Another `com_ptr`.
 	com_ptr(const com_ptr& ptr) noexcept
 		: m_ptr(ptr.get_owner()) {
 		// empty
@@ -78,7 +78,7 @@ public:
 	/// @param ptr Another instance of a different type.
 	template <typename S>
 	com_ptr(const com_ptr<S>& ptr)
-		: m_ptr(ptr.get_owner<T>()) {
+		: m_ptr(ptr.template get_owner<T>()) {
 		// empty
 	}
 
@@ -104,7 +104,7 @@ private:
 	/// @brief Assigns an interface pointer without increasing the reference count.
 	/// This constructor is required for `make_com`.
 	/// @param p The native pointer.
-	explicit com_ptr(_In_ AbstractComObject* const p)
+	explicit com_ptr(_In_ internal::AbstractComObject* const p)
 		: m_ptr(p->QueryInterface<T>()) {
 		// empty
 	}
@@ -134,7 +134,7 @@ public:
 	template <typename S>
 	com_ptr& operator=(const com_ptr<S>& ptr) {
 		// first query then release for strong exception guarantee
-		T* const p = ptr.get_owner<T>();
+		T* const p = ptr.template get_owner<T>();
 		com_release();
 		m_ptr = p;
 		return *this;
@@ -159,13 +159,13 @@ public:
 	/// @brief Allows the smart pointer to act as the interface.
 	/// @remarks There is no `const` overload because COM does not use `const` methods.
 	/// @return The native pointer to the interface.
-	[[nodiscard]] _Ret_maybenull_ Restricted* operator->() const noexcept {
-		return static_cast<Restricted*>(m_ptr);
+	[[nodiscard]] _Ret_maybenull_ restricted_ptr* operator->() const noexcept {
+		return static_cast<restricted_ptr*>(m_ptr);
 	}
 
 	/// @brief An invalid * operator.
 	/// @note I've never seen anyone using references of COM objects or COM objects on the stack. So the * operator does not compile.
-	_Ret_maybenull_ Restricted& operator*() const noexcept {
+	_Ret_maybenull_ restricted_ptr& operator*() const noexcept {
 #ifndef __clang_analyzer__
 		// clang can't handle this
 		static_assert(false, "Are you sure you know what you're doing?");
@@ -203,7 +203,7 @@ public:
 	}
 
 	/// @brief Returns a native pointer as a new reference to a different interface using `QueryInterface`.
-	/// @detaisl The method calls `AddRef` internally. This is the generic version of the method.
+	/// @details The method calls `AddRef` internally. This is the generic version of the method.
 	/// If the instance contains no object, the function returns `nullptr`.
 	/// @tparam Q The type of the requested interface.
 	/// @return The native pointer to the interface or `nullptr` if this `com_ptr` is empty.
@@ -211,7 +211,7 @@ public:
 	[[nodiscard]] _Ret_maybenull_ Q* get_owner() const {
 		if (m_ptr) {
 			const IID iid = __uuidof(Q);
-			Q* p;
+			Q* p;  // NOLINT(cppcoreguidelines-init-variables): Out parameter for QueryInterface.
 			M3C_HRESULT_TO_EXCEPTION(m_ptr->QueryInterface(iid, (void**) &p), "QueryInterface {}", iid);
 			return p;
 		}
@@ -271,7 +271,7 @@ private:
 	T* m_ptr = nullptr;  ///< @brief The native pointer wrapped by this class.
 
 	template <typename T, typename C, typename... Args>
-	friend typename std::enable_if_t<std::is_base_of_v<AbstractComObject, C>, com_ptr<T>> make_com(Args&&... args);
+	friend typename std::enable_if_t<std::is_base_of_v<internal::AbstractComObject, C>, com_ptr<T>> make_com(Args&&... args);
 };
 
 
@@ -393,8 +393,8 @@ template <typename T>
 /// @param args The arguments for the constructor of @p C.
 /// @return A `com_ptr` holding a newly created COM object.
 template <typename T, typename C, typename... Args>
-[[nodiscard]] inline typename std::enable_if_t<std::is_base_of_v<AbstractComObject, C>, com_ptr<T>> make_com(Args&&... args) {
-	AbstractComObject* const pObject = new C(std::forward<Args>(args)...);
+[[nodiscard]] inline typename std::enable_if_t<std::is_base_of_v<internal::AbstractComObject, C>, com_ptr<T>> make_com(Args&&... args) {
+	internal::AbstractComObject* const pObject = new C(std::forward<Args>(args)...);
 	auto f = finally([pObject]() noexcept {
 		pObject->Release();
 	});
@@ -427,7 +427,7 @@ llamalog::LogLine& operator<<(llamalog::LogLine& logLine, m3c::com_ptr<IUnknown>
 llamalog::LogLine& operator<<(llamalog::LogLine& logLine, m3c::com_ptr<IStream>& arg);
 
 /// @brief Add the value of the smart pointer to a `llamalog::LogLine`.
-/// @tparam The type managed by the COM pointer.
+/// @tparam T The type managed by the COM pointer.
 /// @param logLine The output target.
 /// @param arg A `com_ptr`.
 template <typename T>

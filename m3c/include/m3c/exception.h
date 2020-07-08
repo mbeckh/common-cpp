@@ -29,22 +29,16 @@ limitations under the License.
 
 namespace m3c {
 
-/**
-The singleton for windows errors returned from `GetLastError`.
-@return The singleton for this category.
-*/
+/// @brief The singleton for windows errors returned from `GetLastError`.
+/// @return The singleton for this category.
 const std::error_category& win32_category() noexcept;
 
-/**
-The singleton for RPC errors returned as `RPC_STATUS`.
-@return The singleton for this category.
-*/
+/// @brief The singleton for RPC errors returned as `RPC_STATUS`.
+/// @return The singleton for this category.
 const std::error_category& rpc_category() noexcept;
 
-/**
-The singleton for `HRESULT` errors.
-@return The singleton for this category.
-*/
+/// @brief The singleton for `HRESULT` errors.
+/// @return The singleton for this category.
 const std::error_category& com_category() noexcept;
 
 
@@ -53,7 +47,7 @@ class windows_exception : public lg::system_error {
 public:
 	/// @brief Creates the exception.
 	/// @param errorCode The windows error code returned by `GetLastError`.
-	windows_exception(const DWORD errorCode)
+	explicit windows_exception(const DWORD errorCode)
 		: windows_exception(errorCode, nullptr) {
 		// empty
 	}
@@ -73,7 +67,7 @@ class rpc_exception : public lg::system_error {
 public:
 	/// @brief Creates the exception.
 	/// @param errorCode The windows error code returned from RPC functions.
-	rpc_exception(const RPC_STATUS errorCode)
+	explicit rpc_exception(const RPC_STATUS errorCode)
 		: rpc_exception(errorCode, nullptr) {
 		// empty
 	}
@@ -93,7 +87,7 @@ class com_exception : public lg::system_error {
 public:
 	/// @brief Creates the exception.
 	/// @param hr The `HRESULT` value.
-	com_exception(const HRESULT hr)
+	explicit com_exception(const HRESULT hr)
 		: com_exception(hr, nullptr) {
 		// empty
 	}
@@ -114,16 +108,14 @@ public:
 		// empty
 	}
 
-	/**
-	Creates the exception with `HRESULT` value of `E_INVALIDARG`.
-	@param arg The name of the invalid argument.
-	*/
-	com_invalid_argument_exception(_In_opt_z_ const char* const arg)
+	/// @brief Creates the exception with `HRESULT` value of `E_INVALIDARG`.
+	/// @param arg The name of the invalid argument.
+	explicit com_invalid_argument_exception(_In_opt_z_ const char* const arg)
 		: com_invalid_argument_exception(E_INVALIDARG, arg) {
 		// empty
 	}
 
-	com_invalid_argument_exception(const HRESULT hr)
+	explicit com_invalid_argument_exception(const HRESULT hr)
 		: com_invalid_argument_exception(hr, nullptr) {
 		// empty
 	}
@@ -138,27 +130,33 @@ namespace internal {
 
 /// @brief Conversion function if the global log level is set to `DEBUG` or lower.
 /// @remarks The function is always compiled to be available for testing.
-/// @param message The log message pattern.
+/// @param file The name of the current source file.
+/// @param line The currently source code line.
+/// @param function The name of the current function.
 /// @param thunk A function that receives @p log, the priority, the message and the exception and calls @p log accordingly.
 /// @param log A function that logs a message at the respective level.
 /// @return The HRESULT as described for `#ExceptionToHRESULT`.
-HRESULT ExceptionToHRESULT_DEBUG(_In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, _In_ void (*thunk)(_In_opt_ void*, llamalog::Priority, _In_z_ const char*, std::uint32_t, _In_z_ const char*, const std::exception&), _In_opt_ void* log) noexcept;
+HRESULT ExceptionToHRESULT_DEBUG(_In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, _In_ void (*thunk)(_In_opt_ void*, llamalog::Priority, _In_z_ const char*, std::uint32_t, _In_z_ const char*, const std::exception&), _In_opt_ void* log) noexcept;  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 
 /// @brief Conversion function if the global log level is set higher than `DEBUG` and up to `ERROR`.
 /// @remarks The function is always compiled to be available for testing.
-/// @param message The log message pattern.
+/// @param file The name of the current source file.
+/// @param line The currently source code line.
+/// @param function The name of the current function.
 /// @param thunk A function that receives @p log, the priority, the message and the exception and calls @p log accordingly.
 /// @param log A function that logs a message at level `llamalog::Priority::kError`.
 /// @return The HRESULT as described for `#ExceptionToHRESULT`.
-HRESULT ExceptionToHRESULT_ERROR(_In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, _In_ void (*thunk)(_In_opt_ void*, llamalog::Priority, _In_z_ const char*, std::uint32_t, _In_z_ const char*, const std::exception&), _In_opt_ void* log) noexcept;
+HRESULT ExceptionToHRESULT_ERROR(_In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, _In_ void (*thunk)(_In_opt_ void*, llamalog::Priority, _In_z_ const char*, std::uint32_t, _In_z_ const char*, const std::exception&), _In_opt_ void* log) noexcept;  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 
 /// @brief Conversion function if the global log level is set to `FATAL`.
 /// @remarks The function is always compiled to be available for testing.
 /// @return The HRESULT as described for `#ExceptionToHRESULT`.
-HRESULT ExceptionToHRESULT_FATAL() noexcept;
+HRESULT ExceptionToHRESULT_FATAL() noexcept;  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 
 
 /// @brief Helper for `#ExceptionToHRESULT` to make testing easier.
+/// @details @internal The functions `#CallExceptionToHRESULT_DEBUG`, `#CallExceptionToHRESULT_ERROR` and
+/// `#CallExceptionToHRESULT_FATAL` MUST share the same signature for use in `#ExceptionToHRESULT`.
 /// @tparam T The types of the message arguments.
 /// @param file The name of the current source file.
 /// @param line The currently source code line.
@@ -166,20 +164,22 @@ HRESULT ExceptionToHRESULT_FATAL() noexcept;
 /// @param message The pattern for the log message. The exception is added as the **last** argument.
 /// @param args Arguments to append to log messages.
 /// @return The `HRESULT` value.
-/// @copyright The function uses a trick that allows calling a binding lambda using a function pointer. It is published
+/// @copyright The function uses a trick that allows calling a binding lambda to use a function pointer. It is published
 /// by Joaquín M López Muñoz at http://bannalia.blogspot.com/2016/07/passing-capturing-c-lambda-functions-as.html.
 template <typename... T>
-[[nodiscard]] HRESULT CallExceptionToHRESULT_DEBUG(_In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, _In_z_ const char* message, T&&... args) noexcept {
-	auto log = [message, args...](const llamalog::Priority priority, _In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, const std::exception& e) {
+[[nodiscard]] HRESULT CallExceptionToHRESULT_DEBUG(_In_z_ const char* const file, const std::uint32_t line, _In_z_ const char* const function, _In_z_ const char* const message, T&&... args) noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
+	auto log = [message, args...](const llamalog::Priority priority, _In_z_ const char* const file, const std::uint32_t line, _In_z_ const char* const function, const std::exception& e) {
 		llamalog::Log(priority, file, line, function, message, std::forward<T>(args)..., e);
 	};
-	auto thunk = [](_In_ void* p, const llamalog::Priority priority, _In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, const std::exception& e) {
+	auto thunk = [](_In_ void* const p, const llamalog::Priority priority, _In_z_ const char* const file, const std::uint32_t line, _In_z_ const char* const function, const std::exception& e) {
 		(*static_cast<decltype(log)*>(p))(priority, file, line, function, e);
 	};
 	return ExceptionToHRESULT_DEBUG(file, line, function, thunk, &log);
 }
 
 /// @brief Helper for `#ExceptionToHRESULT` to make testing easier.
+/// @details @internal The functions `#CallExceptionToHRESULT_DEBUG`, `#CallExceptionToHRESULT_ERROR` and
+/// `#CallExceptionToHRESULT_FATAL` MUST share the same signature for use in `#ExceptionToHRESULT`.
 /// @tparam T The types of the message arguments.
 /// @param file The name of the current source file.
 /// @param line The currently source code line.
@@ -187,20 +187,22 @@ template <typename... T>
 /// @param message The pattern for the log message. The exception is added as the **last** argument.
 /// @param args Arguments to append to log messages.
 /// @return The `HRESULT` value.
-/// @copyright The function uses a trick that allows calling a binding lambda using a function pointer. It is published
+/// @copyright The function uses a trick that allows calling a binding lambda to use a function pointer. It is published
 /// by Joaquín M López Muñoz at http://bannalia.blogspot.com/2016/07/passing-capturing-c-lambda-functions-as.html.
 template <typename... T>
-[[nodiscard]] HRESULT CallExceptionToHRESULT_ERROR(_In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, _In_z_ const char* message, T&&... args) noexcept {
-	auto log = [message, args...](_In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, const std::exception& e) {
+[[nodiscard]] HRESULT CallExceptionToHRESULT_ERROR(_In_z_ const char* const file, const std::uint32_t line, _In_z_ const char* const function, _In_z_ const char* const message, T&&... args) noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
+	auto log = [message, args...](_In_z_ const char* const file, const std::uint32_t line, _In_z_ const char* const function, const std::exception& e) {
 		llamalog::Log(llamalog::Priority::kError, file, line, function, message, std::forward<T>(args)..., e);
 	};
-	auto thunk = [](_In_ void* p, llamalog::Priority /* priority */, _In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, const std::exception& e) {
+	auto thunk = [](_In_ void* const p, llamalog::Priority /* priority */, _In_z_ const char* const file, const std::uint32_t line, _In_z_ const char* const function, const std::exception& e) {
 		(*static_cast<decltype(log)*>(p))(file, line, function, e);
 	};
 	return ExceptionToHRESULT_ERROR(file, line, function, thunk, &log);
 }
 
 /// @brief Helper for `#ExceptionToHRESULT` to make testing easier.
+/// @details @internal The functions `#CallExceptionToHRESULT_DEBUG`, `#CallExceptionToHRESULT_ERROR` and
+/// `#CallExceptionToHRESULT_FATAL` MUST share the same signature for use in `#ExceptionToHRESULT`.
 /// @tparam T The types of the message arguments.
 /// @param file The name of the current source file.
 /// @param line The currently source code line.
@@ -209,7 +211,7 @@ template <typename... T>
 /// @param args Arguments to append to log messages.
 /// @return The `HRESULT` value.
 template <typename... T>
-[[nodiscard]] HRESULT CallExceptionToHRESULT_FATAL(_In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, _In_z_ const char* message, T&&... args) noexcept {
+[[nodiscard]] HRESULT CallExceptionToHRESULT_FATAL([[maybe_unused]] _In_z_ const char* const file, [[maybe_unused]] const std::uint32_t line, [[maybe_unused]] _In_z_ const char* const function, [[maybe_unused]] _In_z_ const char* const message, [[maybe_unused]] T&&... args) noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 	return ExceptionToHRESULT_FATAL();
 }
 
@@ -227,7 +229,7 @@ template <typename... T>
 /// @param args Arguments to append to log messages.
 /// @return The `HRESULT` value.
 template <typename... T>
-[[nodiscard]] HRESULT ExceptionToHRESULT(_In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, _In_z_ const char* message, T&&... args) noexcept {
+[[nodiscard]] HRESULT ExceptionToHRESULT(_In_z_ const char* const file, const std::uint32_t line, _In_z_ const char* const function, _In_z_ const char* const message, T&&... args) noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 	return
 #if defined(LLAMALOG_LEVEL_DEBUG) || defined(LLAMALOG_LEVEL_TRACE)
 		internal::CallExceptionToHRESULT_DEBUG
@@ -243,12 +245,11 @@ template <typename... T>
 /// @details The `HRESULT` is converted from `#SystemError::code()` if available, is set to `E_OUTOFMEMORY` for
 /// `std::bad_alloc` and `E_FAIL` for any other type of exception.
 /// @note The function MUST be called from within a catch block.
-/// @tparam T The types of the message arguments.
 /// @param file The name of the current source file.
 /// @param line The currently source code line.
 /// @param function The name of the current function.
 /// @return The `HRESULT` value.
-[[nodiscard]] inline HRESULT ExceptionToHRESULT(_In_z_ const char* file, std::uint32_t line, _In_z_ const char* function) noexcept {
+[[nodiscard]] inline HRESULT ExceptionToHRESULT(_In_z_ const char* const file, const std::uint32_t line, _In_z_ const char* const function) noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 	return ExceptionToHRESULT(file, line, function, "{}");
 }
 

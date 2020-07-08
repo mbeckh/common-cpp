@@ -27,8 +27,11 @@ limitations under the License.
 
 namespace m3c {
 
-/// @brief Base class for all class factories to manage the number of locks acquired on all class factories.
-class __declspec(novtable) AbstractClassFactory : public ComObject<IClassFactory> {
+namespace internal {
+
+/// @brief The base class of all `ClassFactory` objects.
+/// @details The class also manages the number of locks acquired on all class factories.
+class __declspec(novtable) AbstractClassFactory : public ComObject<IClassFactory> {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 protected:
 	// Only allow creation from sub classes.
 	AbstractClassFactory() noexcept = default;
@@ -44,33 +47,24 @@ public:
 	AbstractClassFactory& operator=(const AbstractClassFactory&) = delete;
 	AbstractClassFactory& operator=(AbstractClassFactory&&) = delete;
 
-public:
-	/// @brief Get the number of locks currently held. @details The value is shared by all `ClassFactory` objects.
-	/// @return The number of locks.
-	[[nodiscard]] static ULONG GetLockCount() noexcept {
-		return m_lockCount;
-	}
-
 public:  // IClassFactory
-	[[nodiscard]] virtual HRESULT __stdcall CreateInstance(_In_opt_ IUnknown* pOuter, REFIID riid, _COM_Outptr_ void** ppObject) noexcept final;
-	[[nodiscard]] virtual HRESULT __stdcall LockServer(BOOL lock) noexcept final;
+	[[nodiscard]] HRESULT __stdcall CreateInstance(_In_opt_ IUnknown* pOuter, REFIID riid, _COM_Outptr_ void** ppObject) noexcept final;
+	[[nodiscard]] HRESULT __stdcall LockServer(BOOL lock) noexcept final;
 
 private:
 	/// @brief Create a new COM object.
 	/// @return A newly created COM object.
-	[[nodiscard]] virtual AbstractComObject* CreateObject() const = 0;
-
-private:
-	/// @brief The number of locks currently held.
-	inline static volatile ULONG m_lockCount;
+	[[nodiscard]] virtual AbstractComObject* CreateObject() const = 0;  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 };
 
+}  // namespace internal
 
-/// @brief Class factory for COM objects derived from @ref `AbstractComObject`.
+
+/// @brief Class factory for COM objects.
 template <class T>
-class ClassFactory final : public AbstractClassFactory {
-	// Only valid for classes derived from `AbstractComObject`.
-	static_assert(std::is_base_of_v<AbstractComObject, T>);
+class ClassFactory final : public internal::AbstractClassFactory {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
+	// Only valid for classes derived from `internal::AbstractComObject`.
+	static_assert(std::is_base_of_v<internal::AbstractComObject, T>);
 
 public:
 	ClassFactory() noexcept = default;
@@ -85,7 +79,7 @@ public:
 	ClassFactory& operator=(ClassFactory&&) = delete;
 
 private:
-	[[nodiscard]] virtual AbstractComObject* CreateObject() const final {
+	[[nodiscard]] AbstractComObject* CreateObject() const final {
 		return new T();
 	}
 };

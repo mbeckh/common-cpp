@@ -27,12 +27,12 @@ namespace m3c {
 /// @brief Convert a wide character string to a UTF-8 encoded string.
 /// @param wstr The source string.
 /// @return The source string in UTF-8 encoding.
-std::string EncodeUtf8(_In_z_ const wchar_t* __restrict wstr);
+std::string EncodeUtf8(_In_z_ const wchar_t* __restrict wstr);  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 
 /// @brief Convert part of a wide character string to a UTF-8 encoded string.
 /// @param wstr The source string.
-/// @param length The number of characters to convert starting at @a wsz.
+/// @param length The number of characters to convert starting at @p wstr.
 /// @return The first cchLen characters of the source string in UTF-8 encoding.
-std::string EncodeUtf8(_In_reads_(length) const wchar_t* __restrict wstr, std::size_t length);
+std::string EncodeUtf8(_In_reads_(length) const wchar_t* __restrict wstr, std::size_t length);  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 
 }  // namespace m3c

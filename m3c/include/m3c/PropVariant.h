@@ -30,10 +30,10 @@ namespace m3c {
 /// @brief Returns a string representation of the type of a `PROPVARIANT`.
 /// @param pv A `PROPVARIANT`.
 /// @return The type as a string.
-std::string VariantTypeToString(const PROPVARIANT& pv);
+[[nodiscard]] std::string VariantTypeToString(const PROPVARIANT& pv);  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 
 /// @brief A class to manage stack unwinding for `PROPVARIANT` objects.
-class PropVariant final : public PROPVARIANT {
+class PropVariant final : public PROPVARIANT {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 public:
 	/// @brief Ensures that `PropVariantInit` is called for an empty instance.
 	PropVariant() noexcept;
@@ -52,7 +52,7 @@ public:
 	PropVariant& operator=(PropVariant&&) = delete;
 
 public:
-	std::string GetVariantType() const {
+	[[nodiscard]] std::string GetVariantType() const {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 		return VariantTypeToString(*this);
 	}
 };

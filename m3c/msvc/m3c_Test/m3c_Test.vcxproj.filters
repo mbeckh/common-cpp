@@ -56,9 +56,6 @@
     <ClCompile Include="..\..\test\com_ptr_Test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\ClassFactory_Test.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\test\rpc_string_Test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -69,6 +66,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="types_log_Test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\ClassFactory_Test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

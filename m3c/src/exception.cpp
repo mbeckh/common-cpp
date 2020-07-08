@@ -32,23 +32,23 @@ namespace m3c {
 namespace {
 
 /// @brief An error category for windows errors returned by `GetLastError`.
-class ErrorCategory : public std::error_category {
+class error_category : public std::error_category {
 public:
 	/// @brief Create the singleton.
-	ErrorCategory(const char* const name) noexcept
+	explicit error_category(const char* const name) noexcept
 		: m_name(name) {
 		//empty
 	}
 
 	/// @brief The category name.
 	/// @return The name.
-	_Ret_z_ const char* name() const noexcept final {
+	[[nodiscard]] _Ret_z_ const char* name() const noexcept final {
 		return m_name;
 	}
 
 	/// @brief The message in the format '<text> (0x<code>)'.
 	/// @return The message as a UTF-8 encoded string.
-	std::string message(const int condition) const final {
+	[[nodiscard]] std::string message(const int condition) const final {
 		return fmt::format("{:%}", lg::error_code{condition});
 	}
 
@@ -57,18 +57,19 @@ private:
 };
 
 }  // namespace
+
 const std::error_category& win32_category() noexcept {
-	static const ErrorCategory kInstance("win32");
+	static const error_category kInstance("win32");
 	return kInstance;
 }
 
 const std::error_category& rpc_category() noexcept {
-	static const ErrorCategory kInstance("rpc");
+	static const error_category kInstance("rpc");
 	return kInstance;
 }
 
 const std::error_category& com_category() noexcept {
-	static const ErrorCategory kInstance("com");
+	static const error_category kInstance("com");
 	return kInstance;
 }
 
@@ -84,7 +85,7 @@ namespace {
 /// @param e The exception.
 /// @param thunk A function that receives @p log, the priority, the message and the exception and calls @p log accordingly.
 /// @param log A function that logs a message at level `llamalog::Priority::kError`.
-void SafeLog(const llamalog::Priority priority, _In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, const std::exception& e, _In_ void (*const thunk)(_In_opt_ void*, llamalog::Priority, _In_z_ const char*, std::uint32_t, _In_z_ const char*, const std::exception&), _In_opt_ void* const log) noexcept {
+void SafeLog(const llamalog::Priority priority, _In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, const std::exception& e, _In_ void (*const thunk)(_In_opt_ void*, llamalog::Priority, _In_z_ const char*, std::uint32_t, _In_z_ const char*, const std::exception&), _In_opt_ void* const log) noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 	try {
 		thunk(log, priority, file, line, function, e);
 	} catch (...) {
@@ -106,7 +107,7 @@ void SafeLog(const llamalog::Priority priority, _In_z_ const char* file, std::ui
 
 }  // namespace
 
-HRESULT ExceptionToHRESULT_DEBUG(_In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, _In_ void (*const thunk)(_In_opt_ void*, llamalog::Priority, _In_z_ const char*, std::uint32_t, _In_z_ const char*, const std::exception&), _In_opt_ void* const log) noexcept {
+HRESULT ExceptionToHRESULT_DEBUG(_In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, _In_ void (*const thunk)(_In_opt_ void*, llamalog::Priority, _In_z_ const char*, std::uint32_t, _In_z_ const char*, const std::exception&), _In_opt_ void* const log) noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 	try {
 		throw;
 	} catch (const com_invalid_argument_exception& e) {
@@ -135,7 +136,7 @@ HRESULT ExceptionToHRESULT_DEBUG(_In_z_ const char* file, std::uint32_t line, _I
 	}
 }
 
-HRESULT ExceptionToHRESULT_ERROR(_In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, _In_ void (*const thunk)(_In_opt_ void*, llamalog::Priority, _In_z_ const char*, std::uint32_t, _In_z_ const char*, const std::exception&), _In_opt_ void* const log) noexcept {
+HRESULT ExceptionToHRESULT_ERROR(_In_z_ const char* file, std::uint32_t line, _In_z_ const char* function, _In_ void (*const thunk)(_In_opt_ void*, llamalog::Priority, _In_z_ const char*, std::uint32_t, _In_z_ const char*, const std::exception&), _In_opt_ void* const log) noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 	try {
 		throw;
 	} catch (const com_invalid_argument_exception& e) {
@@ -163,7 +164,7 @@ HRESULT ExceptionToHRESULT_ERROR(_In_z_ const char* file, std::uint32_t line, _I
 	}
 }
 
-HRESULT ExceptionToHRESULT_FATAL() noexcept {
+HRESULT ExceptionToHRESULT_FATAL() noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 	// no logging at all
 	try {
 		throw;
@@ -185,6 +186,5 @@ HRESULT ExceptionToHRESULT_FATAL() noexcept {
 }
 
 }  // namespace internal
-
 
 }  // namespace m3c

@@ -18,6 +18,7 @@ limitations under the License.
 
 #include "Bar.h"
 #include "Foo.h"
+#include "m3c/COM.h"
 #include "m3c/exception.h"
 
 #include <gtest/gtest.h>
@@ -37,13 +38,13 @@ namespace m3c::test {
 //
 
 TEST(ComObjectTest, GetObjectCount_Initial_Return0) {
-	EXPECT_EQ(0u, AbstractComObject::GetObjectCount());
+	EXPECT_EQ(0u, COM::GetObjectCount());
 }
 
 TEST(ComObjectTest, GetObjectCount_Create1Object_Return1) {
 	Foo* pFoo = new Foo();
 
-	EXPECT_EQ(1u, AbstractComObject::GetObjectCount());
+	EXPECT_EQ(1u, COM::GetObjectCount());
 
 	pFoo->Release();
 }
@@ -52,7 +53,7 @@ TEST(ComObjectTest, GetObjectCount_Create2Objects_Return2) {
 	Foo* pFoo = new Foo();
 	Bar* pBar = new Bar();
 
-	EXPECT_EQ(2u, AbstractComObject::GetObjectCount());
+	EXPECT_EQ(2u, COM::GetObjectCount());
 
 	pFoo->Release();
 	pBar->Release();
@@ -63,7 +64,7 @@ TEST(ComObjectTest, GetObjectCount_Create3Objects_Return3) {
 	Bar* pBar = new Bar();
 	Foo* pBaz = new Foo();
 
-	EXPECT_EQ(3u, AbstractComObject::GetObjectCount());
+	EXPECT_EQ(3u, COM::GetObjectCount());
 
 	pFoo->Release();
 	pBar->Release();
@@ -74,7 +75,7 @@ TEST(ComObjectTest, GetObjectCount_AddRef_NoChange) {
 	Foo* pFoo = new Foo();
 	pFoo->AddRef();
 
-	EXPECT_EQ(1u, AbstractComObject::GetObjectCount());
+	EXPECT_EQ(1u, COM::GetObjectCount());
 
 	pFoo->Release();
 	pFoo->Release();
@@ -85,7 +86,7 @@ TEST(ComObjectTest, GetObjectCount_ReleaseNonFinal_NoChange) {
 	pFoo->AddRef();
 	pFoo->Release();
 
-	EXPECT_EQ(1u, AbstractComObject::GetObjectCount());
+	EXPECT_EQ(1u, COM::GetObjectCount());
 
 	pFoo->Release();
 }
@@ -95,7 +96,7 @@ TEST(ComObjectTest, GetObjectCount_ReleaseFinal_Reduce) {
 	Bar* pBar = new Bar();
 	pFoo->Release();
 
-	EXPECT_EQ(1u, AbstractComObject::GetObjectCount());
+	EXPECT_EQ(1u, COM::GetObjectCount());
 
 	pBar->Release();
 }

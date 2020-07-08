@@ -40,7 +40,7 @@ public:
 	com_heap_ptr(const com_heap_ptr&) = delete;
 
 	/// @brief Transfers ownership.
-	/// @param p Another `com_heap_ptr`.
+	/// @param ptr Another `com_heap_ptr`.
 	com_heap_ptr(com_heap_ptr&& ptr) noexcept
 		: m_ptr(ptr.release()) {
 		// empty
@@ -76,7 +76,7 @@ public:
 	com_heap_ptr& operator=(const com_heap_ptr&) = delete;
 
 	/// @brief Transfers ownership.
-	/// @param p Another `com_heap_ptr`.
+	/// @param ptr Another `com_heap_ptr`.
 	/// @return This instance.
 	com_heap_ptr& operator=(com_heap_ptr&& ptr) noexcept {
 		CoTaskMemFree(m_ptr);

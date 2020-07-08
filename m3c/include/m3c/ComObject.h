@@ -28,8 +28,9 @@ limitations under the License.
 
 namespace m3c {
 
-/// @brief Base class for all objects to manage the number of objects.
-class __declspec(novtable) AbstractComObject {
+namespace internal {
+/// @brief The base class of all `ComObject` objects.
+class __declspec(novtable) AbstractComObject {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 protected:
 	/// @brief Constructor which also increments the global object count.
 	AbstractComObject() noexcept;
@@ -46,65 +47,57 @@ public:
 	AbstractComObject& operator=(const AbstractComObject&) = delete;
 	AbstractComObject& operator=(AbstractComObject&&) = delete;
 
-public:
-	/// @brief Get the number of currently instantiated objects.
-	/// @details The value is shared by all `ComObject` objects.
-	/// @return The number of currently instantiated COM objects.
-	[[nodiscard]] static ULONG GetObjectCount() noexcept {
-		return m_objectCount;
-	}
-
 public:  // IUnknown
-	[[nodiscard]] virtual HRESULT __stdcall QueryInterface(REFIID riid, _COM_Outptr_ void** ppObject) noexcept;
-	virtual ULONG __stdcall AddRef() noexcept;
-	virtual ULONG __stdcall Release() noexcept;
+	// AbstractComObject does not inherit from IUnknwon to avoid multiple inheritance happening as a "surprise".
+	// Sub classes MUST therefore override the methods from IUnknwon and call these implementations.
+	[[nodiscard]] HRESULT QueryInterface(REFIID riid, _COM_Outptr_ void** ppObject) noexcept;  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
+	ULONG AddRef() noexcept;                                                                   // NOLINT(readability-identifier-naming): Windows/COM naming convention.
+	ULONG Release() noexcept;                                                                  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 
 public:
 	/// @brief Query for an interface by IID.
-	/// @param iid The IID of the requested interface.
+	/// @param riid The IID of the requested interface.
 	/// @return A pointer to the interface.
 	/// @throws `com_exception` if the interface is not supported.
-	[[nodiscard]] _Ret_notnull_ void* QueryInterface(REFIID riid);
+	[[nodiscard]] _Ret_notnull_ void* QueryInterface(REFIID riid);  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 
 	/// @brief Query for an interface.
 	/// @tparam T The type of the interface.
 	/// @return A pointer to the interface.
 	/// @throws `com_exception` if the interface is not supported.
 	template <typename T>
-	[[nodiscard]] _Ret_notnull_ T* QueryInterface() {
+	[[nodiscard]] _Ret_notnull_ T* QueryInterface() {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 		return static_cast<T*>(QueryInterface(__uuidof(T)));
 	}
 
 private:
 	/// @brief Lookup a pointer to a particular interface.
-	/// @param The requested interface.
+	/// @param riid The requested interface.
 	/// @return A pointer to the interface or `nullptr` if the interface is not supported.
-	[[nodiscard]] virtual _Ret_maybenull_ void* FindInterface(REFIID riid) noexcept = 0;
+	[[nodiscard]] virtual _Ret_maybenull_ void* FindInterface(REFIID riid) noexcept = 0;  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 
 protected:
 	/// @brief Provides support for COM inheritance hierarchies.
-	/// @details Classes which implement COM interfaces which in turn have base interfaces other than IUnknown MUST implement this method.
-	/// This method checks for the base IIDs and returns the correct pointer. If the interface is not supported, `nullptr` is required.
-	/// The method is called only after all base classes have been checked.
+	/// @details Classes which implement COM interfaces which in turn have base interfaces other than IUnknown MUST
+	/// implement this method. The method MUST check for the base IIDs and return the correct pointer. If the interface
+	/// is not supported, `nullptr` is REQUIRED. The method is called only after all base classes have been checked.
 	/// @param riid The requested IID.
 	/// @return A pointer to the interface if found, else `nullptr`.
-	[[nodiscard]] virtual _Ret_maybenull_ void* FindBaseInterface(REFIID /* riid */) noexcept {
+	[[nodiscard]] virtual _Ret_maybenull_ void* FindBaseInterface([[maybe_unused]] REFIID riid) noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 		return nullptr;
 	}
-
-private:
-	inline static volatile ULONG m_objectCount;  ///< @brief The global object count.
 
 private:
 	volatile ULONG m_refCount = 1;  ///< @brief The COM reference count of this object.
 };
 
+}  // namespace internal
 
 /// @brief A common base class for all COM objects.
 /// @details The class provides default implementations for `IUnknown` and reference counting for `DllCanUnloadNow`.
 /// @tparam Interfaces The interfaces implemented by this COM object.
 template <typename... Interfaces>
-class __declspec(novtable) ComObject : public AbstractComObject
+class __declspec(novtable) ComObject : public internal::AbstractComObject  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 	, public Interfaces... {
 protected:
 	/// @brief Default constructor increments the global object count.
@@ -131,14 +124,13 @@ public:
 public:  // IUnknown
 	using AbstractComObject::QueryInterface;
 	[[nodiscard]] HRESULT __stdcall QueryInterface(REFIID riid, _COM_Outptr_ void** const ppObject) noexcept final {
-		return LOG_TRACE_HRESULT(AbstractComObject::QueryInterface(riid, ppObject), "hr={}, riid={}", riid);
+		return AbstractComObject::QueryInterface(riid, ppObject);
 	}
 	ULONG __stdcall AddRef() noexcept final {
-		return LOG_TRACE_RESULT(AbstractComObject::AddRef(), "ref={}, this={}", static_cast<const void*>(this));
+		return AbstractComObject::AddRef();
 	}
 	ULONG __stdcall Release() noexcept final {
-		const void* const ths = this;  // do not touch this after possible deletion in Release
-		return LOG_TRACE_RESULT(AbstractComObject::Release(), "ref={}, this={}, objects={}", ths, GetObjectCount());
+		return AbstractComObject::Release();
 	}
 
 private:
@@ -152,7 +144,7 @@ private:
 	/// @param riid The requested interface.
 	/// @return A pointer to the interface or `nullptr` if the interface is not supported.
 	template <typename First, typename... Remaining>
-	[[nodiscard]] _Ret_maybenull_ void* FindInterfaceInternal(REFIID riid) noexcept {
+	[[nodiscard]] _Ret_maybenull_ void* FindInterfaceInternal(REFIID riid) noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 		if (IsEqualIID(riid, __uuidof(First)) || IsEqualIID(riid, IID_IUnknown)) {
 			return static_cast<First*>(this);
 		}
@@ -163,7 +155,7 @@ private:
 	/// @param riid The requested interface.
 	/// @return A pointer to the interface or `nullptr` if the interface is not supported.
 	template <int = 0>
-	[[nodiscard]] _Ret_maybenull_ void* FindInterfaceRemaining(REFIID riid) noexcept {
+	[[nodiscard]] _Ret_maybenull_ void* FindInterfaceRemaining(REFIID riid) noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 		return FindBaseInterface(riid);
 	}
 
@@ -173,7 +165,7 @@ private:
 	/// @param riid The requested interface.
 	/// @return A pointer to the interface or `nullptr` if the interface is not supported.
 	template <typename First, typename... Remaining>
-	[[nodiscard]] _Ret_maybenull_ void* FindInterfaceRemaining(REFIID riid) noexcept {
+	[[nodiscard]] _Ret_maybenull_ void* FindInterfaceRemaining(REFIID riid) noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 		if (IsEqualIID(riid, __uuidof(First))) {
 			return static_cast<First*>(this);
 		}

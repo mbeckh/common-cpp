@@ -18,6 +18,7 @@ limitations under the License.
 
 #include "Bar.h"
 #include "Foo.h"
+#include "m3c/COM.h"
 #include "m3c/com_ptr.h"
 
 #include <gtest/gtest.h>
@@ -35,7 +36,7 @@ namespace m3c::test {
 TEST(ClassFactoryTest, LockServer_InitialCount_LockCountIs0) {
 	com_ptr<IClassFactory> pClassFactory = make_com<IClassFactory, ClassFactory<Foo>>();
 
-	EXPECT_EQ(0u, AbstractClassFactory::GetLockCount());
+	EXPECT_EQ(0u, COM::GetLockCount());
 }
 
 TEST(ClassFactoryTest, LockServer_Lock_LockCountIs1) {
@@ -45,13 +46,13 @@ TEST(ClassFactoryTest, LockServer_Lock_LockCountIs1) {
 		HRESULT hr = pClassFactory->LockServer(TRUE);
 
 		ASSERT_HRESULT_SUCCEEDED(hr);
-		EXPECT_EQ(1u, AbstractClassFactory::GetLockCount());
+		EXPECT_EQ(1u, COM::GetLockCount());
 	}
 	{
 		HRESULT hr = pClassFactory->LockServer(FALSE);
 
 		ASSERT_HRESULT_SUCCEEDED(hr);
-		EXPECT_EQ(0u, AbstractClassFactory::GetLockCount());
+		EXPECT_EQ(0u, COM::GetLockCount());
 	}
 }
 
@@ -64,17 +65,17 @@ TEST(ClassFactoryTest, LockServer_LockDifferentClassFactory_LockCountIs2) {
 		HRESULT hr = pOtherClassFactory->LockServer(TRUE);
 
 		ASSERT_HRESULT_SUCCEEDED(hr);
-		EXPECT_EQ(2u, AbstractClassFactory::GetLockCount());
+		EXPECT_EQ(2u, COM::GetLockCount());
 	}
 	{
 		HRESULT hr = pOtherClassFactory->LockServer(FALSE);
 
 		ASSERT_HRESULT_SUCCEEDED(hr);
-		EXPECT_EQ(1u, AbstractClassFactory::GetLockCount());
+		EXPECT_EQ(1u, COM::GetLockCount());
 	}
 
 	ASSERT_HRESULT_SUCCEEDED(pClassFactory->LockServer(FALSE));
-	EXPECT_EQ(0u, AbstractClassFactory::GetLockCount());
+	EXPECT_EQ(0u, COM::GetLockCount());
 }
 
 

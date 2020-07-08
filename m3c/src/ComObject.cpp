@@ -18,6 +18,7 @@ limitations under the License.
 
 #include "m3c/ComObject.h"
 
+#include "m3c/COM.h"
 #include "m3c/exception.h"
 #include "m3c/types_log.h"
 
@@ -27,51 +28,51 @@ limitations under the License.
 #include <windows.h>
 
 
-namespace m3c {
+namespace m3c::internal {
 
 AbstractComObject::AbstractComObject() noexcept {
-	InterlockedIncrement(&m_objectCount);
+	InterlockedIncrement(&COM::m_objectCount);
 }
 
 AbstractComObject::~AbstractComObject() noexcept {
-	InterlockedDecrement(&m_objectCount);
+	InterlockedDecrement(&COM::m_objectCount);
 }
-
 
 //
 // IUnknown
 //
 
-HRESULT AbstractComObject::QueryInterface(REFIID riid, _COM_Outptr_ void** const ppObject) noexcept {
+HRESULT AbstractComObject::QueryInterface(REFIID riid, _COM_Outptr_ void** const ppObject) noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 	if (!ppObject) {
-		return E_INVALIDARG;
+		return LOG_TRACE_HRESULT(E_INVALIDARG, "hr={}, riid={}", riid);
 	}
 
 	*ppObject = FindInterface(riid);
 	if (*ppObject) {
 		static_cast<IUnknown*>(*ppObject)->AddRef();
-		return S_OK;
+		return LOG_TRACE_HRESULT(S_OK, "hr={}, riid={}", riid);
 	}
-	return E_NOINTERFACE;
+	return LOG_TRACE_HRESULT(E_NOINTERFACE, "hr={}, riid={}", riid);
 }
 
-ULONG AbstractComObject::AddRef() noexcept {
-	return InterlockedIncrement(&m_refCount);
+ULONG AbstractComObject::AddRef() noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
+	return LOG_TRACE_RESULT(InterlockedIncrement(&m_refCount), "ref={}, this={}", static_cast<const void*>(this));
 }
 
-ULONG AbstractComObject::Release() noexcept {
+ULONG AbstractComObject::Release() noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
+	const void* const ths = this;              // do not touch this after possible deletion
 	const ULONG refCount = InterlockedDecrement(&m_refCount);
 	if (!refCount) {
 		delete this;
 	}
-	return refCount;
+	return LOG_TRACE_RESULT(refCount, "ref={}, this={}, objects={}", ths, COM::m_objectCount);
 }
 
 //
 // Custom methods
 //
 
-_Ret_notnull_ void* AbstractComObject::QueryInterface(REFIID riid) {
+_Ret_notnull_ void* AbstractComObject::QueryInterface(REFIID riid) {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 	void* const pInterface = FindInterface(riid);
 	if (pInterface) {
 		static_cast<IUnknown*>(pInterface)->AddRef();
@@ -80,4 +81,4 @@ _Ret_notnull_ void* AbstractComObject::QueryInterface(REFIID riid) {
 	THROW(com_exception(E_NOINTERFACE), "IID={}", riid);
 }
 
-}  // namespace m3c
+}  // namespace m3c::internal
