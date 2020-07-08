@@ -29,6 +29,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\test\Bar.cpp" />
     <ClCompile Include="..\..\test\ClassFactory_Test.cpp" />
+    <ClCompile Include="..\..\test\lazy_string_Test.cpp" />
     <ClCompile Include="..\..\test\types_fmt_Test.cpp" />
     <ClCompile Include="..\..\test\ComObject_Test.cpp" />
     <ClCompile Include="..\..\test\com_heap_ptr_Test.cpp" />
