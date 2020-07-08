@@ -35,7 +35,7 @@ namespace t = testing;
 // windows_exception
 //
 
-TEST(windows_exceptionTest, ctor_WithArgs_HasValues) {
+TEST(windows_exception_Test, ctor_WithArgs_HasValues) {
 	const windows_exception error(ERROR_INSUFFICIENT_BUFFER, "MyMessage");
 	const std::string str(error.what());
 
@@ -48,7 +48,7 @@ TEST(windows_exceptionTest, ctor_WithArgs_HasValues) {
 // rpc_exception
 //
 
-TEST(rpc_exceptionTest, ctor_WithArgs_HasValues) {
+TEST(rpc_exception_Test, ctor_WithArgs_HasValues) {
 	const rpc_exception error(RPC_S_STRING_TOO_LONG, "MyMessage");
 	const std::string str(error.what());
 
@@ -61,7 +61,7 @@ TEST(rpc_exceptionTest, ctor_WithArgs_HasValues) {
 // com_exception
 //
 
-TEST(com_exceptionTest, ctor_FromHRESULT_HasValues) {
+TEST(com_exception_Test, ctor_FromHRESULT_HasValues) {
 	const com_exception error(E_INVALIDARG, "MyMessage");
 	const std::string str(error.what());
 
@@ -69,7 +69,7 @@ TEST(com_exceptionTest, ctor_FromHRESULT_HasValues) {
 	EXPECT_EQ(E_INVALIDARG, error.code().value());
 }
 
-TEST(com_exceptionTest, ctor_FromWIN32_HasValues) {
+TEST(com_exception_Test, ctor_FromWIN32_HasValues) {
 	const com_exception error(HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), "MyMessage");
 	const std::string str(error.what());
 
@@ -77,7 +77,7 @@ TEST(com_exceptionTest, ctor_FromWIN32_HasValues) {
 	EXPECT_EQ(HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), error.code().value());
 }
 
-TEST(com_exceptionTest, ctor_FromRPC_HasValues) {
+TEST(com_exception_Test, ctor_FromRPC_HasValues) {
 	const com_exception error(RPC_S_STRING_TOO_LONG, "MyMessage");
 	const std::string str(error.what());
 
@@ -90,7 +90,7 @@ TEST(com_exceptionTest, ctor_FromRPC_HasValues) {
 // com_invalid_argument_exception
 //
 
-TEST(com_invalid_argument_exceptionTest, ctor_FromMessageOnly_IsInvalidArgumentCode) {
+TEST(com_invalid_argument_exception_Test, ctor_FromMessageOnly_IsInvalidArgumentCode) {
 	const com_invalid_argument_exception error("MyMessage");
 	const std::string str(error.what());
 
@@ -98,7 +98,7 @@ TEST(com_invalid_argument_exceptionTest, ctor_FromMessageOnly_IsInvalidArgumentC
 	EXPECT_EQ(E_INVALIDARG, error.code().value());
 }
 
-TEST(com_invalid_argument_exceptionTest, ctor_WithArgs_HasValues) {
+TEST(com_invalid_argument_exception_Test, ctor_WithArgs_HasValues) {
 	const com_invalid_argument_exception error(E_NOTIMPL, "MyMessage");
 	const std::string str(error.what());
 
@@ -111,7 +111,7 @@ TEST(com_invalid_argument_exceptionTest, ctor_WithArgs_HasValues) {
 // ExceptionToHRESULT: No exception
 //
 
-TEST(ExceptionToHRESULT, call_NoException_ReturnResult) {
+TEST(ExceptionToHRESULT_Test, call_NoException_ReturnResult) {
 	HRESULT hr = [] {
 		std::exception_ptr eptr;
 		try {
@@ -131,7 +131,7 @@ TEST(ExceptionToHRESULT, call_NoException_ReturnResult) {
 // ExceptionToHRESULT: windows_exception
 //
 
-TEST(ExceptionToHRESULT, call_ThrowWrappedWindowsException_ReturnCode) {
+TEST(ExceptionToHRESULT_Test, call_ThrowWrappedWindowsException_ReturnCode) {
 	HRESULT hr = [] {
 		try {
 			LLAMALOG_THROW(windows_exception(ERROR_INVALID_PARAMETER, "ERROR_INVALID_PARAMETER"));
@@ -143,7 +143,7 @@ TEST(ExceptionToHRESULT, call_ThrowWrappedWindowsException_ReturnCode) {
 	EXPECT_EQ(HRESULT_FROM_WIN32(ERROR_INVALID_PARAMETER), hr);
 }
 
-TEST(ExceptionToHRESULT, call_ThrowPlainWindowsException_ReturnCode) {
+TEST(ExceptionToHRESULT_Test, call_ThrowPlainWindowsException_ReturnCode) {
 	HRESULT hr = [] {
 		try {
 			throw windows_exception(ERROR_INVALID_PARAMETER, "E_FAIL");
@@ -160,7 +160,7 @@ TEST(ExceptionToHRESULT, call_ThrowPlainWindowsException_ReturnCode) {
 // ExceptionToHRESULT: rpc_exception
 //
 
-TEST(ExceptionToHRESULT, call_ThrowWrappedRpcException_ReturnCode) {
+TEST(ExceptionToHRESULT_Test, call_ThrowWrappedRpcException_ReturnCode) {
 	HRESULT hr = [] {
 		try {
 			LLAMALOG_THROW(rpc_exception(RPC_S_ADDRESS_ERROR, "RPC_S_ADDRESS_ERROR"));
@@ -172,7 +172,7 @@ TEST(ExceptionToHRESULT, call_ThrowWrappedRpcException_ReturnCode) {
 	EXPECT_EQ(MAKE_HRESULT(SEVERITY_ERROR, FACILITY_RPC, RPC_S_ADDRESS_ERROR), hr);
 }
 
-TEST(ExceptionToHRESULT, call_ThrowPlainRpcException_ReturnCode) {
+TEST(ExceptionToHRESULT_Test, call_ThrowPlainRpcException_ReturnCode) {
 	HRESULT hr = [] {
 		try {
 			throw rpc_exception(RPC_S_ADDRESS_ERROR, "RPC_S_ADDRESS_ERROR");
@@ -189,7 +189,7 @@ TEST(ExceptionToHRESULT, call_ThrowPlainRpcException_ReturnCode) {
 // ExceptionToHRESULT: com_exception
 //
 
-TEST(ExceptionToHRESULT, call_ThrowWrappedComException_ReturnCode) {
+TEST(ExceptionToHRESULT_Test, call_ThrowWrappedComException_ReturnCode) {
 	HRESULT hr = [] {
 		try {
 			LLAMALOG_THROW(com_exception(E_BOUNDS, "E_BOUNDS"));
@@ -201,7 +201,7 @@ TEST(ExceptionToHRESULT, call_ThrowWrappedComException_ReturnCode) {
 	EXPECT_EQ(E_BOUNDS, hr);
 }
 
-TEST(ExceptionToHRESULT, call_ThrowPlainComException_ReturnCode) {
+TEST(ExceptionToHRESULT_Test, call_ThrowPlainComException_ReturnCode) {
 	HRESULT hr = [] {
 		try {
 			throw com_exception(E_BOUNDS, "E_BOUNDS");
@@ -218,7 +218,7 @@ TEST(ExceptionToHRESULT, call_ThrowPlainComException_ReturnCode) {
 // ExceptionToHRESULT: system_error
 //
 
-TEST(ExceptionToHRESULT, call_ThrowWrappedSystemError_ReturnCode) {
+TEST(ExceptionToHRESULT_Test, call_ThrowWrappedSystemError_ReturnCode) {
 	HRESULT hr = [] {
 		try {
 			LLAMALOG_THROW(std::system_error(std::make_error_code(std::errc::address_in_use), "EADDRINUSE"));
@@ -230,7 +230,7 @@ TEST(ExceptionToHRESULT, call_ThrowWrappedSystemError_ReturnCode) {
 	EXPECT_EQ(E_FAIL, hr);
 }
 
-TEST(ExceptionToHRESULT, call_ThrowPlainSystemError_ReturnCode) {
+TEST(ExceptionToHRESULT_Test, call_ThrowPlainSystemError_ReturnCode) {
 	HRESULT hr = [] {
 		try {
 			throw std::system_error(std::make_error_code(std::errc::address_in_use), "EADDRINUSE");

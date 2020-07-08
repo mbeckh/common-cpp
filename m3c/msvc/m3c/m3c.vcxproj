@@ -26,6 +26,7 @@
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClInclude Include="..\..\include\m3c\ClassFactory.h" />
+    <ClInclude Include="..\..\include\m3c\COM.h" />
     <ClInclude Include="..\..\include\m3c\types_fmt.h" />
     <ClInclude Include="..\..\include\m3c\ComObject.h" />
     <ClInclude Include="..\..\include\m3c\types_log.h" />
@@ -50,6 +51,15 @@
     <ClCompile Include="..\..\src\PropVariant.cpp" />
     <ClCompile Include="..\..\src\string_encode.cpp" />
     <ClCompile Include="..\..\src\unique_ptr.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\.clang-format" />
+    <None Include="..\..\..\.clang-tidy" />
+    <None Include="..\..\..\.codacy.yml" />
+    <None Include="..\..\..\.editorconfig" />
+    <None Include="..\..\..\.github\workflows\build.yml" />
+    <None Include="..\..\..\CHANGES.md" />
+    <None Include="..\..\..\README.md" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <ClCompile>

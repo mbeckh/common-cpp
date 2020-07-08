@@ -26,7 +26,7 @@ namespace m3c::test {
 // finally
 //
 
-TEST(finallyTest, ctorFromLambda_WithArg_CallCleanup) {
+TEST(finally_Test, ctorFromLambda_WithArg_CallCleanup) {
 	int i = 3;
 	{
 		auto f = finally([&]() noexcept {
@@ -37,7 +37,7 @@ TEST(finallyTest, ctorFromLambda_WithArg_CallCleanup) {
 	EXPECT_EQ(4, i);
 }
 
-TEST(finallyTest, ctorMove_WithArg_CallCleanup) {
+TEST(finally_Test, ctorMove_WithArg_CallCleanup) {
 	int i = 3;
 	{
 		auto f = std::move(finally([&]() noexcept {

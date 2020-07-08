@@ -43,7 +43,7 @@ public:
 	basic_rpc_string(const basic_rpc_string&) = delete;
 
 	/// @brief Transfers ownership.
-	/// @param p Another `basic_rpc_string`.
+	/// @param str Another `basic_rpc_string`.
 	basic_rpc_string(basic_rpc_string&& str) noexcept
 		: m_ptr(str.release()) {
 		// empty
@@ -131,7 +131,7 @@ public:
 	}
 
 	/// @brief Swap two objects.
-	/// @param ptr The other `basic_rpc_string`.
+	/// @param str The other `basic_rpc_string`.
 	void swap(basic_rpc_string& str) noexcept {
 		std::swap(m_ptr, str.m_ptr);
 	}
@@ -149,7 +149,7 @@ private:
 		if constexpr (std::is_same_v<T, RPC_CSTR>) {
 			return RpcStringFreeA(&m_ptr);
 		} else if constexpr (std::is_same_v<T, RPC_WSTR>) {
-			return RpcStringFreeA(&m_ptr);
+			return RpcStringFreeW(&m_ptr);
 		} else {
 			__assume(0);
 		}
@@ -268,7 +268,7 @@ template <typename T>
 
 /// @brief Swap function.
 /// @tparam T The type of the managed native pointer.
-/// @param ptr A `basic_rpc_string` object.
+/// @param str A `basic_rpc_string` object.
 /// @param oth Another `basic_rpc_string` object.
 template <typename T>
 inline void swap(m3c::internal::basic_rpc_string<T>& str, m3c::internal::basic_rpc_string<T>& oth) noexcept {

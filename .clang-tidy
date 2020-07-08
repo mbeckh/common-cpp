@@ -3,10 +3,13 @@ Checks: '
   cert-*,
   clang-analyzer-*,
   clang-diagnostic-*,
+    -clang-diagnostic-gnu-zero-variadic-macro-arguments,
+    -clang-diagnostic-language-extension-token,
   cppcoreguidelines-*,
     -cppcoreguidelines-avoid-c-arrays,
     -cppcoreguidelines-owning-memory,
     -cppcoreguidelines-pro-type-reinterpret-cast,
+    -cppcoreguidelines-pro-type-union-access,
     -cppcoreguidelines-pro-bounds-*,
   google-*,
     -google-readability-*,
@@ -30,7 +33,15 @@ Checks: '
     -readability-qualified-auto,
     -readability-redundant-access-specifiers'
 WarningsAsErrors: ''
-HeaderFilterRegex: ''
+HeaderFilterRegex: '(src|(include/m3c))/.*'
+ExtraArgsBefore: [
+  '--system-header-prefix=lib/', '-xc++', '-std=c++20', 
+  '-WCL4', '-Wpedantic', '-Wthread-safety', '-Wmicrosoft', '-Wdocumentation', '-Wdocumentation-pedantic', '-Wtautological-compare',
+  '-fms-extensions', '-fms-compatibility', '-D_CRT_USE_BUILTIN_OFFSETOF',
+  '-fno-delayed-template-parsing', '-fcomment-block-commands=internal,hideinitializer',
+  '-Im3c/include', '-Ilib/fmt/include', '-Ilib/llamalog/include',
+  '-DUNICODE', '-D_UNICODE', '-DNOMINMAX', '-DWIN32_LEAN_AND_MEAN'
+  ]
 CheckOptions:
   - key:   bugprone-assert-side-effect.AssertMacros
     value: 'assert,_assert,_wassert,_ASSERT,_ASSERTE,_ASSERT_EXPR'
@@ -53,15 +64,15 @@ CheckOptions:
   - key:   readability-braces-around-statements.ShortStatementLines
     value: '0'
   - key:   readability-identifier-naming.ClassCase
-    value: 'CamelCase'
+    value: 'lower_case'
   - key:   readability-identifier-naming.StructCase
-    value: 'CamelCase'
+    value: 'lower_case'
   - key:   readability-identifier-naming.UnionCase
-    value: 'CamelCase'
+    value: 'lower_case'
   - key:   readability-identifier-naming.TypeAliasCase
-    value: 'CamelCase'
+    value: 'lower_case'
   - key:   readability-identifier-naming.TypedefCase
-    value: 'CamelCase'
+    value: 'lower_case'
   - key:   readability-identifier-naming.MemberCase
     value: 'camelBack'
   - key:   readability-identifier-naming.MemberPrefix
@@ -83,13 +94,13 @@ CheckOptions:
   - key:   readability-identifier-naming.ClassConstantPrefix
     value: 'k'
   - key:   readability-identifier-naming.EnumCase
-    value: 'CamelCase'
+    value: 'lower_case'
   - key:   readability-identifier-naming.EnumConstantCase
     value: 'CamelCase'
   - key:   readability-identifier-naming.EnumConstantPrefix
     value: 'k'
   - key:   readability-identifier-naming.FunctionCase
-    value: 'CamelCase'
+    value: 'lower_case'
   - key:   readability-identifier-naming.NamespaceCase
     value: 'lower_case'
   - key:   readability-identifier-naming.VariableCase

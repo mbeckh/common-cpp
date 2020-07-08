@@ -37,7 +37,7 @@ public:
 	unique_ptr(const unique_ptr&) = delete;
 
 	/// @brief Transfers ownership.
-	/// @param p Another `unique_ptr`.
+	/// @param ptr Another `unique_ptr`.
 	unique_ptr(unique_ptr&& ptr) noexcept
 		: m_ptr(ptr.release()) {
 		// empty

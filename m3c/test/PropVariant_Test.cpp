@@ -27,7 +27,7 @@ limitations under the License.
 
 namespace m3c::test {
 
-class PropVariantTest : public t::Test {
+class PropVariant_Test : public t::Test {
 protected:
 	void SetUp() override {
 		COM_MOCK_SETUP(m_object, IStream);
@@ -47,7 +47,7 @@ protected:
 // PropVariant
 //
 
-TEST_F(PropVariantTest, ctor_Ok_IsEmpty) {
+TEST_F(PropVariant_Test, ctor_Ok_IsEmpty) {
 	PropVariant pv;
 
 	EXPECT_EQ(VT_EMPTY, pv.vt);
@@ -58,7 +58,7 @@ TEST_F(PropVariantTest, ctor_Ok_IsEmpty) {
 // ~PropVariant
 //
 
-TEST_F(PropVariantTest, dtor_Value_Cleanup) {
+TEST_F(PropVariant_Test, dtor_Value_Cleanup) {
 	t::InSequence s;
 	EXPECT_CALL(m_object, AddRef());
 	EXPECT_CALL(m_check, Call());

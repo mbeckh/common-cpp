@@ -18,6 +18,8 @@ limitations under the License.
 
 #include "Bar.h"
 #include "Foo.h"
+
+#include "m3c/COM.h"
 #include "m3c/exception.h"
 
 #include <gtest/gtest.h>
@@ -29,73 +31,72 @@ limitations under the License.
 
 #include <new>
 
-
 namespace m3c::test {
 
 //
 // GetObjectCount
 //
 
-TEST(ComObjectTest, GetObjectCount_Initial_Return0) {
-	EXPECT_EQ(0u, AbstractComObject::GetObjectCount());
+TEST(ComObject_Test, GetObjectCount_Initial_Return0) {
+	EXPECT_EQ(0u, COM::GetObjectCount());
 }
 
-TEST(ComObjectTest, GetObjectCount_Create1Object_Return1) {
+TEST(ComObject_Test, GetObjectCount_Create1Object_Return1) {
 	Foo* pFoo = new Foo();
 
-	EXPECT_EQ(1u, AbstractComObject::GetObjectCount());
+	EXPECT_EQ(1u, COM::GetObjectCount());
 
 	pFoo->Release();
 }
 
-TEST(ComObjectTest, GetObjectCount_Create2Objects_Return2) {
+TEST(ComObject_Test, GetObjectCount_Create2Objects_Return2) {
 	Foo* pFoo = new Foo();
 	Bar* pBar = new Bar();
 
-	EXPECT_EQ(2u, AbstractComObject::GetObjectCount());
+	EXPECT_EQ(2u, COM::GetObjectCount());
 
 	pFoo->Release();
 	pBar->Release();
 }
 
-TEST(ComObjectTest, GetObjectCount_Create3Objects_Return3) {
+TEST(ComObject_Test, GetObjectCount_Create3Objects_Return3) {
 	Foo* pFoo = new Foo();
 	Bar* pBar = new Bar();
 	Foo* pBaz = new Foo();
 
-	EXPECT_EQ(3u, AbstractComObject::GetObjectCount());
+	EXPECT_EQ(3u, COM::GetObjectCount());
 
 	pFoo->Release();
 	pBar->Release();
 	pBaz->Release();
 }
 
-TEST(ComObjectTest, GetObjectCount_AddRef_NoChange) {
+TEST(ComObject_Test, GetObjectCount_AddRef_NoChange) {
 	Foo* pFoo = new Foo();
 	pFoo->AddRef();
 
-	EXPECT_EQ(1u, AbstractComObject::GetObjectCount());
+	EXPECT_EQ(1u, COM::GetObjectCount());
 
 	pFoo->Release();
 	pFoo->Release();
 }
 
-TEST(ComObjectTest, GetObjectCount_ReleaseNonFinal_NoChange) {
+TEST(ComObject_Test, GetObjectCount_ReleaseNonFinal_NoChange) {
 	Foo* pFoo = new Foo();
 	pFoo->AddRef();
 	pFoo->Release();
 
-	EXPECT_EQ(1u, AbstractComObject::GetObjectCount());
+	EXPECT_EQ(1u, COM::GetObjectCount());
 
 	pFoo->Release();
 }
 
-TEST(ComObjectTest, GetObjectCount_ReleaseFinal_Reduce) {
+TEST(ComObject_Test, GetObjectCount_ReleaseFinal_Reduce) {
 	Foo* pFoo = new Foo();
 	Bar* pBar = new Bar();
 	pFoo->Release();
 
-	EXPECT_EQ(1u, AbstractComObject::GetObjectCount());
+	EXPECT_EQ(1u, COM::GetObjectCount());
 
 	pBar->Release();
 }
@@ -106,7 +107,7 @@ TEST(ComObjectTest, GetObjectCount_ReleaseFinal_Reduce) {
 // Release
 //
 
-TEST(ComObjectTest, ReferenceCount_AddAndRelease_IsChanged) {
+TEST(ComObject_Test, ReferenceCount_AddAndRelease_IsChanged) {
 	Foo* pFoo = new Foo();
 
 	EXPECT_EQ(2u, pFoo->AddRef());
@@ -114,7 +115,9 @@ TEST(ComObjectTest, ReferenceCount_AddAndRelease_IsChanged) {
 
 	EXPECT_EQ(2u, pFoo->Release());
 	EXPECT_EQ(1u, pFoo->Release());
+	m4t::memory_start_tracking(pFoo);
 	EXPECT_EQ(0u, pFoo->Release());
+	m4t::memory_stop_tracking();
 	EXPECT_DELETED(pFoo);
 }
 
@@ -123,7 +126,7 @@ TEST(ComObjectTest, ReferenceCount_AddAndRelease_IsChanged) {
 // QueryInterface(REFIID, void**)
 //
 
-TEST(ComObjectTest, QueryInterface_IidIsNotSupported_ReturnNoInterface) {
+TEST(ComObject_Test, QueryInterface_IidIsNotSupported_ReturnNoInterface) {
 	Foo foo;
 	IFoo* pFoo = (IFoo*) m4t::kInvalidPtr;
 	HRESULT hr = foo.QueryInterface(IID_IBar, (void**) &pFoo);
@@ -132,7 +135,7 @@ TEST(ComObjectTest, QueryInterface_IidIsNotSupported_ReturnNoInterface) {
 	EXPECT_NULL(pFoo);
 }
 
-TEST(ComObjectTest, QueryInterface_ObjectIsNullptr_ReturnInvalidArgument) {
+TEST(ComObject_Test, QueryInterface_ObjectIsNullptr_ReturnInvalidArgument) {
 	Foo foo;
 #pragma warning(suppress : 6387)
 	HRESULT hr = foo.QueryInterface(IID_IUnknown, nullptr);
@@ -143,7 +146,7 @@ TEST(ComObjectTest, QueryInterface_ObjectIsNullptr_ReturnInvalidArgument) {
 	foo.Release();
 }
 
-TEST(ComObjectTest, QueryInterface_Ok_ReturnObjectAndIncrementReferenceCount) {
+TEST(ComObject_Test, QueryInterface_Ok_ReturnObjectAndIncrementReferenceCount) {
 	Foo foo;
 	IFoo* pFoo = (IFoo*) m4t::kInvalidPtr;
 	HRESULT hr = foo.QueryInterface(IID_IUnknown, (void**) &pFoo);
@@ -161,14 +164,14 @@ TEST(ComObjectTest, QueryInterface_Ok_ReturnObjectAndIncrementReferenceCount) {
 // QueryInterface(REFIID)
 //
 
-TEST(ComObjectTest, QueryInterfaceWithIID_IIDIsNotSupported_ThrowsException) {
+TEST(ComObject_Test, QueryInterfaceWithIID_IIDIsNotSupported_ThrowsException) {
 	Foo foo;
 
 #pragma warning(suppress : 4834)
 	EXPECT_THROW(foo.QueryInterface(IID_IStream), com_exception);
 }
 
-TEST(ComObjectTest, QueryInterfaceWithIID_Ok_ReturnObjectAndIncrementReferenceCount) {
+TEST(ComObject_Test, QueryInterfaceWithIID_Ok_ReturnObjectAndIncrementReferenceCount) {
 	Foo foo;
 	IFoo* pFoo = (IFoo*) foo.QueryInterface(IID_IFoo);
 

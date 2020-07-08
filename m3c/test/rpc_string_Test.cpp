@@ -30,14 +30,9 @@ limitations under the License.
 
 namespace m3c::test {
 
-class rpc_stringTest : public t::Test {
-public:
-	rpc_stringTest() {
-		Initialize();
-	}
-
-private:
-	void Initialize() {
+class rpc_string_Test : public t::Test {
+protected:
+	void SetUp() override {
 		ASSERT_EQ(RPC_S_OK, UuidToStringA(&IID_IClassFactory, &m_str));
 		EXPECT_NOT_NULL(m_str);
 
@@ -55,7 +50,7 @@ protected:
 // RpcString()
 //
 
-TEST_F(rpc_stringTest, ctor_Default_IsEmpty) {
+TEST_F(rpc_string_Test, ctor_Default_IsEmpty) {
 	rpc_string str;
 
 	EXPECT_EQ(nullptr, str);
@@ -66,7 +61,7 @@ TEST_F(rpc_stringTest, ctor_Default_IsEmpty) {
 // RpcString(RpcString&&)
 //
 
-TEST_F(rpc_stringTest, ctorMove_WithEmpty_IsEmpty) {
+TEST_F(rpc_string_Test, ctorMove_WithEmpty_IsEmpty) {
 	rpc_string oth;
 	rpc_string str(std::move(oth));
 
@@ -74,7 +69,7 @@ TEST_F(rpc_stringTest, ctorMove_WithEmpty_IsEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST_F(rpc_stringTest, ctorMove_WithValue_ValueIsMoved) {
+TEST_F(rpc_string_Test, ctorMove_WithValue_ValueIsMoved) {
 	RPC_CSTR p = m_other.get();
 	rpc_string str(std::move(m_other));
 
@@ -88,7 +83,7 @@ TEST_F(rpc_stringTest, ctorMove_WithValue_ValueIsMoved) {
 // RpcString(nullptr_t)
 //
 
-TEST_F(rpc_stringTest, ctorFromNullptr_WithNullptr_IsEmpty) {
+TEST_F(rpc_string_Test, ctorFromNullptr_WithNullptr_IsEmpty) {
 	rpc_string str(nullptr);
 
 	EXPECT_NULL(str);
@@ -99,7 +94,7 @@ TEST_F(rpc_stringTest, ctorFromNullptr_WithNullptr_IsEmpty) {
 // operator=(unique_ptr&&)
 //
 
-TEST_F(rpc_stringTest, opMove_EmptyToEmpty_IsEmpty) {
+TEST_F(rpc_string_Test, opMove_EmptyToEmpty_IsEmpty) {
 	rpc_string str;
 	rpc_string oth;
 
@@ -109,7 +104,7 @@ TEST_F(rpc_stringTest, opMove_EmptyToEmpty_IsEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST_F(rpc_stringTest, opMove_ValueToEmpty_ValueIsMoved) {
+TEST_F(rpc_string_Test, opMove_ValueToEmpty_ValueIsMoved) {
 	rpc_string str;
 	RPC_CSTR p = m_other.get();
 
@@ -120,7 +115,7 @@ TEST_F(rpc_stringTest, opMove_ValueToEmpty_ValueIsMoved) {
 	EXPECT_NULL(m_other);
 }
 
-TEST_F(rpc_stringTest, opMove_ValueToValue_ValueIsMoved) {
+TEST_F(rpc_string_Test, opMove_ValueToValue_ValueIsMoved) {
 	RPC_CSTR p = m_other.get();
 
 	m_str = std::move(m_other);
@@ -135,14 +130,14 @@ TEST_F(rpc_stringTest, opMove_ValueToValue_ValueIsMoved) {
 // operator=(nullptr_t)
 //
 
-TEST_F(rpc_stringTest, opAssign_NullptrToEmpty_IsEmpty) {
+TEST_F(rpc_string_Test, opAssign_NullptrToEmpty_IsEmpty) {
 	rpc_string str;
 	str = nullptr;
 
 	EXPECT_NULL(str);
 }
 
-TEST_F(rpc_stringTest, opAssign_NullptrToValue_ValueIsCleared) {
+TEST_F(rpc_string_Test, opAssign_NullptrToValue_ValueIsCleared) {
 	m_str = nullptr;
 
 	EXPECT_NULL(m_str);
@@ -153,7 +148,7 @@ TEST_F(rpc_stringTest, opAssign_NullptrToValue_ValueIsCleared) {
 // operator&
 //
 
-TEST_F(rpc_stringTest, opAddressOf_Empty_ReturnAddress) {
+TEST_F(rpc_string_Test, opAddressOf_Empty_ReturnAddress) {
 	rpc_string str;
 	RPC_CSTR* pp = &str;
 
@@ -161,14 +156,14 @@ TEST_F(rpc_stringTest, opAddressOf_Empty_ReturnAddress) {
 	EXPECT_NOT_NULL(pp);
 }
 
-TEST_F(rpc_stringTest, opAddressOf_Value_SetEmpty) {
+TEST_F(rpc_string_Test, opAddressOf_Value_SetEmpty) {
 	RPC_CSTR* pp = &m_str;
 
 	EXPECT_NULL(m_str);
 	EXPECT_NOT_NULL(pp);
 }
 
-TEST_F(rpc_stringTest, opAddressOf_SetValue_HasValue) {
+TEST_F(rpc_string_Test, opAddressOf_SetValue_HasValue) {
 	RPC_CSTR* pp = &m_str;
 	ASSERT_NOT_NULL(pp);
 
@@ -183,13 +178,13 @@ TEST_F(rpc_stringTest, opAddressOf_SetValue_HasValue) {
 // (bool)
 //
 
-TEST_F(rpc_stringTest, opBool_Empty_ReturnFalse) {
+TEST_F(rpc_string_Test, opBool_Empty_ReturnFalse) {
 	rpc_string str;
 
 	EXPECT_FALSE(str);
 }
 
-TEST_F(rpc_stringTest, opBool_Value_ReturnTrue) {
+TEST_F(rpc_string_Test, opBool_Value_ReturnTrue) {
 	EXPECT_TRUE(m_str);
 }
 
@@ -198,14 +193,14 @@ TEST_F(rpc_stringTest, opBool_Value_ReturnTrue) {
 // get
 //
 
-TEST_F(rpc_stringTest, Get_Empty_ReturnNullptr) {
+TEST_F(rpc_string_Test, Get_Empty_ReturnNullptr) {
 	rpc_string str;
 	RPC_CSTR p = str.get();
 
 	EXPECT_NULL(p);
 }
 
-TEST_F(rpc_stringTest, Get_Value_ReturnPointer) {
+TEST_F(rpc_string_Test, Get_Value_ReturnPointer) {
 	RPC_CSTR p = m_str.get();
 
 	EXPECT_NOT_NULL(p);
@@ -216,14 +211,14 @@ TEST_F(rpc_stringTest, Get_Value_ReturnPointer) {
 // as_native
 //
 
-TEST_F(rpc_stringTest, AsNative_Empty_ReturnNullptr) {
+TEST_F(rpc_string_Test, AsNative_Empty_ReturnNullptr) {
 	rpc_string str;
 	const char* p = str.as_native();
 
 	EXPECT_NULL(p);
 }
 
-TEST_F(rpc_stringTest, AsNative_Value_ReturnPointer) {
+TEST_F(rpc_string_Test, AsNative_Value_ReturnPointer) {
 	const char* p = m_str.as_native();
 
 	EXPECT_NOT_NULL(p);
@@ -234,7 +229,7 @@ TEST_F(rpc_stringTest, AsNative_Value_ReturnPointer) {
 // Release
 //
 
-TEST_F(rpc_stringTest, Release_Empty_ReturnNullptr) {
+TEST_F(rpc_string_Test, Release_Empty_ReturnNullptr) {
 	rpc_string str;
 	RPC_CSTR p = str.release();
 
@@ -242,7 +237,7 @@ TEST_F(rpc_stringTest, Release_Empty_ReturnNullptr) {
 	EXPECT_NULL(p);
 }
 
-TEST_F(rpc_stringTest, Release_Value_ReturnPointer) {
+TEST_F(rpc_string_Test, Release_Value_ReturnPointer) {
 	RPC_CSTR p;
 	{
 		RPC_CSTR addr = m_str.get();
@@ -260,7 +255,7 @@ TEST_F(rpc_stringTest, Release_Value_ReturnPointer) {
 // swap
 //
 
-TEST_F(rpc_stringTest, Swap_EmptyWithEmpty_AreEmpty) {
+TEST_F(rpc_string_Test, Swap_EmptyWithEmpty_AreEmpty) {
 	rpc_string str;
 	rpc_string oth;
 
@@ -270,7 +265,7 @@ TEST_F(rpc_stringTest, Swap_EmptyWithEmpty_AreEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST_F(rpc_stringTest, Swap_ValueWithEmpty_EmptyAndValue) {
+TEST_F(rpc_string_Test, Swap_ValueWithEmpty_EmptyAndValue) {
 	RPC_CSTR p = m_str.get();
 	rpc_string oth;
 
@@ -280,7 +275,7 @@ TEST_F(rpc_stringTest, Swap_ValueWithEmpty_EmptyAndValue) {
 	EXPECT_EQ(p, oth);
 }
 
-TEST_F(rpc_stringTest, Swap_EmptyWithValue_ValueAndEmpty) {
+TEST_F(rpc_string_Test, Swap_EmptyWithValue_ValueAndEmpty) {
 	rpc_string str;
 	RPC_CSTR p = m_other.get();
 
@@ -290,7 +285,7 @@ TEST_F(rpc_stringTest, Swap_EmptyWithValue_ValueAndEmpty) {
 	EXPECT_NULL(m_other);
 }
 
-TEST_F(rpc_stringTest, Swap_ValueWithValue_ValueAndValue) {
+TEST_F(rpc_string_Test, Swap_ValueWithValue_ValueAndValue) {
 	RPC_CSTR p = m_str.get();
 	RPC_CSTR o = m_other.get();
 
@@ -305,14 +300,14 @@ TEST_F(rpc_stringTest, Swap_ValueWithValue_ValueAndValue) {
 // hash
 //
 
-TEST_F(rpc_stringTest, Hash_Empty_ReturnHash) {
+TEST_F(rpc_string_Test, Hash_Empty_ReturnHash) {
 	rpc_string str;
 	std::size_t h = str.hash();
 
 	EXPECT_EQ(std::hash<void*>{}(str.get()), h);
 }
 
-TEST_F(rpc_stringTest, Hash_Value_ReturnHash) {
+TEST_F(rpc_string_Test, Hash_Value_ReturnHash) {
 	std::size_t h = m_str.hash();
 
 	EXPECT_EQ(std::hash<void*>{}(m_str.get()), h);
@@ -324,7 +319,7 @@ TEST_F(rpc_stringTest, Hash_Value_ReturnHash) {
 // operator!=(const RpcString&, const RpcString&)
 //
 
-TEST_F(rpc_stringTest, opEquals_EmptyAndEmpty_Equal) {
+TEST_F(rpc_string_Test, opEquals_EmptyAndEmpty_Equal) {
 	rpc_string str;
 	rpc_string oth;
 
@@ -335,7 +330,7 @@ TEST_F(rpc_stringTest, opEquals_EmptyAndEmpty_Equal) {
 	EXPECT_FALSE(oth != str);
 }
 
-TEST_F(rpc_stringTest, opEquals_EmptyAndValue_NotEqual) {
+TEST_F(rpc_string_Test, opEquals_EmptyAndValue_NotEqual) {
 	rpc_string str;
 
 	EXPECT_FALSE(str == m_other);
@@ -345,7 +340,7 @@ TEST_F(rpc_stringTest, opEquals_EmptyAndValue_NotEqual) {
 	EXPECT_TRUE(m_other != str);
 }
 
-TEST_F(rpc_stringTest, opEquals_ValueAndValue_NotEqual) {
+TEST_F(rpc_string_Test, opEquals_ValueAndValue_NotEqual) {
 	EXPECT_FALSE(m_str == m_other);
 	EXPECT_FALSE(m_other == m_str);
 
@@ -354,7 +349,7 @@ TEST_F(rpc_stringTest, opEquals_ValueAndValue_NotEqual) {
 }
 
 // currently not possibly
-// TEST(rpc_stringTest, opEquals_ValueAndSameValue_Equal);
+// TEST(rpc_string_Test, opEquals_ValueAndSameValue_Equal);
 
 
 //
@@ -364,7 +359,7 @@ TEST_F(rpc_stringTest, opEquals_ValueAndValue_NotEqual) {
 // operator!=(U* p, RpcString&)
 //
 
-TEST_F(rpc_stringTest, opEqualsPointer_EmptyAndNullptr_Equal) {
+TEST_F(rpc_string_Test, opEqualsPointer_EmptyAndNullptr_Equal) {
 	rpc_string str;
 	RPC_CSTR p = nullptr;
 
@@ -375,7 +370,7 @@ TEST_F(rpc_stringTest, opEqualsPointer_EmptyAndNullptr_Equal) {
 	EXPECT_FALSE(p != str);
 }
 
-TEST_F(rpc_stringTest, opEqualsPointer_EmptyAndPointer_NotEqual) {
+TEST_F(rpc_string_Test, opEqualsPointer_EmptyAndPointer_NotEqual) {
 	rpc_string str;
 	RPC_CSTR p = m_str.get();
 
@@ -386,7 +381,7 @@ TEST_F(rpc_stringTest, opEqualsPointer_EmptyAndPointer_NotEqual) {
 	EXPECT_TRUE(p != str);
 }
 
-TEST_F(rpc_stringTest, opEqualsPointer_ValueAndNullptr_NotEqual) {
+TEST_F(rpc_string_Test, opEqualsPointer_ValueAndNullptr_NotEqual) {
 	RPC_CSTR p = nullptr;
 
 	EXPECT_FALSE(m_str == p);
@@ -396,7 +391,7 @@ TEST_F(rpc_stringTest, opEqualsPointer_ValueAndNullptr_NotEqual) {
 	EXPECT_TRUE(p != m_str);
 }
 
-TEST_F(rpc_stringTest, opEqualsPointer_ValueAndPointer_NotEqual) {
+TEST_F(rpc_string_Test, opEqualsPointer_ValueAndPointer_NotEqual) {
 	RPC_CSTR p = m_other.get();
 
 	EXPECT_FALSE(m_str == p);
@@ -406,7 +401,7 @@ TEST_F(rpc_stringTest, opEqualsPointer_ValueAndPointer_NotEqual) {
 	EXPECT_TRUE(p != m_str);
 }
 
-TEST_F(rpc_stringTest, opEqualsPointer_ValueAndSamePointer_Equal) {
+TEST_F(rpc_string_Test, opEqualsPointer_ValueAndSamePointer_Equal) {
 	RPC_CSTR p = m_str.get();
 
 	EXPECT_TRUE(m_str == p);
@@ -424,7 +419,7 @@ TEST_F(rpc_stringTest, opEqualsPointer_ValueAndSamePointer_Equal) {
 // operator!=(nullptr_t, com_heap_ptr com_ptr<T>&)
 //
 
-TEST_F(rpc_stringTest, opEqualsNullptr_Empty_Equal) {
+TEST_F(rpc_string_Test, opEqualsNullptr_Empty_Equal) {
 	rpc_string str;
 
 	EXPECT_TRUE(str == nullptr);
@@ -434,7 +429,7 @@ TEST_F(rpc_stringTest, opEqualsNullptr_Empty_Equal) {
 	EXPECT_FALSE(nullptr != str);
 }
 
-TEST_F(rpc_stringTest, opEqualsNullptr_Value_NoEqual) {
+TEST_F(rpc_string_Test, opEqualsNullptr_Value_NoEqual) {
 	EXPECT_FALSE(m_str == nullptr);
 	EXPECT_FALSE(nullptr == m_str);
 
@@ -447,7 +442,7 @@ TEST_F(rpc_stringTest, opEqualsNullptr_Value_NoEqual) {
 // std::swap
 //
 
-TEST_F(rpc_stringTest, stdSwap_EmptyWithEmpty_AreEmpty) {
+TEST_F(rpc_string_Test, stdSwap_EmptyWithEmpty_AreEmpty) {
 	rpc_string str;
 	rpc_string oth;
 
@@ -457,7 +452,7 @@ TEST_F(rpc_stringTest, stdSwap_EmptyWithEmpty_AreEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST_F(rpc_stringTest, stdSwap_ValueWithEmpty_EmptyAndValue) {
+TEST_F(rpc_string_Test, stdSwap_ValueWithEmpty_EmptyAndValue) {
 	RPC_CSTR p = m_str.get();
 	rpc_string oth;
 
@@ -467,7 +462,7 @@ TEST_F(rpc_stringTest, stdSwap_ValueWithEmpty_EmptyAndValue) {
 	EXPECT_EQ(p, oth);
 }
 
-TEST_F(rpc_stringTest, stdSwap_EmptyWithValue_ValueAndEmpty) {
+TEST_F(rpc_string_Test, stdSwap_EmptyWithValue_ValueAndEmpty) {
 	rpc_string str;
 	RPC_CSTR p = m_other.get();
 
@@ -477,7 +472,7 @@ TEST_F(rpc_stringTest, stdSwap_EmptyWithValue_ValueAndEmpty) {
 	EXPECT_NULL(m_other);
 }
 
-TEST_F(rpc_stringTest, stdSwap_ValueWithValue_ValueAndValue) {
+TEST_F(rpc_string_Test, stdSwap_ValueWithValue_ValueAndValue) {
 	RPC_CSTR p = m_str.get();
 	RPC_CSTR o = m_other.get();
 
@@ -492,14 +487,14 @@ TEST_F(rpc_stringTest, stdSwap_ValueWithValue_ValueAndValue) {
 // std::hash
 //
 
-TEST_F(rpc_stringTest, stdHash_Empty_ReturnHash) {
+TEST_F(rpc_string_Test, stdHash_Empty_ReturnHash) {
 	rpc_string str;
 	std::size_t h = std::hash<rpc_string>{}(str);
 
 	EXPECT_EQ(std::hash<void*>{}(str.get()), h);
 }
 
-TEST_F(rpc_stringTest, stdHash_Value_ReturnHash) {
+TEST_F(rpc_string_Test, stdHash_Value_ReturnHash) {
 	std::size_t h = std::hash<rpc_string>{}(m_str);
 
 	EXPECT_EQ(std::hash<void*>{}(m_str.get()), h);

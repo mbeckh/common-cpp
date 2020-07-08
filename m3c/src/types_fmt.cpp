@@ -64,11 +64,11 @@ fmt::format_parse_context::iterator Parse(fmt::format_parse_context& ctx) noexce
 // UUID
 //
 
-fmt::format_parse_context::iterator fmt::formatter<UUID>::parse(fmt::format_parse_context& ctx) noexcept {  // NOLINT(readability-identifier-naming): MUST use name as in fmt::formatter.
+fmt::format_parse_context::iterator fmt::formatter<UUID>::parse(fmt::format_parse_context& ctx) noexcept {
 	return Parse(ctx);
 }
 
-fmt::format_context::iterator fmt::formatter<UUID>::format(const UUID& arg, fmt::format_context& ctx) {  // NOLINT(readability-identifier-naming): MUST use name as in fmt::formatter.
+fmt::format_context::iterator fmt::formatter<UUID>::format(const UUID& arg, fmt::format_context& ctx) {
 	m3c::rpc_string rpc;
 	RPC_STATUS status = UuidToStringA(&arg, &rpc);
 	if (status != RPC_S_OK) {
@@ -81,14 +81,14 @@ fmt::format_context::iterator fmt::formatter<UUID>::format(const UUID& arg, fmt:
 
 
 //
-// PropVariant
+// PROPVARIANT
 //
 
-fmt::format_parse_context::iterator fmt::formatter<PROPVARIANT>::parse(fmt::format_parse_context& ctx) noexcept {  // NOLINT(readability-identifier-naming): MUST use name as in fmt::formatter.
+fmt::format_parse_context::iterator fmt::formatter<PROPVARIANT>::parse(fmt::format_parse_context& ctx) noexcept {
 	return Parse(ctx);
 }
 
-fmt::format_context::iterator fmt::formatter<PROPVARIANT>::format(const PROPVARIANT& arg, fmt::format_context& ctx) {  // NOLINT(readability-identifier-naming): MUST use name as in fmt::formatter.
+fmt::format_context::iterator fmt::formatter<PROPVARIANT>::format(const PROPVARIANT& arg, fmt::format_context& ctx) {
 	const std::string vt = m3c::VariantTypeToString(arg);
 	*ctx.out() = '(';
 	std::copy(vt.cbegin(), vt.cend(), ctx.out());
@@ -141,7 +141,7 @@ fmt::format_context::iterator Format(IStream* arg, fmt::format_context& ctx) {
 	const ULONG ref = arg->AddRef();
 	arg->Release();
 
-	STATSTG statstg = {0};
+	STATSTG statstg{};
 	auto f = m3c::finally([&statstg]() noexcept {
 		CoTaskMemFree(statstg.pwcsName);
 	});
@@ -157,40 +157,40 @@ fmt::format_context::iterator Format(IStream* arg, fmt::format_context& ctx) {
 }  // namespace
 
 
-fmt::format_parse_context::iterator fmt::formatter<m3c::fmt_ptr<IUnknown>>::parse(fmt::format_parse_context& ctx) noexcept {  // NOLINT(readability-identifier-naming): MUST use name as in fmt::formatter.
+fmt::format_parse_context::iterator fmt::formatter<m3c::fmt_ptr<IUnknown>>::parse(fmt::format_parse_context& ctx) noexcept {
 	return Parse(ctx);
 }
 
-fmt::format_context::iterator fmt::formatter<m3c::fmt_ptr<IUnknown>>::format(const m3c::fmt_ptr<IUnknown>& arg, fmt::format_context& ctx) {  // NOLINT(readability-identifier-naming): MUST use name as in fmt::formatter.
+fmt::format_context::iterator fmt::formatter<m3c::fmt_ptr<IUnknown>>::format(const m3c::fmt_ptr<IUnknown>& arg, fmt::format_context& ctx) {
 	// there is nothing such as a const COM object :-)
 	return Format(arg, ctx);
 }
 
 
-fmt::format_parse_context::iterator fmt::formatter<m3c::fmt_ptr<IStream>>::parse(fmt::format_parse_context& ctx) noexcept {  // NOLINT(readability-identifier-naming): MUST use name as in fmt::formatter.
+fmt::format_parse_context::iterator fmt::formatter<m3c::fmt_ptr<IStream>>::parse(fmt::format_parse_context& ctx) noexcept {
 	return Parse(ctx);
 }
 
-fmt::format_context::iterator fmt::formatter<m3c::fmt_ptr<IStream>>::format(const m3c::fmt_ptr<IStream>& arg, fmt::format_context& ctx) {  // NOLINT(readability-identifier-naming): MUST use name as in fmt::formatter.
+fmt::format_context::iterator fmt::formatter<m3c::fmt_ptr<IStream>>::format(const m3c::fmt_ptr<IStream>& arg, fmt::format_context& ctx) {
 	// there is nothing such as a const COM object :-)
 	return Format(arg, ctx);
 }
 
 
-fmt::format_parse_context::iterator fmt::formatter<m3c::com_ptr<IUnknown>>::parse(fmt::format_parse_context& ctx) noexcept {  // NOLINT(readability-identifier-naming): MUST use name as in fmt::formatter.
+fmt::format_parse_context::iterator fmt::formatter<m3c::com_ptr<IUnknown>>::parse(fmt::format_parse_context& ctx) noexcept {
 	return Parse(ctx);
 }
 
-fmt::format_context::iterator fmt::formatter<m3c::com_ptr<IUnknown>>::format(const m3c::com_ptr<IUnknown>& arg, fmt::format_context& ctx) {  // NOLINT(readability-identifier-naming): MUST use name as in fmt::formatter.
+fmt::format_context::iterator fmt::formatter<m3c::com_ptr<IUnknown>>::format(const m3c::com_ptr<IUnknown>& arg, fmt::format_context& ctx) {
 	return Format(arg.get(), ctx);
 }
 
 
-fmt::format_parse_context::iterator fmt::formatter<m3c::com_ptr<IStream>>::parse(fmt::format_parse_context& ctx) noexcept {  // NOLINT(readability-identifier-naming): MUST use name as in fmt::formatter.
+fmt::format_parse_context::iterator fmt::formatter<m3c::com_ptr<IStream>>::parse(fmt::format_parse_context& ctx) noexcept {
 	return Parse(ctx);
 }
 
-fmt::format_context::iterator fmt::formatter<m3c::com_ptr<IStream>>::format(const m3c::com_ptr<IStream>& arg, fmt::format_context& ctx) {  // NOLINT(readability-identifier-naming): MUST use name as in fmt::formatter.
+fmt::format_context::iterator fmt::formatter<m3c::com_ptr<IStream>>::format(const m3c::com_ptr<IStream>& arg, fmt::format_context& ctx) {
 	return Format(arg.get(), ctx);
 }
 
@@ -199,11 +199,11 @@ fmt::format_context::iterator fmt::formatter<m3c::com_ptr<IStream>>::format(cons
 // PROPERTYKEY
 //
 
-fmt::format_parse_context::iterator fmt::formatter<PROPERTYKEY>::parse(fmt::format_parse_context& ctx) noexcept {  // NOLINT(readability-identifier-naming): MUST use name as in fmt::formatter.
+fmt::format_parse_context::iterator fmt::formatter<PROPERTYKEY>::parse(fmt::format_parse_context& ctx) noexcept {
 	return Parse(ctx);
 }
 
-fmt::format_context::iterator fmt::formatter<PROPERTYKEY>::format(const PROPERTYKEY& arg, fmt::format_context& ctx) {  // NOLINT(readability-identifier-naming): MUST use name as in fmt::formatter.
+fmt::format_context::iterator fmt::formatter<PROPERTYKEY>::format(const PROPERTYKEY& arg, fmt::format_context& ctx) {
 	m3c::com_heap_ptr<wchar_t> key;
 	COM_HR(PSGetNameFromPropertyKey(arg, &key), "PSGetNameFromPropertyKey");
 
@@ -216,7 +216,7 @@ fmt::format_context::iterator fmt::formatter<PROPERTYKEY>::format(const PROPERTY
 // WICRect
 //
 
-fmt::format_parse_context::iterator fmt::formatter<WICRect>::parse(fmt::format_parse_context& ctx) {  // NOLINT(readability-identifier-naming): MUST use name as in fmt::formatter.
+fmt::format_parse_context::iterator fmt::formatter<WICRect>::parse(fmt::format_parse_context& ctx) {
 	auto it = ctx.begin();
 	if (it != ctx.end() && *it == ':') {
 		++it;
@@ -225,7 +225,8 @@ fmt::format_parse_context::iterator fmt::formatter<WICRect>::parse(fmt::format_p
 	while (end != ctx.end() && *end != '}') {
 		++end;
 	}
-	m_format.reserve((end - it + 3) * 4 + 13);  // NOLINT(readability-magic-numbers): length calculated from strings
+	constexpr std::size_t kGroupingCharCount = 13;
+	m_format.reserve((end - it + 3) * 4 + kGroupingCharCount);
 	m_format.append("(@({:");
 	m_format.append(it, end);
 	m_format.append("}, {:");
@@ -235,10 +236,10 @@ fmt::format_parse_context::iterator fmt::formatter<WICRect>::parse(fmt::format_p
 	m_format.append("} x {:");
 	m_format.append(it, end);
 	m_format.append("})");
-	assert(m_format.size() == static_cast<std::size_t>((end - it + 3) * 4 + 13));
+	assert(m_format.size() == static_cast<std::size_t>((end - it + 3) * 4 + kGroupingCharCount));
 	return end;
 }
 
-fmt::format_context::iterator fmt::formatter<WICRect>::format(const WICRect& arg, fmt::format_context& ctx) {  // NOLINT(readability-identifier-naming): MUST use name as in fmt::formatter.
+fmt::format_context::iterator fmt::formatter<WICRect>::format(const WICRect& arg, fmt::format_context& ctx) {
 	return fmt::format_to(ctx.out(), m_format, arg.X, arg.Y, arg.Width, arg.Height);
 }

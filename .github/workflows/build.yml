@@ -82,7 +82,7 @@ jobs:
       uses: mbeckh/msvc-common/actions/analyze-clang-tidy@v2
       with:
         id: ${{ matrix.configuration }}
-        clang-args: -xc++ -std=c++20 -Im3c/include -Ilib/fmt/include -Ilib/llamalog/include -DUNICODE -D_UNICODE -DNOMINMAX -DWIN32_LEAN_AND_MEAN -D_WIN32_WINNT=0x0602 ${{ env.analyze_args }}
+        clang-args: -D_WIN32_WINNT=0x0602 ${{ env.analyze_args }}
     
     - name: Save logs
       uses: actions/upload-artifact@v2
@@ -107,4 +107,3 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}
- 

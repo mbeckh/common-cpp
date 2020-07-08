@@ -29,20 +29,15 @@ limitations under the License.
 
 namespace m3c::test {
 
-class com_heap_ptrTest : public t::Test {
-public:
-	com_heap_ptrTest() {
-		Initialize();
+class com_heap_ptr_Test : public t::Test {
+protected:
+	void SetUp() override {
+		ASSERT_HRESULT_SUCCEEDED(CoRegisterMallocSpy(&m_spy));
 	}
 
-	~com_heap_ptrTest() {
+	void TearDown() override {
 		EXPECT_EQ(0, m_spy.GetAllocatedCount());
 		EXPECT_HRESULT_SUCCEEDED(CoRevokeMallocSpy());
-	}
-
-private:
-	void Initialize() {
-		ASSERT_HRESULT_SUCCEEDED(CoRegisterMallocSpy(&m_spy));
 	}
 
 protected:
@@ -61,7 +56,7 @@ protected:
 // com_heap_ptr()
 //
 
-TEST_F(com_heap_ptrTest, ctor_Default_IsEmpty) {
+TEST_F(com_heap_ptr_Test, ctor_Default_IsEmpty) {
 	com_heap_ptr<int> ptr;
 
 	EXPECT_NULL(ptr);
@@ -74,7 +69,7 @@ TEST_F(com_heap_ptrTest, ctor_Default_IsEmpty) {
 // com_heap_ptr(com_heap_ptr&&)
 //
 
-TEST_F(com_heap_ptrTest, ctorMove_WithEmpty_IsEmpty) {
+TEST_F(com_heap_ptr_Test, ctorMove_WithEmpty_IsEmpty) {
 	com_heap_ptr<int> oth;
 	com_heap_ptr<int> ptr(std::move(oth));
 
@@ -84,7 +79,7 @@ TEST_F(com_heap_ptrTest, ctorMove_WithEmpty_IsEmpty) {
 	EXPECT_COM_DELETED_COUNT(0);
 }
 
-TEST_F(com_heap_ptrTest, ctorMove_WithValue_ValueIsMoved) {
+TEST_F(com_heap_ptr_Test, ctorMove_WithValue_ValueIsMoved) {
 	com_heap_ptr<int> oth(7);
 	int* p = oth.get();
 	com_heap_ptr<int> ptr(std::move(oth));
@@ -101,7 +96,7 @@ TEST_F(com_heap_ptrTest, ctorMove_WithValue_ValueIsMoved) {
 // com_heap_ptr(nullptr_t)
 //
 
-TEST_F(com_heap_ptrTest, ctorFromNullptr_WithNullptr_IsEmpty) {
+TEST_F(com_heap_ptr_Test, ctorFromNullptr_WithNullptr_IsEmpty) {
 	com_heap_ptr<int> ptr(nullptr);
 
 	EXPECT_NULL(ptr);
@@ -114,7 +109,7 @@ TEST_F(com_heap_ptrTest, ctorFromNullptr_WithNullptr_IsEmpty) {
 // com_heap_ptr(T*)
 //
 
-TEST_F(com_heap_ptrTest, ctorFromPointer_WithNullptr_IsEmpty) {
+TEST_F(com_heap_ptr_Test, ctorFromPointer_WithNullptr_IsEmpty) {
 	int* p = nullptr;
 	com_heap_ptr<int> ptr(p);
 
@@ -123,7 +118,7 @@ TEST_F(com_heap_ptrTest, ctorFromPointer_WithNullptr_IsEmpty) {
 	EXPECT_COM_DELETED_COUNT(0);
 }
 
-TEST_F(com_heap_ptrTest, ctorFromPointer_WithValue_HasValue) {
+TEST_F(com_heap_ptr_Test, ctorFromPointer_WithValue_HasValue) {
 	int* p = (int*) CoTaskMemAlloc(8);
 	com_heap_ptr<int> ptr(p);
 
@@ -138,7 +133,7 @@ TEST_F(com_heap_ptrTest, ctorFromPointer_WithValue_HasValue) {
 // com_heap_ptr(size_t)
 //
 
-TEST_F(com_heap_ptrTest, ctorFromSize_WithValue_CreateObject) {
+TEST_F(com_heap_ptr_Test, ctorFromSize_WithValue_CreateObject) {
 	com_heap_ptr<int> ptr(3);
 	int* p = ptr.get();
 
@@ -154,7 +149,7 @@ TEST_F(com_heap_ptrTest, ctorFromSize_WithValue_CreateObject) {
 // ~com_heap_ptr
 //
 
-TEST_F(com_heap_ptrTest, dtor_Value_DeleteObject) {
+TEST_F(com_heap_ptr_Test, dtor_Value_DeleteObject) {
 	int* p = (int*) CoTaskMemAlloc(7);
 	{
 		com_heap_ptr<int> ptr(p);
@@ -172,7 +167,7 @@ TEST_F(com_heap_ptrTest, dtor_Value_DeleteObject) {
 // operator=(com_heap_ptr&&)
 //
 
-TEST_F(com_heap_ptrTest, opMove_EmptyToEmpty_IsEmpty) {
+TEST_F(com_heap_ptr_Test, opMove_EmptyToEmpty_IsEmpty) {
 	com_heap_ptr<int> ptr;
 	com_heap_ptr<int> oth;
 
@@ -185,7 +180,7 @@ TEST_F(com_heap_ptrTest, opMove_EmptyToEmpty_IsEmpty) {
 }
 
 
-TEST_F(com_heap_ptrTest, opMove_ValueToEmpty_ValueIsMoved) {
+TEST_F(com_heap_ptr_Test, opMove_ValueToEmpty_ValueIsMoved) {
 	com_heap_ptr<int> ptr;
 	com_heap_ptr<int> oth(7);
 	int* p = oth.get();
@@ -199,7 +194,7 @@ TEST_F(com_heap_ptrTest, opMove_ValueToEmpty_ValueIsMoved) {
 	EXPECT_COM_DELETED_COUNT(0);
 }
 
-TEST_F(com_heap_ptrTest, opMove_EmptyToValue_IsEmpty) {
+TEST_F(com_heap_ptr_Test, opMove_EmptyToValue_IsEmpty) {
 	com_heap_ptr<int> ptr(7);
 	int* p = ptr.get();
 	com_heap_ptr<int> oth;
@@ -213,7 +208,7 @@ TEST_F(com_heap_ptrTest, opMove_EmptyToValue_IsEmpty) {
 	EXPECT_COM_DELETED_COUNT(1);
 }
 
-TEST_F(com_heap_ptrTest, opMove_ValueToValue_ValueIsMoved) {
+TEST_F(com_heap_ptr_Test, opMove_ValueToValue_ValueIsMoved) {
 	com_heap_ptr<int> ptr(3);
 	int* p = ptr.get();
 	com_heap_ptr<int> oth(7);
@@ -236,7 +231,7 @@ TEST_F(com_heap_ptrTest, opMove_ValueToValue_ValueIsMoved) {
 // operator=(nullptr_t)
 //
 
-TEST_F(com_heap_ptrTest, opAssign_NullptrToEmpty_IsEmpty) {
+TEST_F(com_heap_ptr_Test, opAssign_NullptrToEmpty_IsEmpty) {
 	com_heap_ptr<int> ptr;
 
 	ptr = nullptr;
@@ -246,7 +241,7 @@ TEST_F(com_heap_ptrTest, opAssign_NullptrToEmpty_IsEmpty) {
 	EXPECT_COM_DELETED_COUNT(0);
 }
 
-TEST_F(com_heap_ptrTest, opAssign_NullptrToValue_ValueIsCleared) {
+TEST_F(com_heap_ptr_Test, opAssign_NullptrToValue_ValueIsCleared) {
 	com_heap_ptr<int> ptr(3);
 	int* p = ptr.get();
 
@@ -263,7 +258,7 @@ TEST_F(com_heap_ptrTest, opAssign_NullptrToValue_ValueIsCleared) {
 // operator&
 //
 
-TEST_F(com_heap_ptrTest, opAddressOf_Empty_ReturnNullptr) {
+TEST_F(com_heap_ptr_Test, opAddressOf_Empty_ReturnNullptr) {
 	com_heap_ptr<int> ptr;
 	int** pp = &ptr;
 
@@ -273,7 +268,7 @@ TEST_F(com_heap_ptrTest, opAddressOf_Empty_ReturnNullptr) {
 	EXPECT_COM_DELETED_COUNT(0);
 }
 
-TEST_F(com_heap_ptrTest, opAddressOf_Value_SetEmpty) {
+TEST_F(com_heap_ptr_Test, opAddressOf_Value_SetEmpty) {
 	com_heap_ptr<int> ptr(3);
 	int* p = ptr.get();
 	int** pp = &ptr;
@@ -285,7 +280,7 @@ TEST_F(com_heap_ptrTest, opAddressOf_Value_SetEmpty) {
 	EXPECT_COM_DELETED_COUNT(1);
 }
 
-TEST_F(com_heap_ptrTest, opAddressOf_SetValue_HasValue) {
+TEST_F(com_heap_ptr_Test, opAddressOf_SetValue_HasValue) {
 	com_heap_ptr<int> ptr;
 	int** pp = &ptr;
 	ASSERT_NOT_NULL(pp);
@@ -304,7 +299,7 @@ TEST_F(com_heap_ptrTest, opAddressOf_SetValue_HasValue) {
 // (bool)
 //
 
-TEST_F(com_heap_ptrTest, opBool_Empty_ReturnFalse) {
+TEST_F(com_heap_ptr_Test, opBool_Empty_ReturnFalse) {
 	com_heap_ptr<int> ptr;
 
 	bool b = (bool) ptr;
@@ -312,7 +307,7 @@ TEST_F(com_heap_ptrTest, opBool_Empty_ReturnFalse) {
 	EXPECT_FALSE(b);
 }
 
-TEST_F(com_heap_ptrTest, opBool_Value_ReturnTrue) {
+TEST_F(com_heap_ptr_Test, opBool_Value_ReturnTrue) {
 	com_heap_ptr<int> ptr(6);
 
 	bool b = (bool) ptr;
@@ -325,7 +320,7 @@ TEST_F(com_heap_ptrTest, opBool_Value_ReturnTrue) {
 // get
 //
 
-TEST_F(com_heap_ptrTest, get_Empty_ReturnNullptr) {
+TEST_F(com_heap_ptr_Test, get_Empty_ReturnNullptr) {
 	com_heap_ptr<int> ptr;
 	int* p = ptr.get();
 
@@ -334,7 +329,7 @@ TEST_F(com_heap_ptrTest, get_Empty_ReturnNullptr) {
 	EXPECT_COM_DELETED_COUNT(0);
 }
 
-TEST_F(com_heap_ptrTest, get_EmptyAndConst_ReturnNullptr) {
+TEST_F(com_heap_ptr_Test, get_EmptyAndConst_ReturnNullptr) {
 	const com_heap_ptr<int> ptr;
 	const int* p = ptr.get();
 
@@ -343,7 +338,7 @@ TEST_F(com_heap_ptrTest, get_EmptyAndConst_ReturnNullptr) {
 	EXPECT_COM_DELETED_COUNT(0);
 }
 
-TEST_F(com_heap_ptrTest, get_Value_ReturnPointer) {
+TEST_F(com_heap_ptr_Test, get_Value_ReturnPointer) {
 	com_heap_ptr<int> ptr(3);
 	int* p = ptr.get();
 
@@ -353,7 +348,7 @@ TEST_F(com_heap_ptrTest, get_Value_ReturnPointer) {
 	EXPECT_COM_DELETED_COUNT(0);
 }
 
-TEST_F(com_heap_ptrTest, get_ValueAndConst_ReturnPointer) {
+TEST_F(com_heap_ptr_Test, get_ValueAndConst_ReturnPointer) {
 	const com_heap_ptr<int> ptr(3);
 	const int* p = ptr.get();
 
@@ -368,7 +363,7 @@ TEST_F(com_heap_ptrTest, get_ValueAndConst_ReturnPointer) {
 // release
 //
 
-TEST_F(com_heap_ptrTest, release_Empty_ReturnNullptr) {
+TEST_F(com_heap_ptr_Test, release_Empty_ReturnNullptr) {
 	com_heap_ptr<int> ptr;
 	int* p = ptr.release();
 
@@ -378,7 +373,7 @@ TEST_F(com_heap_ptrTest, release_Empty_ReturnNullptr) {
 	EXPECT_COM_DELETED_COUNT(0);
 }
 
-TEST_F(com_heap_ptrTest, release_Value_ReturnPointer) {
+TEST_F(com_heap_ptr_Test, release_Value_ReturnPointer) {
 	int* p;
 	{
 		com_heap_ptr<int> ptr(6);
@@ -403,7 +398,7 @@ TEST_F(com_heap_ptrTest, release_Value_ReturnPointer) {
 // realloc
 //
 
-TEST_F(com_heap_ptrTest, realloc_Empty_IsValue) {
+TEST_F(com_heap_ptr_Test, realloc_Empty_IsValue) {
 	com_heap_ptr<int> ptr;
 	ptr.realloc(5);
 
@@ -413,7 +408,7 @@ TEST_F(com_heap_ptrTest, realloc_Empty_IsValue) {
 	EXPECT_COM_DELETED_COUNT(0);
 }
 
-TEST_F(com_heap_ptrTest, realloc_EmptyWithSize0_IsValue) {
+TEST_F(com_heap_ptr_Test, realloc_EmptyWithSize0_IsValue) {
 	com_heap_ptr<int> ptr;
 	ptr.realloc(0);
 
@@ -423,7 +418,7 @@ TEST_F(com_heap_ptrTest, realloc_EmptyWithSize0_IsValue) {
 	EXPECT_COM_DELETED_COUNT(0);
 }
 
-TEST_F(com_heap_ptrTest, realloc_Value_IsValue) {
+TEST_F(com_heap_ptr_Test, realloc_Value_IsValue) {
 	com_heap_ptr<int> ptr(7);
 	int* p = ptr.get();
 	ptr.realloc(12);
@@ -440,7 +435,7 @@ TEST_F(com_heap_ptrTest, realloc_Value_IsValue) {
 // swap
 //
 
-TEST_F(com_heap_ptrTest, swap_EmptyWithEmpty_AreEmpty) {
+TEST_F(com_heap_ptr_Test, swap_EmptyWithEmpty_AreEmpty) {
 	com_heap_ptr<int> ptr;
 	com_heap_ptr<int> oth;
 
@@ -450,7 +445,7 @@ TEST_F(com_heap_ptrTest, swap_EmptyWithEmpty_AreEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST_F(com_heap_ptrTest, swap_ValueWithEmpty_EmptyAndValue) {
+TEST_F(com_heap_ptr_Test, swap_ValueWithEmpty_EmptyAndValue) {
 	com_heap_ptr<int> ptr(3);
 	int* p = ptr.get();
 	com_heap_ptr<int> oth;
@@ -464,7 +459,7 @@ TEST_F(com_heap_ptrTest, swap_ValueWithEmpty_EmptyAndValue) {
 	EXPECT_COM_DELETED_COUNT(0);
 }
 
-TEST_F(com_heap_ptrTest, swap_EmptyWithValue_ValueAndEmpty) {
+TEST_F(com_heap_ptr_Test, swap_EmptyWithValue_ValueAndEmpty) {
 	com_heap_ptr<int> ptr;
 	com_heap_ptr<int> oth(4);
 	int* p = oth.get();
@@ -478,7 +473,7 @@ TEST_F(com_heap_ptrTest, swap_EmptyWithValue_ValueAndEmpty) {
 	EXPECT_COM_DELETED_COUNT(0);
 }
 
-TEST_F(com_heap_ptrTest, swap_ValueWithValue_ValueAndValue) {
+TEST_F(com_heap_ptr_Test, swap_ValueWithValue_ValueAndValue) {
 	com_heap_ptr<int> ptr(7);
 	int* p = ptr.get();
 	com_heap_ptr<int> oth(4);
@@ -499,14 +494,14 @@ TEST_F(com_heap_ptrTest, swap_ValueWithValue_ValueAndValue) {
 // hash
 //
 
-TEST_F(com_heap_ptrTest, hash_Empty_ReturnHash) {
+TEST_F(com_heap_ptr_Test, hash_Empty_ReturnHash) {
 	com_heap_ptr<int> ptr;
 	std::size_t h = ptr.hash();
 
 	EXPECT_EQ(std::hash<int*>{}(ptr.get()), h);
 }
 
-TEST_F(com_heap_ptrTest, hash_Value_ReturnHash) {
+TEST_F(com_heap_ptr_Test, hash_Value_ReturnHash) {
 	com_heap_ptr<int> ptr(7);
 	std::size_t h = ptr.hash();
 
@@ -519,7 +514,7 @@ TEST_F(com_heap_ptrTest, hash_Value_ReturnHash) {
 // operator!=(const com_heap_ptr&, const com_heap_ptr&)
 //
 
-TEST_F(com_heap_ptrTest, opEquals_EmptyAndEmpty_Equal) {
+TEST_F(com_heap_ptr_Test, opEquals_EmptyAndEmpty_Equal) {
 	com_heap_ptr<int> ptr;
 	com_heap_ptr<int> oth;
 
@@ -530,7 +525,7 @@ TEST_F(com_heap_ptrTest, opEquals_EmptyAndEmpty_Equal) {
 	EXPECT_FALSE(oth != ptr);
 }
 
-TEST_F(com_heap_ptrTest, opEquals_EmptyAndValue_NotEqual) {
+TEST_F(com_heap_ptr_Test, opEquals_EmptyAndValue_NotEqual) {
 	com_heap_ptr<int> ptr;
 	com_heap_ptr<int> oth(3);
 
@@ -541,7 +536,7 @@ TEST_F(com_heap_ptrTest, opEquals_EmptyAndValue_NotEqual) {
 	EXPECT_TRUE(oth != ptr);
 }
 
-TEST_F(com_heap_ptrTest, opEquals_ValueAndValue_NotEqual) {
+TEST_F(com_heap_ptr_Test, opEquals_ValueAndValue_NotEqual) {
 	com_heap_ptr<int> ptr(3);
 	com_heap_ptr<int> oth(7);
 
@@ -552,7 +547,7 @@ TEST_F(com_heap_ptrTest, opEquals_ValueAndValue_NotEqual) {
 	EXPECT_TRUE(oth != ptr);
 }
 
-TEST_F(com_heap_ptrTest, opEquals_ValueAndSameValue_Equal) {
+TEST_F(com_heap_ptr_Test, opEquals_ValueAndSameValue_Equal) {
 	com_heap_ptr<int> ptr(3);
 	com_heap_ptr<int> oth(ptr.get());
 
@@ -574,7 +569,7 @@ TEST_F(com_heap_ptrTest, opEquals_ValueAndSameValue_Equal) {
 // operator!=(U* p, const com_heap_ptr<T>&)
 //
 
-TEST_F(com_heap_ptrTest, opEqualsPointer_EmptyAndNullptr_Equal) {
+TEST_F(com_heap_ptr_Test, opEqualsPointer_EmptyAndNullptr_Equal) {
 	com_heap_ptr<int> ptr;
 	int* p = nullptr;
 
@@ -585,7 +580,7 @@ TEST_F(com_heap_ptrTest, opEqualsPointer_EmptyAndNullptr_Equal) {
 	EXPECT_FALSE(p != ptr);
 }
 
-TEST_F(com_heap_ptrTest, opEqualsPointer_EmptyAndPointer_NotEqual) {
+TEST_F(com_heap_ptr_Test, opEqualsPointer_EmptyAndPointer_NotEqual) {
 	com_heap_ptr<int> ptr;
 	int i = 7;
 	int* p = &i;
@@ -597,7 +592,7 @@ TEST_F(com_heap_ptrTest, opEqualsPointer_EmptyAndPointer_NotEqual) {
 	EXPECT_TRUE(p != ptr);
 }
 
-TEST_F(com_heap_ptrTest, opEqualsPointer_ValueAndNullptr_NotEqual) {
+TEST_F(com_heap_ptr_Test, opEqualsPointer_ValueAndNullptr_NotEqual) {
 	com_heap_ptr<int> ptr(3);
 	int* p = nullptr;
 
@@ -608,7 +603,7 @@ TEST_F(com_heap_ptrTest, opEqualsPointer_ValueAndNullptr_NotEqual) {
 	EXPECT_TRUE(p != ptr);
 }
 
-TEST_F(com_heap_ptrTest, opEqualsPointer_ValueAndPointer_NotEqual) {
+TEST_F(com_heap_ptr_Test, opEqualsPointer_ValueAndPointer_NotEqual) {
 	com_heap_ptr<int> ptr(3);
 	int i = 3;
 	int* p = &i;
@@ -620,7 +615,7 @@ TEST_F(com_heap_ptrTest, opEqualsPointer_ValueAndPointer_NotEqual) {
 	EXPECT_TRUE(p != ptr);
 }
 
-TEST_F(com_heap_ptrTest, opEqualsPointer_ValueAndSamePointer_Equal) {
+TEST_F(com_heap_ptr_Test, opEqualsPointer_ValueAndSamePointer_Equal) {
 	com_heap_ptr<int> ptr(3);
 	int* p = ptr.get();
 
@@ -639,7 +634,7 @@ TEST_F(com_heap_ptrTest, opEqualsPointer_ValueAndSamePointer_Equal) {
 // operator!=(nullptr_t, const com_heap_ptr<T>&)
 //
 
-TEST_F(com_heap_ptrTest, opEqualsNullptr_Empty_Equal) {
+TEST_F(com_heap_ptr_Test, opEqualsNullptr_Empty_Equal) {
 	com_heap_ptr<int> ptr;
 
 	EXPECT_TRUE(ptr == nullptr);
@@ -649,7 +644,7 @@ TEST_F(com_heap_ptrTest, opEqualsNullptr_Empty_Equal) {
 	EXPECT_FALSE(nullptr != ptr);
 }
 
-TEST_F(com_heap_ptrTest, opEqualsNullptr_Value_NoEqual) {
+TEST_F(com_heap_ptr_Test, opEqualsNullptr_Value_NoEqual) {
 	com_heap_ptr<int> ptr(3);
 
 	EXPECT_FALSE(ptr == nullptr);
@@ -664,7 +659,7 @@ TEST_F(com_heap_ptrTest, opEqualsNullptr_Value_NoEqual) {
 // std::swap
 //
 
-TEST_F(com_heap_ptrTest, stdSwap_EmptyWithEmpty_AreEmpty) {
+TEST_F(com_heap_ptr_Test, stdSwap_EmptyWithEmpty_AreEmpty) {
 	com_heap_ptr<int> ptr;
 	com_heap_ptr<int> oth;
 
@@ -674,7 +669,7 @@ TEST_F(com_heap_ptrTest, stdSwap_EmptyWithEmpty_AreEmpty) {
 	EXPECT_NULL(oth);
 }
 
-TEST_F(com_heap_ptrTest, stdSwap_ValueWithEmpty_EmptyAndValue) {
+TEST_F(com_heap_ptr_Test, stdSwap_ValueWithEmpty_EmptyAndValue) {
 	com_heap_ptr<int> ptr(3);
 	int* p = ptr.get();
 	com_heap_ptr<int> oth;
@@ -688,7 +683,7 @@ TEST_F(com_heap_ptrTest, stdSwap_ValueWithEmpty_EmptyAndValue) {
 	EXPECT_COM_DELETED_COUNT(0);
 }
 
-TEST_F(com_heap_ptrTest, stdSwap_EmptyWithValue_ValueAndEmpty) {
+TEST_F(com_heap_ptr_Test, stdSwap_EmptyWithValue_ValueAndEmpty) {
 	com_heap_ptr<int> ptr;
 	com_heap_ptr<int> oth(4);
 	int* p = oth.get();
@@ -702,7 +697,7 @@ TEST_F(com_heap_ptrTest, stdSwap_EmptyWithValue_ValueAndEmpty) {
 	EXPECT_COM_DELETED_COUNT(0);
 }
 
-TEST_F(com_heap_ptrTest, stdSwap_ValueWithValue_ValueAndValue) {
+TEST_F(com_heap_ptr_Test, stdSwap_ValueWithValue_ValueAndValue) {
 	com_heap_ptr<int> ptr(7);
 	int* p = ptr.get();
 	com_heap_ptr<int> oth(4);
@@ -723,14 +718,14 @@ TEST_F(com_heap_ptrTest, stdSwap_ValueWithValue_ValueAndValue) {
 // std::hash
 //
 
-TEST_F(com_heap_ptrTest, stdHash_Empty_ReturnHash) {
+TEST_F(com_heap_ptr_Test, stdHash_Empty_ReturnHash) {
 	com_heap_ptr<int> ptr;
 	std::size_t h = std::hash<com_heap_ptr<int>>{}(ptr);
 
 	EXPECT_EQ(std::hash<int*>{}(ptr.get()), h);
 }
 
-TEST_F(com_heap_ptrTest, stdHash_Value_ReturnHash) {
+TEST_F(com_heap_ptr_Test, stdHash_Value_ReturnHash) {
 	com_heap_ptr<int> ptr(7);
 	std::size_t h = std::hash<com_heap_ptr<int>>{}(ptr);
 

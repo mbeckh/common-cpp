@@ -31,17 +31,17 @@ limitations under the License.
 
 namespace m3c {
 
-std::string EncodeUtf8(_In_z_ const wchar_t* __restrict const wstr) {
+std::string EncodeUtf8(_In_z_ const wchar_t* __restrict const wstr) {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 	return EncodeUtf8(wstr, std::wcslen(wstr));
 }
 
-std::string EncodeUtf8(_In_reads_(length) const wchar_t* __restrict const wstr, const std::size_t length) {
+std::string EncodeUtf8(_In_reads_(length) const wchar_t* __restrict const wstr, const std::size_t length) {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 	if (!length) {
 		return "";
 	}
 	assert(length <= std::numeric_limits<int>::max());
 
-	DWORD lastError;
+	DWORD lastError;  // NOLINT(cppcoreguidelines-init-variables): Guaranteed to be initialized before first read.
 	if (constexpr std::uint_fast16_t kFixedBufferSize = 256; length <= kFixedBufferSize) {
 		char result[kFixedBufferSize];
 		const int sizeInBytes = WideCharToMultiByte(CP_UTF8, 0, wstr, static_cast<int>(length), result, sizeof(result), nullptr, nullptr);
@@ -50,7 +50,7 @@ std::string EncodeUtf8(_In_reads_(length) const wchar_t* __restrict const wstr, 
 		}
 		lastError = GetLastError();
 		if (lastError != ERROR_INSUFFICIENT_BUFFER) {
-			goto error;  // NOLINT(cppcoreguidelines-avoid-goto): yes, I DO want a goto here
+			goto error;  // NOLINT(cppcoreguidelines-avoid-goto, hicpp-avoid-goto): Yes, I DO want a goto here.
 		}
 	}
 	{

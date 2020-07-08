@@ -26,7 +26,7 @@ struct IUnknown;
 struct IStream;
 
 namespace llamalog {
-class LogLine;
+class LogLine;  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 }  // namespace llamalog
 
 

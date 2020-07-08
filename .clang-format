@@ -10,6 +10,8 @@ BreakInheritanceList: BeforeComma
 ColumnLimit: 0
 IncludeBlocks: Regroup
 IncludeCategories: 
+  - Regex:    '^"m3c/.*\.h"'
+    Priority: 2
   - Regex:    '^<m3c/.*\.h>'
     Priority: 2
   - Regex:    '^<[[:alnum:]]+/.*\.h[hpx]{0,2}>'

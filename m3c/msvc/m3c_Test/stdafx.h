@@ -27,6 +27,7 @@ limitations under the License.
 #include <propvarutil.h>
 #include <rpc.h>
 #include <unknwn.h>
+#include <wincodec.h>
 #include <windows.h>
 #include <wtypes.h>
 

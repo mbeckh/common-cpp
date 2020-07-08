@@ -37,6 +37,7 @@ namespace m3c {
 
 std::string VariantTypeToString(const PROPVARIANT& pv) {
 #pragma push_macro("VT_")
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage): Not possible without macro.
 #define VT_(vt_)            \
 	case VARENUM::VT_##vt_: \
 		type = #vt_;        \
@@ -94,6 +95,7 @@ std::string VariantTypeToString(const PROPVARIANT& pv) {
 	}
 
 #undef VT_
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage): Not possible without macro.
 #define VT_(vt_)            \
 	case VARENUM::VT_##vt_: \
 		return std::string(type) += "|" #vt_
@@ -109,7 +111,7 @@ std::string VariantTypeToString(const PROPVARIANT& pv) {
 	return std::string(type);
 }
 
-
+// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init): PROPVARIANT is initialized using PropVariantInit.
 PropVariant::PropVariant() noexcept {
 	PropVariantInit(this);
 }
@@ -124,6 +126,7 @@ PropVariant::PropVariant(PropVariant&& pv) noexcept
 	// empty
 }
 
+// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init): PROPVARIANT is initialized using PropVariantInit.
 PropVariant::PropVariant(const PROPVARIANT& pv) {
 	PropVariantInit(this);
 	COM_HR(PropVariantCopy(this, &pv), "PropVariantCopy for {}", pv);

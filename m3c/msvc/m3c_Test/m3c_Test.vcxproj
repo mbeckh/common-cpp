@@ -39,8 +39,8 @@
     <ClCompile Include="..\..\test\main.cpp" />
     <ClCompile Include="..\..\test\PropVariant_Test.cpp" />
     <ClCompile Include="..\..\test\rpc_string_Test.cpp" />
+    <ClCompile Include="..\..\test\types_log_Test.cpp" />
     <ClCompile Include="..\..\test\unique_ptr_Test.cpp" />
-    <ClCompile Include="types_log_Test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\test\Bar.h" />
