@@ -65,10 +65,10 @@
     <ClCompile Include="..\..\test\types_fmt_Test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="types_log_Test.cpp">
+    <ClCompile Include="..\..\test\ClassFactory_Test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\test\ClassFactory_Test.cpp">
+    <ClCompile Include="..\..\test\types_log_Test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
