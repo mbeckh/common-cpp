@@ -33,7 +33,7 @@ Checks: '
     -readability-qualified-auto,
     -readability-redundant-access-specifiers'
 WarningsAsErrors: ''
-HeaderFilterRegex: 'm3c/(src|include)/.*'
+HeaderFilterRegex: 'common-cpp[\/\\]m3c[\/\\](src|include)[\/\\].*'
 ExtraArgsBefore: [
   '--system-header-prefix=lib/', '-xc++', '-std=c++20', 
   '-WCL4', '-Wpedantic', '-Wthread-safety', '-Wmicrosoft', '-Wdocumentation', '-Wdocumentation-pedantic', '-Wtautological-compare',

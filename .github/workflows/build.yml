@@ -43,6 +43,7 @@ jobs:
         codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}
 
     - name: Save output
+      if: always()
       uses: actions/upload-artifact@v2
       with:
         name: output
@@ -85,6 +86,7 @@ jobs:
         clang-args: -D_WIN32_WINNT=0x0602 ${{ env.analyze_args }}
     
     - name: Save logs
+      if: always()
       uses: actions/upload-artifact@v2
       with:
         name: clang-tidy
