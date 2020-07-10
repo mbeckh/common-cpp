@@ -74,7 +74,7 @@ public:
 		}
 	}
 
-	template <std::size_t kOthSize>
+	template <size_type kOthSize>
 	basic_lazy_string(basic_lazy_string<kOthSize, CharT>&& oth) {
 		if (oth.m_inline) {
 			m_inline = oth.m_size < kSize;
@@ -160,7 +160,7 @@ public:
 		return *this;
 	}
 
-	template <std::size_t kOthSize>
+	template <size_type kOthSize>
 	basic_lazy_string& operator=(const basic_lazy_string<kOthSize, CharT>& oth) {
 		if (oth.size() < kSize) {
 			if (!m_inline) {
@@ -208,7 +208,7 @@ public:
 		return *this;
 	}
 
-	template <std::size_t kOthSize>
+	template <size_type kOthSize>
 	basic_lazy_string& operator=(basic_lazy_string<kOthSize, CharT>&& oth) {
 		if (oth.m_inline) {
 			if (oth.m_size < kSize) {
@@ -282,7 +282,7 @@ public:
 	// Append
 	//
 
-	template <std::size_t kOthSize>
+	template <size_type kOthSize>
 	basic_lazy_string& operator+=(const basic_lazy_string<kOthSize, CharT>& add) {
 		const string_view_type sv = add.sv();
 		return append(sv.data(), sv.size());
@@ -322,7 +322,7 @@ public:
 	// Concatenate
 	//
 
-	template <std::size_t kOthSize>
+	template <size_type kOthSize>
 	basic_lazy_string operator+(const basic_lazy_string<kOthSize, CharT>& rhs) const {
 		const string_view_type lsv = sv();
 		const string_view_type rsv = rhs.sv();
@@ -388,7 +388,7 @@ public:
 	// Comparison
 	//
 
-	template <std::size_t kOthSize>
+	template <size_type kOthSize>
 	[[nodiscard]] bool operator==(const basic_lazy_string<kOthSize, CharT>& oth) const noexcept {
 		return (*this <=> oth) == 0;
 	}
@@ -405,7 +405,7 @@ public:
 		return (*this <=> oth) == 0;
 	}
 
-	template <std::size_t kOthSize>
+	template <size_type kOthSize>
 	[[nodiscard]] std::strong_ordering operator<=>(const basic_lazy_string<kOthSize, CharT>& oth) const noexcept {
 		const std::size_t othSize = oth.size();
 		if (const int cmp = std::char_traits<CharT>::compare(c_str(), oth.c_str(), std::min(size(), othSize)); cmp) {
@@ -537,7 +537,7 @@ public:
 		}
 	}
 
-	template <std::size_t kOthSize>
+	template <size_type kOthSize>
 	void swap(basic_lazy_string<kOthSize, CharT>& oth) {
 		if (m_inline) {
 			if (oth.m_inline) {
@@ -615,7 +615,7 @@ private:
 		std::basic_string<CharT> m_string;  // NOLINT(readability-identifier-naming): Member of anonymous union is part of enclosing scope.
 	};
 
-	template <std::uint16_t, typename>
+	template <size_type, typename>
 	friend class basic_lazy_string;
 };
 
