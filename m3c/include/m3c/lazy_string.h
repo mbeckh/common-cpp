@@ -636,6 +636,12 @@ using lazy_string = basic_lazy_string<kSize, char>;
 template <std::uint16_t kSize>
 using lazy_wstring = basic_lazy_string<kSize, wchar_t>;
 
+#ifdef __clang_analyzer__
+// make clang happy and define in namespace for ADL. MSVC can't find correct overload when the declaration is present.
+template <std::uint16_t kSize, typename CharT>
+llamalog::LogLine& operator<<(llamalog::LogLine& logLine, const basic_lazy_string<kSize, CharT>& arg);
+#endif
+
 }  // namespace m3c
 
 /// @brief Specialization of std::hash.
