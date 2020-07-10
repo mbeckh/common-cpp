@@ -22,8 +22,8 @@ limitations under the License.
 #include "m3c/com_ptr.h"
 #include "m3c/types_fmt.h"  // IWYU pragma: keep
 
+#include <llamalog/LogLine.h>
 #include <llamalog/custom_types.h>
-#include <llamalog/llamalog.h>
 
 #include <objidl.h>
 #include <rpc.h>

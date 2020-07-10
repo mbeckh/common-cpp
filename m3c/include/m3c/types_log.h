@@ -20,6 +20,7 @@ limitations under the License.
 
 #include <propidl.h>
 #include <rpc.h>
+#include <windows.h>
 #include <wtypes.h>
 
 struct IUnknown;

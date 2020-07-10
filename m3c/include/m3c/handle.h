@@ -21,6 +21,11 @@ limitations under the License.
 
 #include <llamalog/llamalog.h>
 
+#include <windows.h>
+
+#include <cstddef>
+#include <functional>
+
 namespace m3c {
 
 namespace internal {

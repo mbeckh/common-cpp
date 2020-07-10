@@ -1,12 +1,22 @@
 #pragma once
 
-#include <llamalog/llamalog.h>
+
+#include <sal.h>
 
 #include <algorithm>
 #include <cassert>
 #include <compare>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <cwchar>
+#include <functional>
+#include <new>
 #include <string>
-#include <string_view>
+
+namespace llamalog {
+class LogLine;
+}
 
 namespace m3c {
 

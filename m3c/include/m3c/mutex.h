@@ -1,12 +1,7 @@
 #pragma once
 
-#include <m3c/exception.h>
+#include <windows.h>
 
-#include <llamalog/exception.h>
-#ifdef _DEBUG
-#include <atomic>
-#endif
-#include <cassert>
 #include <chrono>
 
 namespace m3c {
