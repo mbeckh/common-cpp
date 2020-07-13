@@ -48,10 +48,17 @@ limitations under the License.
 namespace m3c::internal {
 
 fmt::format_parse_context::iterator base_formatter::parse(fmt::format_parse_context& ctx) noexcept {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
-	auto end = ctx.begin();
-	while (end != ctx.end() && *end != '}') {
+	auto it = ctx.begin();
+	const auto last = ctx.end();
+	if (it != last && *it == ':') {
+		++it;
+	}
+	auto end = it;
+	while (end != last && *end != '}') {
 		++end;
 	}
+
+	m_format.assign(it, end);
 	return end;
 }
 
@@ -63,13 +70,12 @@ fmt::format_parse_context::iterator base_formatter::parse(fmt::format_parse_cont
 
 fmt::format_context::iterator fmt::formatter<UUID>::format(const UUID& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
 	m3c::rpc_string rpc;
-	RPC_STATUS status = UuidToStringA(&arg, &rpc);
+	const RPC_STATUS status = UuidToStringA(&arg, &rpc);
 	if (status != RPC_S_OK) {
 		THROW(m3c::rpc_exception(status), "UuidToStringA: {}", lg::error_code{status});
 	}
 
-	std::string_view sv(rpc.as_native());
-	return std::copy(sv.cbegin(), sv.cend(), ctx.out());
+	return fmt::format_to(ctx.out(), GetFormat(), rpc.as_native());
 }
 
 
@@ -136,8 +142,7 @@ fmt::format_context::iterator Format(IStream* arg, fmt::format_context& ctx) {  
 	});
 	COM_HR(arg->Stat(&statstg, STATFLAG_DEFAULT), "IStream.Stat");
 
-	std::string str = statstg.pwcsName ? m3c::EncodeUtf8(statstg.pwcsName) : "";
-	//m3c::EscapeC(str);
+	const std::string str = statstg.pwcsName ? m3c::EncodeUtf8(statstg.pwcsName) : "";
 
 	// do not count AddRef and the reference held by the logger
 	return fmt::format_to(ctx.out(), "({}, ref={}, this={})", str, ref - 2, static_cast<void*>(arg));
@@ -174,8 +179,7 @@ fmt::format_context::iterator fmt::formatter<PROPERTYKEY>::format(const PROPERTY
 	m3c::com_heap_ptr<wchar_t> key;
 	COM_HR(PSGetNameFromPropertyKey(arg, &key), "PSGetNameFromPropertyKey");
 
-	std::string str = m3c::EncodeUtf8(key.get());
-	return std::copy(str.cbegin(), str.cend(), ctx.out());
+	return fmt::format_to(ctx.out(), GetFormat(), m3c::EncodeUtf8(key.get()));
 }
 
 
@@ -185,11 +189,12 @@ fmt::format_context::iterator fmt::formatter<PROPERTYKEY>::format(const PROPERTY
 
 fmt::format_parse_context::iterator fmt::formatter<WICRect>::parse(fmt::format_parse_context& ctx) {
 	auto it = ctx.begin();
-	if (it != ctx.end() && *it == ':') {
+	const auto last = ctx.end();
+	if (it != last && *it == ':') {
 		++it;
 	}
 	auto end = it;
-	while (end != ctx.end() && *end != '}') {
+	while (end != last && *end != '}') {
 		++end;
 	}
 	constexpr std::size_t kGroupingCharCount = 13;
