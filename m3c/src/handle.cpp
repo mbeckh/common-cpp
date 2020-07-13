@@ -17,11 +17,11 @@ limitations under the License.
 /// @file
 /// @brief Include the header file to allow compilation and analyzer checks.
 
-#include "m3c/handle.h"
+#include "m3c/Handle.h"
 
 namespace m3c::internal {
 
-template class base_handle<handle_closer>;
-template class base_handle<find_closer>;
+template class BaseHandle<HandleCloser>;
+template class BaseHandle<FindCloser>;
 
 }  // namespace m3c::internal

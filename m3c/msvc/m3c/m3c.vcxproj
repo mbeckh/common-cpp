@@ -28,7 +28,7 @@
     <ClInclude Include="..\..\include\m3c\ClassFactory.h" />
     <ClInclude Include="..\..\include\m3c\COM.h" />
     <ClInclude Include="..\..\include\m3c\mutex.h" />
-    <ClInclude Include="..\..\include\m3c\handle.h" />
+    <ClInclude Include="..\..\include\m3c\Handle.h" />
     <ClInclude Include="..\..\include\m3c\lazy_string.h" />
     <ClInclude Include="..\..\include\m3c\types_fmt.h" />
     <ClInclude Include="..\..\include\m3c\ComObject.h" />
@@ -47,7 +47,7 @@
     <ClCompile Include="..\..\src\com_heap_ptr.cpp" />
     <ClCompile Include="..\..\src\com_ptr.cpp" />
     <ClCompile Include="..\..\src\exception.cpp" />
-    <ClCompile Include="..\..\src\handle.cpp" />
+    <ClCompile Include="..\..\src\Handle.cpp" />
     <ClCompile Include="..\..\src\lazy_string.cpp" />
     <ClCompile Include="..\..\src\mutex.cpp" />
     <ClCompile Include="..\..\src\rpc_string.cpp" />

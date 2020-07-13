@@ -72,7 +72,7 @@
     <ClInclude Include="..\..\include\m3c\COM.h">
       <Filter>Header Files\m3c</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\m3c\handle.h">
+    <ClInclude Include="..\..\include\m3c\Handle.h">
       <Filter>Header Files\m3c</Filter>
     </ClInclude>
   </ItemGroup>
@@ -119,7 +119,7 @@
     <ClCompile Include="..\..\src\ClassFactory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\handle.cpp">
+    <ClCompile Include="..\..\src\Handle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
