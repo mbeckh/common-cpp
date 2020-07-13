@@ -119,6 +119,8 @@ public:
 	/// @param str A pointer to a character sequence.
 	/// @param length The number of non-null characters to create this string from.
 	basic_lazy_string(_In_reads_or_z_(length) const CharT* str, const std::size_t length) {
+		assert(!std::char_traits<CharT>::find(str, length, 0));
+
 		m_inline = length < kSize;
 		if (m_inline) {
 			m_size = static_cast<size_type>(length);
@@ -127,7 +129,6 @@ public:
 		} else {
 			new (&m_string) string_type(str, length);
 		}
-		assert(length == size());
 	}
 
 	/// @brief Create a new instance as a copy of a `std::basic_string`.
@@ -294,6 +295,8 @@ public:
 	/// @param length The number of non-null characters to create this string from.
 	/// @return A reference to this instance.
 	basic_lazy_string& assign(const CharT* const str, const std::size_t length) {
+		assert(!std::char_traits<CharT>::find(str, length, 0));
+
 		if (length < kSize) {
 			if (!m_inline) {
 				m_string.~basic_string();
@@ -310,7 +313,6 @@ public:
 				m_string.assign(str, length);
 			}
 		}
-		assert(length == size());
 		return *this;
 	}
 
@@ -376,6 +378,8 @@ public:
 	/// @param add A pointer to a character sequence.
 	/// @return A reference to this instance.
 	basic_lazy_string& append(const CharT* const add, const std::size_t len) {
+		assert(!std::char_traits<CharT>::find(add, len, 0));
+
 		const std::size_t oldSize = size();
 		const std::size_t addSize = len;
 		const std::size_t newSize = oldSize + addSize;
@@ -386,7 +390,6 @@ public:
 		// setting 0 explicitly automatically allows cases where len is less than the length of add
 		buffer[newSize] = 0;
 
-		assert(newSize);
 		return *this;
 	}
 
@@ -501,6 +504,9 @@ private:
 	/// @param rSize The number on non-null characters in @p rhs.
 	/// @return A newly created `basic_lazy_string` object.
 	static basic_lazy_string concat(const CharT* const lhs, const std::size_t lSize, const CharT* const rhs, const std::size_t rSize) {
+		assert(!std::char_traits<CharT>::find(lhs, lSize, 0));
+		assert(!std::char_traits<CharT>::find(rhs, rSize, 0));
+
 		const std::size_t newSize = lSize + rSize;
 
 		basic_lazy_string result;
