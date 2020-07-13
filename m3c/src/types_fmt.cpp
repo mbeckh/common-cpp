@@ -47,7 +47,7 @@ limitations under the License.
 
 namespace m3c::internal {
 
-fmt::format_parse_context::iterator base_formatter::parse(fmt::format_parse_context& ctx) noexcept {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
+fmt::format_parse_context::iterator base_formatter::parse(fmt::format_parse_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
 	auto it = ctx.begin();
 	const auto last = ctx.end();
 	if (it != last && *it == ':') {
