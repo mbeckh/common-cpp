@@ -4,6 +4,7 @@
 
 #include <llamalog/exception.h>
 
+#include <mutex>
 namespace m3c {
 
 //

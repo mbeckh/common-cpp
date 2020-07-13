@@ -21,7 +21,7 @@ limitations under the License.
 #include <m3c/ComObject.h>
 #include <m3c/exception.h>
 #include <m3c/finally.h>
-#include <m3c/types_log.h>
+#include <m3c/types_log.h>  // IWYU pragma: keep
 
 #include <guiddef.h>
 #include <sal.h>
@@ -30,7 +30,7 @@ limitations under the License.
 #include <cstddef>
 #include <functional>
 #include <memory>
-#include <new>
+#include <new>  // IWYU pragma: keep
 #include <type_traits>
 #include <utility>
 
@@ -423,9 +423,6 @@ struct std::hash<m3c::com_ptr<T>> {
 	}
 };
 
-llamalog::LogLine& operator<<(llamalog::LogLine& logLine, m3c::com_ptr<IUnknown>& arg);
-llamalog::LogLine& operator<<(llamalog::LogLine& logLine, m3c::com_ptr<IStream>& arg);
-
 /// @brief Add the value of the smart pointer to a `llamalog::LogLine`.
 /// @tparam T The type managed by the COM pointer.
 /// @param logLine The output target.
@@ -435,3 +432,6 @@ llamalog::LogLine& operator<<(llamalog::LogLine& logLine, m3c::com_ptr<T>& arg) 
 	m3c::com_ptr<IUnknown> ptr(arg);
 	return operator<<(logLine, ptr);
 }
+
+llamalog::LogLine& operator<<(llamalog::LogLine& logLine, m3c::com_ptr<IUnknown>& arg);
+llamalog::LogLine& operator<<(llamalog::LogLine& logLine, m3c::com_ptr<IStream>& arg);

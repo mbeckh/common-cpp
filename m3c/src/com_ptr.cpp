@@ -18,8 +18,8 @@ limitations under the License.
 
 #include "m3c/types_fmt.h"  // IWYU pragma: keep
 
+#include <llamalog/LogLine.h>
 #include <llamalog/custom_types.h>
-#include <llamalog/llamalog.h>
 
 llamalog::LogLine& operator<<(llamalog::LogLine& logLine, m3c::com_ptr<IUnknown>& arg) {
 	return logLine.AddCustomArgument(arg);

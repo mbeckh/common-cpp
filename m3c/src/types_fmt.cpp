@@ -40,17 +40,14 @@ limitations under the License.
 
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <iterator>
 #include <string>
 #include <string_view>
 
-namespace {
+namespace m3c::internal {
 
-fmt::format_parse_context::iterator Parse(fmt::format_parse_context& ctx) noexcept {
-	auto it = ctx.begin();
-	if (it != ctx.end() && *it == ':') {
-		++it;
-	}
+fmt::format_parse_context::iterator base_formatter::parse(fmt::format_parse_context& ctx) noexcept {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
 	auto end = ctx.begin();
 	while (end != ctx.end() && *end != '}') {
 		++end;
@@ -58,17 +55,13 @@ fmt::format_parse_context::iterator Parse(fmt::format_parse_context& ctx) noexce
 	return end;
 }
 
-}  // namespace
+}  // namespace m3c::internal
 
 //
 // UUID
 //
 
-fmt::format_parse_context::iterator fmt::formatter<UUID>::parse(fmt::format_parse_context& ctx) noexcept {
-	return Parse(ctx);
-}
-
-fmt::format_context::iterator fmt::formatter<UUID>::format(const UUID& arg, fmt::format_context& ctx) {
+fmt::format_context::iterator fmt::formatter<UUID>::format(const UUID& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
 	m3c::rpc_string rpc;
 	RPC_STATUS status = UuidToStringA(&arg, &rpc);
 	if (status != RPC_S_OK) {
@@ -84,11 +77,7 @@ fmt::format_context::iterator fmt::formatter<UUID>::format(const UUID& arg, fmt:
 // PROPVARIANT
 //
 
-fmt::format_parse_context::iterator fmt::formatter<PROPVARIANT>::parse(fmt::format_parse_context& ctx) noexcept {
-	return Parse(ctx);
-}
-
-fmt::format_context::iterator fmt::formatter<PROPVARIANT>::format(const PROPVARIANT& arg, fmt::format_context& ctx) {
+fmt::format_context::iterator fmt::formatter<PROPVARIANT>::format(const PROPVARIANT& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
 	const std::string vt = m3c::VariantTypeToString(arg);
 	*ctx.out() = '(';
 	std::copy(vt.cbegin(), vt.cend(), ctx.out());
@@ -114,7 +103,7 @@ fmt::format_context::iterator fmt::formatter<PROPVARIANT>::format(const PROPVARI
 
 namespace {
 
-fmt::format_context::iterator Format(IUnknown* arg, fmt::format_context& ctx) {
+fmt::format_context::iterator Format(IUnknown* arg, fmt::format_context& ctx) {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 	if (!arg) {
 		*ctx.out() = '0';
 		*ctx.out() = 'x';
@@ -129,7 +118,7 @@ fmt::format_context::iterator Format(IUnknown* arg, fmt::format_context& ctx) {
 	return fmt::format_to(ctx.out(), "(ref={}, this={})", ref - 2, static_cast<void*>(arg));
 }
 
-fmt::format_context::iterator Format(IStream* arg, fmt::format_context& ctx) {
+fmt::format_context::iterator Format(IStream* arg, fmt::format_context& ctx) {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 	if (!arg) {
 		*ctx.out() = '0';
 		*ctx.out() = 'x';
@@ -157,40 +146,22 @@ fmt::format_context::iterator Format(IStream* arg, fmt::format_context& ctx) {
 }  // namespace
 
 
-fmt::format_parse_context::iterator fmt::formatter<m3c::fmt_ptr<IUnknown>>::parse(fmt::format_parse_context& ctx) noexcept {
-	return Parse(ctx);
+fmt::format_context::iterator fmt::formatter<m3c::fmt_ptr<IUnknown>>::format(const m3c::fmt_ptr<IUnknown>& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
+	// there is nothing such as a const COM object :-)
+	return Format(arg, ctx);
 }
 
-fmt::format_context::iterator fmt::formatter<m3c::fmt_ptr<IUnknown>>::format(const m3c::fmt_ptr<IUnknown>& arg, fmt::format_context& ctx) {
+fmt::format_context::iterator fmt::formatter<m3c::fmt_ptr<IStream>>::format(const m3c::fmt_ptr<IStream>& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
 	// there is nothing such as a const COM object :-)
 	return Format(arg, ctx);
 }
 
 
-fmt::format_parse_context::iterator fmt::formatter<m3c::fmt_ptr<IStream>>::parse(fmt::format_parse_context& ctx) noexcept {
-	return Parse(ctx);
-}
-
-fmt::format_context::iterator fmt::formatter<m3c::fmt_ptr<IStream>>::format(const m3c::fmt_ptr<IStream>& arg, fmt::format_context& ctx) {
-	// there is nothing such as a const COM object :-)
-	return Format(arg, ctx);
-}
-
-
-fmt::format_parse_context::iterator fmt::formatter<m3c::com_ptr<IUnknown>>::parse(fmt::format_parse_context& ctx) noexcept {
-	return Parse(ctx);
-}
-
-fmt::format_context::iterator fmt::formatter<m3c::com_ptr<IUnknown>>::format(const m3c::com_ptr<IUnknown>& arg, fmt::format_context& ctx) {
+fmt::format_context::iterator fmt::formatter<m3c::com_ptr<IUnknown>>::format(const m3c::com_ptr<IUnknown>& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
 	return Format(arg.get(), ctx);
 }
 
-
-fmt::format_parse_context::iterator fmt::formatter<m3c::com_ptr<IStream>>::parse(fmt::format_parse_context& ctx) noexcept {
-	return Parse(ctx);
-}
-
-fmt::format_context::iterator fmt::formatter<m3c::com_ptr<IStream>>::format(const m3c::com_ptr<IStream>& arg, fmt::format_context& ctx) {
+fmt::format_context::iterator fmt::formatter<m3c::com_ptr<IStream>>::format(const m3c::com_ptr<IStream>& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
 	return Format(arg.get(), ctx);
 }
 
@@ -199,11 +170,7 @@ fmt::format_context::iterator fmt::formatter<m3c::com_ptr<IStream>>::format(cons
 // PROPERTYKEY
 //
 
-fmt::format_parse_context::iterator fmt::formatter<PROPERTYKEY>::parse(fmt::format_parse_context& ctx) noexcept {
-	return Parse(ctx);
-}
-
-fmt::format_context::iterator fmt::formatter<PROPERTYKEY>::format(const PROPERTYKEY& arg, fmt::format_context& ctx) {
+fmt::format_context::iterator fmt::formatter<PROPERTYKEY>::format(const PROPERTYKEY& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
 	m3c::com_heap_ptr<wchar_t> key;
 	COM_HR(PSGetNameFromPropertyKey(arg, &key), "PSGetNameFromPropertyKey");
 

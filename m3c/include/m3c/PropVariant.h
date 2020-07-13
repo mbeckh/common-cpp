@@ -38,8 +38,8 @@ public:
 	/// @brief Ensures that `PropVariantInit` is called for an empty instance.
 	PropVariant() noexcept;
 
-	PropVariant(const PropVariant& pv);
-	PropVariant(PropVariant&& pv) noexcept;
+	PropVariant(const PropVariant& oth);
+	PropVariant(PropVariant&& oth) noexcept;
 
 	explicit PropVariant(const PROPVARIANT& pv);
 	explicit PropVariant(PROPVARIANT&& pv) noexcept;
@@ -57,10 +57,10 @@ public:
 	}
 };
 
-}  // namespace m3c
-
 /// @brief Log a `m3c::PropVariant` as `VT_xx|<value>`.
 /// @param logLine The `llamalog::LogLine`.
 /// @param arg The value.
 /// @return @p logLine to allow method chaining.
-llamalog::LogLine& operator<<(llamalog::LogLine& logLine, const m3c::PropVariant& arg);
+llamalog::LogLine& operator<<(llamalog::LogLine& logLine, const PropVariant& arg);
+
+}  // namespace m3c

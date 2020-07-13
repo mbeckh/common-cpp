@@ -20,12 +20,14 @@ limitations under the License.
 
 #include "m3c/COM.h"
 #include "m3c/exception.h"
-#include "m3c/types_log.h"
+#include "m3c/types_log.h"  // IWYU pragma: keep
 
 #include <llamalog/llamalog.h>
 
 #include <unknwn.h>
 #include <windows.h>
+
+#include <new>
 
 
 namespace m3c::internal {

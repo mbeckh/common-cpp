@@ -22,7 +22,7 @@ limitations under the License.
 #include "m3c/ComObject.h"
 #include "m3c/exception.h"
 #include "m3c/finally.h"
-#include "m3c/types_log.h"
+#include "m3c/types_log.h"  // IWYU pragma: keep
 
 #include <llamalog/llamalog.h>
 

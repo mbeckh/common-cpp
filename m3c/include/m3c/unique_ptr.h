@@ -20,6 +20,7 @@ limitations under the License.
 #include <sal.h>
 
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <type_traits>
 #include <utility>

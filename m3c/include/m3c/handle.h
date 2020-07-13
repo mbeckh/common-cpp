@@ -30,17 +30,25 @@ namespace m3c {
 
 namespace internal {
 
-struct handle_closer final {
-	constexpr handle_closer() noexcept = default;
+/// @brief Strategy to close regular handles.
+struct HandleCloser final {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
+	constexpr HandleCloser() noexcept = default;
 
+	/// @brief Close the handle.
+	/// @param hNative The handle to close.
+	/// @return `true` if the operation was successful, else `false`.
 	bool operator()(const HANDLE hNative) const noexcept {
 		return CloseHandle(hNative);
 	}
 };
 
-struct find_closer final {
-	constexpr find_closer() noexcept = default;
+/// @brief Strategy to close handles which require a call to `FindClose`.
+struct FindCloser final {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
+	constexpr FindCloser() noexcept = default;
 
+	/// @brief Close the handle.
+	/// @param hNative The handle to close.
+	/// @return `true` if the operation was successful, else `false`.
 	bool operator()(const HANDLE hNative) const noexcept {
 		return FindClose(hNative);
 	}
@@ -49,41 +57,41 @@ struct find_closer final {
 /// @brief A RAII type for windows `HANDLE` values.
 /// @tparam Closer The type of the functor to close the handle.
 template <typename Closer>
-class base_handle final {
+class BaseHandle final {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 public:
 	/// @brief Creates an empty instance.
-	constexpr base_handle() noexcept = default;
+	constexpr BaseHandle() noexcept = default;
 
-	base_handle(const base_handle&) = delete;
+	BaseHandle(const BaseHandle&) = delete;
 
 	/// @brief Transfers ownership.
 	/// @param handle Another `BaseHandle`.
-	base_handle(base_handle&& handle) noexcept
+	BaseHandle(BaseHandle&& handle) noexcept
 		: m_hNative(handle.release()) {
 		// empty
 	}
 
 	/// @brief Transfer ownership of an existing handle.
 	/// @param hNative The native `HANDLE`.
-	constexpr base_handle(const HANDLE hNative) noexcept  // NOLINT(google-explicit-constructor): Type should act as a drop-in replacement.
+	constexpr BaseHandle(const HANDLE hNative) noexcept  // NOLINT(google-explicit-constructor): Type should act as a drop-in replacement.
 		: m_hNative(hNative) {
 		// empty
 	}
 
 	/// @brief Calls `CloseHandle`.
-	~base_handle() noexcept {
+	~BaseHandle() noexcept {
 		if (m_hNative != INVALID_HANDLE_VALUE && !m_closer(m_hNative)) {
 			LOG_ERROR("Close: {}", lg::LastError());
 		}
 	}
 
 public:
-	base_handle& operator=(const base_handle&) = delete;
+	BaseHandle& operator=(const BaseHandle&) = delete;
 
 	/// @brief Transfers ownership.
 	/// @param handle Another `BaseHandle`.
 	/// @return This instance.
-	base_handle& operator=(base_handle&& handle) noexcept {
+	BaseHandle& operator=(BaseHandle&& handle) noexcept {
 		if (m_hNative != INVALID_HANDLE_VALUE && !m_closer(m_hNative)) {
 			LOG_ERROR("Close: {}", lg::LastError());
 		}
@@ -94,7 +102,7 @@ public:
 	/// @brief Resets the instance to hold a different value.
 	/// @param hNative A native `HANDLE`.
 	/// @return This instance.
-	base_handle& operator=(HANDLE hNative) noexcept {
+	BaseHandle& operator=(HANDLE hNative) noexcept {
 		if (m_hNative != INVALID_HANDLE_VALUE && !m_closer(m_hNative)) {
 			LOG_ERROR("Close: {}", lg::LastError());
 		}
@@ -148,7 +156,7 @@ public:
 
 	/// @brief Swap two objects.
 	/// @param handle The other `BaseHandle`.
-	void swap(base_handle& handle) noexcept {
+	void swap(BaseHandle& handle) noexcept {
 		std::swap(m_hNative, handle.m_hNative);
 	}
 
@@ -163,8 +171,8 @@ private:
 	Closer m_closer;
 };
 
-extern template base_handle<handle_closer>;
-extern template base_handle<find_closer>;
+extern template class BaseHandle<HandleCloser>;
+extern template class BaseHandle<FindCloser>;
 
 //
 // operator==
@@ -176,7 +184,7 @@ extern template base_handle<find_closer>;
 /// @param oth Another `BaseHandle` object.
 /// @return `true` if @p handle is the same handle as @p oth.
 template <typename Closer>
-[[nodiscard]] inline bool operator==(const base_handle<Closer>& handle, const base_handle<Closer>& oth) noexcept {
+[[nodiscard]] inline bool operator==(const BaseHandle<Closer>& handle, const BaseHandle<Closer>& oth) noexcept {
 	return handle.get() == oth.get();
 }
 
@@ -186,7 +194,7 @@ template <typename Closer>
 /// @param hNative A native handle.
 /// @return `true` if @p handle is the same handle as @p hNative.
 template <typename Closer>
-[[nodiscard]] inline bool operator==(const base_handle<Closer>& handle, const HANDLE hNative) noexcept {
+[[nodiscard]] inline bool operator==(const BaseHandle<Closer>& handle, const HANDLE hNative) noexcept {
 	return handle.get() == hNative;
 }
 
@@ -196,7 +204,7 @@ template <typename Closer>
 /// @param handle A `BaseHandle` object.
 /// @return `true` if @p handle is the same handle as @p hNative.
 template <typename Closer>
-[[nodiscard]] inline bool operator==(const HANDLE hNative, const base_handle<Closer>& handle) noexcept {
+[[nodiscard]] inline bool operator==(const HANDLE hNative, const BaseHandle<Closer>& handle) noexcept {
 	return handle.get() == hNative;
 }
 
@@ -211,7 +219,7 @@ template <typename Closer>
 /// @param oth Another `BaseHandle` object.
 /// @return `true` if @p handle is not the same handle as @p oth.
 template <typename Closer>
-[[nodiscard]] inline bool operator!=(const base_handle<Closer>& handle, const base_handle<Closer>& oth) noexcept {
+[[nodiscard]] inline bool operator!=(const BaseHandle<Closer>& handle, const BaseHandle<Closer>& oth) noexcept {
 	return handle.get() != oth.get();
 }
 
@@ -221,7 +229,7 @@ template <typename Closer>
 /// @param hNative A native handle.
 /// @return `true` if @p handle is not the same handle as @p hNative.
 template <typename Closer>
-[[nodiscard]] inline bool operator!=(const base_handle<Closer>& handle, const HANDLE hNative) noexcept {
+[[nodiscard]] inline bool operator!=(const BaseHandle<Closer>& handle, const HANDLE hNative) noexcept {
 	return handle.get() != hNative;
 }
 
@@ -231,7 +239,7 @@ template <typename Closer>
 /// @param handle A `BaseHandle` object.
 /// @return `true` if @p handle is not the same handle as @p hNative.
 template <typename Closer>
-[[nodiscard]] inline bool operator!=(const HANDLE hNative, const base_handle<Closer>& handle) noexcept {
+[[nodiscard]] inline bool operator!=(const HANDLE hNative, const BaseHandle<Closer>& handle) noexcept {
 	return handle.get() != hNative;
 }
 
@@ -240,25 +248,25 @@ template <typename Closer>
 /// @param handle A `Handle` object.
 /// @param oth Another `Handle` object.
 template <typename Closer>
-inline void swap(base_handle<Closer>& handle, base_handle<Closer>& oth) noexcept {
+inline void swap(BaseHandle<Closer>& handle, BaseHandle<Closer>& oth) noexcept {
 	handle.swap(oth);
 }
 
 }  // namespace internal
 
 /// @brief A RAII type for windows `HANDLE` values.
-using handle = internal::base_handle<internal::handle_closer>;
+using Handle = internal::BaseHandle<internal::HandleCloser>;  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 
 /// @brief A RAII type for windows `HANDLE` values used in the calls `FindFirstFile` etc.
-using find_handle = internal::base_handle<internal::find_closer>;
+using FindHandle = internal::BaseHandle<internal::FindCloser>;  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 
 }  // namespace m3c
 
 /// @brief Specialization of std::hash.
 /// @tparam Closer The type of the functor to close the handle.
 template <typename Closer>
-struct std::hash<m3c::internal::base_handle<Closer>> {
-	[[nodiscard]] size_t operator()(const m3c::internal::base_handle<Closer>& handle) const noexcept {
+struct std::hash<m3c::internal::BaseHandle<Closer>> {
+	[[nodiscard]] size_t operator()(const m3c::internal::BaseHandle<Closer>& handle) const noexcept {
 		return handle.hash();
 	}
 };

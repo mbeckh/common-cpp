@@ -17,6 +17,7 @@ limitations under the License.
 /// @file
 #pragma once
 
+#include <llamalog/LogLine.h>
 #include <llamalog/llamalog.h>
 
 #include <rpc.h>
