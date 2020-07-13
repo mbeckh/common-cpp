@@ -78,6 +78,14 @@ struct base_formatter {
 	/// @param ctx see `fmt::formatter::parse`.
 	/// @return see `fmt::formatter::parse`.
 	fmt::format_parse_context::iterator parse(fmt::format_parse_context& ctx) noexcept;
+
+protected:
+	const std::string& GetFormat() const noexcept {
+		return m_format;
+	}
+
+private:
+	std::string m_format;
 };
 
 }  // namespace internal
