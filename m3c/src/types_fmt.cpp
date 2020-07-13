@@ -58,7 +58,10 @@ fmt::format_parse_context::iterator base_formatter::parse(fmt::format_parse_cont
 		++end;
 	}
 
-	m_format.assign(it, end);
+	m_format.reserve(end - it + 3);
+	m_format.assign("{:");
+	m_format.append(it, end);
+	m_format.push_back('}');
 	return end;
 }
 
