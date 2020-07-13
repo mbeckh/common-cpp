@@ -57,6 +57,10 @@ llamalog::LogLine& operator<<(llamalog::LogLine& logLine, const PROPVARIANT& arg
 // IUnknown
 //
 
+/// @brief Log a COM object implementing the `IUnknown` interface.
+/// @param logLine The `llamalog::LogLine`.
+/// @param arg The pointer to the COM object.
+/// @return @p logLine to allow method chaining.
 llamalog::LogLine& operator<<(llamalog::LogLine& logLine, IUnknown* arg);
 
 
@@ -64,6 +68,10 @@ llamalog::LogLine& operator<<(llamalog::LogLine& logLine, IUnknown* arg);
 // IStream
 //
 
+/// @brief Log a COM object implementing the `IStream` interface.
+/// @param logLine The `llamalog::LogLine`.
+/// @param arg The pointer to the COM object.
+/// @return @p logLine to allow method chaining.
 llamalog::LogLine& operator<<(llamalog::LogLine& logLine, IStream* arg);
 
 
@@ -71,6 +79,10 @@ llamalog::LogLine& operator<<(llamalog::LogLine& logLine, IStream* arg);
 // PROPERTYKEY
 //
 
+/// @brief Log a `PROPERTYKEY` structure.
+/// @param logLine The `llamalog::LogLine`.
+/// @param arg The value.
+/// @return @p logLine to allow method chaining.
 llamalog::LogLine& operator<<(llamalog::LogLine& logLine, const PROPERTYKEY& arg);
 
 
@@ -78,6 +90,10 @@ llamalog::LogLine& operator<<(llamalog::LogLine& logLine, const PROPERTYKEY& arg
 // FILE_ID_128
 //
 
+/// @brief Log a `FILE_ID_128` structure.
+/// @param logLine The `llamalog::LogLine`.
+/// @param arg The value.
+/// @return @p logLine to allow method chaining.
 inline llamalog::LogLine& operator<<(llamalog::LogLine& logLine, const FILE_ID_128& arg) {
 	static_assert(sizeof(FILE_ID_128) == sizeof(UUID));
 	return operator<<(logLine, *reinterpret_cast<const UUID*>(&arg));

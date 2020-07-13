@@ -41,6 +41,8 @@ class PropVariant;
 template <typename T>
 class fmt_ptr {
 public:
+	/// @brief Create a new object by wrapping a pointer.
+	/// @param p The pointer to be wrapped.
 	constexpr fmt_ptr(T* p)
 		: m_p(p) {
 	}
@@ -52,16 +54,20 @@ public:
 	fmt_ptr& operator=(const fmt_ptr&) noexcept = default;
 	fmt_ptr& operator=(fmt_ptr&&) noexcept = default;
 
+	/// @brief Allow conversion to the wrapped type.
+	/// @return The wrapped pointer.
 	operator T*() {
 		return m_p;
 	}
 
+	/// @brief Allow conversion to the wrapped type.
+	/// @return The wrapped pointer.
 	operator T*() const {
 		return m_p;
 	}
 
 private:
-	T* const m_p;
+	T* const m_p;  ///< @brief The wrapped pointer.
 };
 
 namespace internal {
