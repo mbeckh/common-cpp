@@ -33,7 +33,7 @@ IFoo : public IUnknown {
 class Foo : public ComObject<IFoo> {
 public:
 	Foo() = default;
-	Foo(int value)
+	explicit Foo(int value)
 		: m_value(value) {
 		// empty
 	}

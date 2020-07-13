@@ -77,7 +77,7 @@ struct base_formatter {
 	/// @brief Parse the format string.
 	/// @param ctx see `fmt::formatter::parse`.
 	/// @return see `fmt::formatter::parse`.
-	fmt::format_parse_context::iterator parse(fmt::format_parse_context& ctx) noexcept;
+	fmt::format_parse_context::iterator parse(fmt::format_parse_context& ctx);
 
 protected:
 	const std::string& GetFormat() const noexcept {
