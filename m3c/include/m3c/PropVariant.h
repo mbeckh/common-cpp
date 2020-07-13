@@ -48,11 +48,8 @@ public:
 	~PropVariant() noexcept;
 
 public:
-	PropVariant& operator=(const PropVariant& oth);
-	PropVariant& operator=(PropVariant&& oth);
-
-	PropVariant& operator=(const PROPVARIANT& pv);
-	PropVariant& operator=(PROPVARIANT&& pv);
+	PropVariant& operator=(const PropVariant&) = delete;
+	PropVariant& operator=(PropVariant&&) = delete;
 
 public:
 	[[nodiscard]] std::string GetVariantType() const {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
