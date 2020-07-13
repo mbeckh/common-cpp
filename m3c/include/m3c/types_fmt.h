@@ -23,6 +23,7 @@ limitations under the License.
 
 #include <propidl.h>
 #include <rpc.h>
+#include <windows.h>
 #include <wtypes.h>
 
 #include <string>
@@ -63,6 +64,18 @@ private:
 	T* const m_p;
 };
 
+namespace internal {
+
+/// @brief Common base class to keep code out of the templates.
+struct base_formatter {
+	/// @brief Parse the format string.
+	/// @param ctx see `fmt::formatter::parse`.
+	/// @return see `fmt::formatter::parse`.
+	fmt::format_parse_context::iterator parse(fmt::format_parse_context& ctx) noexcept;
+};
+
+}  // namespace internal
+
 }  // namespace m3c
 
 
@@ -72,13 +85,7 @@ private:
 
 /// @brief Specialization of `fmt::formatter` for a `UUID`.
 template <>
-struct fmt::formatter<UUID> {
-public:
-	/// @brief Parse the format string.
-	/// @param ctx see `fmt::formatter::parse`.
-	/// @return see `fmt::formatter::parse`.
-	fmt::format_parse_context::iterator parse(fmt::format_parse_context& ctx) noexcept;
-
+struct fmt::formatter<UUID> : public m3c::internal::base_formatter {
 	/// @brief Format the `UUID`.
 	/// @param arg A `UUID`.
 	/// @param ctx see `fmt::formatter::format`.
@@ -93,13 +100,7 @@ public:
 
 /// @brief Specialization of `fmt::formatter` for a `PROPVARIANT`.
 template <>
-struct fmt::formatter<PROPVARIANT> {
-public:
-	/// @brief Parse the format string.
-	/// @param ctx see `fmt::formatter::parse`.
-	/// @return see `fmt::formatter::parse`.
-	fmt::format_parse_context::iterator parse(fmt::format_parse_context& ctx) noexcept;
-
+struct fmt::formatter<PROPVARIANT> : public m3c::internal::base_formatter {
 	/// @brief Format the `PROPVARIANT` (or `PropVariant`).
 	/// @param arg A `PROPVARIANT`.
 	/// @param ctx see `fmt::formatter::format`.
@@ -120,13 +121,7 @@ struct fmt::formatter<m3c::PropVariant> : public fmt::formatter<PROPVARIANT> {
 
 /// @brief Specialization of `fmt::formatter` for a `IUnknown*`.
 template <>
-struct fmt::formatter<m3c::fmt_ptr<IUnknown>> {
-public:
-	/// @brief Parse the format string.
-	/// @param ctx see `fmt::formatter::parse`.
-	/// @return see `fmt::formatter::parse`.
-	fmt::format_parse_context::iterator parse(fmt::format_parse_context& ctx) noexcept;
-
+struct fmt::formatter<m3c::fmt_ptr<IUnknown>> : public m3c::internal::base_formatter {
 	/// @brief Format the `IUnknown*`.
 	/// @param arg A pointer to a COM object.
 	/// @param ctx see `fmt::formatter::format`.
@@ -137,13 +132,7 @@ public:
 
 /// @brief Specialization of `fmt::formatter` for a `IStream*`.
 template <>
-struct fmt::formatter<m3c::fmt_ptr<IStream>> {
-public:
-	/// @brief Parse the format string.
-	/// @param ctx see `fmt::formatter::parse`.
-	/// @return see `fmt::formatter::parse`.
-	fmt::format_parse_context::iterator parse(fmt::format_parse_context& ctx) noexcept;
-
+struct fmt::formatter<m3c::fmt_ptr<IStream>> : public m3c::internal::base_formatter {
 	/// @brief Format the `IStream*`.
 	/// @param arg A pointer to a COM object.
 	/// @param ctx see `fmt::formatter::format`.
@@ -153,13 +142,7 @@ public:
 
 /// @brief Specialization of `fmt::formatter` for a `m3c::com_ptr<IUnknown>`.
 template <>
-struct fmt::formatter<m3c::com_ptr<IUnknown>> {
-public:
-	/// @brief Parse the format string.
-	/// @param ctx see `fmt::formatter::parse`.
-	/// @return see `fmt::formatter::parse`.
-	fmt::format_parse_context::iterator parse(fmt::format_parse_context& ctx) noexcept;
-
+struct fmt::formatter<m3c::com_ptr<IUnknown>> : public m3c::internal::base_formatter {
 	/// @brief Format the `m3c::com_ptr<IUnknown>`.
 	/// @param arg A smart pointer to a COM object.
 	/// @param ctx see `fmt::formatter::format`.
@@ -169,13 +152,7 @@ public:
 
 /// @brief Specialization of `fmt::formatter` for a `m3c::com_ptr<IStream>`.
 template <>
-struct fmt::formatter<m3c::com_ptr<IStream>> {
-public:
-	/// @brief Parse the format string.
-	/// @param ctx see `fmt::formatter::parse`.
-	/// @return see `fmt::formatter::parse`.
-	fmt::format_parse_context::iterator parse(fmt::format_parse_context& ctx) noexcept;
-
+struct fmt::formatter<m3c::com_ptr<IStream>> : public m3c::internal::base_formatter {
 	/// @brief Format the `m3c::com_ptr<IStream>`.
 	/// @param arg A smart pointer to a COM object.
 	/// @param ctx see `fmt::formatter::format`.
@@ -190,13 +167,7 @@ public:
 
 /// @brief Specialization of `fmt::formatter` for a `PROPERTYKEY`.
 template <>
-struct fmt::formatter<PROPERTYKEY> {
-public:
-	/// @brief Parse the format string.
-	/// @param ctx see `fmt::formatter::parse`.
-	/// @return see `fmt::formatter::parse`.
-	fmt::format_parse_context::iterator parse(fmt::format_parse_context& ctx) noexcept;
-
+struct fmt::formatter<PROPERTYKEY> : public m3c::internal::base_formatter {
 	/// @brief Format the `PROPERTYKEY`.
 	/// @param arg An object.
 	/// @param ctx see `fmt::formatter::format`.

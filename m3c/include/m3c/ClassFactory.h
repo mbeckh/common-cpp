@@ -23,7 +23,7 @@ limitations under the License.
 #include <unknwn.h>
 #include <windows.h>
 
-#include <new>
+#include <new>  // IWYU pragma: keep
 
 namespace m3c {
 

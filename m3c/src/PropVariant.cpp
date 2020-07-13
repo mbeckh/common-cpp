@@ -22,6 +22,7 @@ limitations under the License.
 #include <m3c/types_fmt.h>  // IWYU pragma: keep
 #include <m3c/types_log.h>  // IWYU pragma: keep
 
+#include <llamalog/LogLine.h>
 #include <llamalog/custom_types.h>
 #include <llamalog/llamalog.h>
 
@@ -32,10 +33,12 @@ limitations under the License.
 #include <cstring>
 #include <string>
 #include <string_view>
+#include <type_traits>
+#include <utility>
 
 namespace m3c {
 
-std::string VariantTypeToString(const PROPVARIANT& pv) {
+std::string VariantTypeToString(const PROPVARIANT& pv) {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 #pragma push_macro("VT_")
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage): Not possible without macro.
 #define VT_(vt_)            \
@@ -111,41 +114,74 @@ std::string VariantTypeToString(const PROPVARIANT& pv) {
 	return std::string(type);
 }
 
+// ensure that abstraction does not add to memory requirements
+static_assert(sizeof(PropVariant) == sizeof(PROPVARIANT));
+
 // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init): PROPVARIANT is initialized using PropVariantInit.
 PropVariant::PropVariant() noexcept {
-	PropVariantInit(this);
+	PropVariantInit(static_cast<PROPVARIANT*>(this));
 }
 
-PropVariant::PropVariant(const PropVariant& pv)
-	: PropVariant(static_cast<const PROPVARIANT&>(pv)) {
+PropVariant::PropVariant(const PropVariant& oth)
+	: PropVariant(static_cast<const PROPVARIANT&>(oth)) {
 	// empty
 }
 
-PropVariant::PropVariant(PropVariant&& pv) noexcept
-	: PropVariant(static_cast<const PROPVARIANT&&>(pv)) {
+PropVariant::PropVariant(PropVariant&& oth) noexcept
+	: PropVariant(std::move(static_cast<PROPVARIANT&&>(oth))) {
 	// empty
 }
 
 // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init): PROPVARIANT is initialized using PropVariantInit.
 PropVariant::PropVariant(const PROPVARIANT& pv) {
-	PropVariantInit(this);
-	COM_HR(PropVariantCopy(this, &pv), "PropVariantCopy for {}", pv);
+	PropVariantInit(static_cast<PROPVARIANT*>(this));
+	COM_HR(PropVariantCopy(static_cast<PROPVARIANT*>(this), &pv), "PropVariantCopy for {}", pv);
 }
 
 PropVariant::PropVariant(PROPVARIANT&& pv) noexcept {
-	std::memcpy(this, &pv, sizeof(PROPVARIANT));
+	static_assert(std::is_trivially_copyable_v<PROPVARIANT>, "PROPVARIANT is not trivially copyable");
+	std::memcpy(static_cast<PROPVARIANT*>(this), &pv, sizeof(PROPVARIANT));
+
+	// PropVariantInit, not PropVariantClear because data has been copied
 	PropVariantInit(&pv);
 }
 
 PropVariant::~PropVariant() noexcept {
-	const HRESULT hr = PropVariantClear(this);
+	const HRESULT hr = PropVariantClear(static_cast<PROPVARIANT*>(this));
 	if (FAILED(hr)) {
-		LOG_ERROR("PropVariantClear: {}", lg::error_code{hr});
+		SLOG_ERROR("PropVariantClear: {}", lg::error_code{hr});
 	}
 }
 
-}  // namespace m3c
-
-llamalog::LogLine& operator<<(llamalog::LogLine& logLine, const m3c::PropVariant& arg) {
-	return logLine.AddCustomArgument(arg);
+PropVariant& PropVariant::operator=(const PropVariant& oth) {
+	return *this = static_cast<const PROPVARIANT&>(oth);
 }
+
+PropVariant& PropVariant::operator=(PropVariant&& oth) {
+	return *this = std::move(static_cast<PROPVARIANT&&>(oth));
+}
+
+PropVariant& PropVariant::operator=(const PROPVARIANT& pv) {
+	COM_HR(PropVariantClear(static_cast<PROPVARIANT*>(this)), "PropVariantClear for {}", static_cast<const PROPVARIANT&>(*this));
+	COM_HR(PropVariantCopy(static_cast<PROPVARIANT*>(this), &pv), "PropVariantCopy for {}", pv);
+
+	return *this;
+}
+
+PropVariant& PropVariant::operator=(PROPVARIANT&& pv) {
+	COM_HR(PropVariantClear(static_cast<PROPVARIANT*>(this)), "PropVariantClear for {}", static_cast<const PROPVARIANT&>(*this));
+
+	static_assert(std::is_trivially_copyable_v<PROPVARIANT>, "PROPVARIANT is not trivially copyable");
+	std::memcpy(static_cast<PROPVARIANT*>(this), &pv, sizeof(PROPVARIANT));
+
+	// PropVariantInit, not PropVariantClear because data has been copied
+	PropVariantInit(&pv);
+
+	return *this;
+}
+
+llamalog::LogLine& operator<<(llamalog::LogLine& logLine, const PropVariant& arg) {
+	return logLine.AddCustomArgument(static_cast<const PROPVARIANT&>(arg));
+}
+
+}  // namespace m3c

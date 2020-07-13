@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <cassert>
 #include <compare>
-#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <cwchar>
@@ -646,11 +645,15 @@ using lazy_string = basic_lazy_string<kSize, char>;
 template <std::uint16_t kSize>
 using lazy_wstring = basic_lazy_string<kSize, wchar_t>;
 
-#ifdef __clang_analyzer__
-// make clang happy and define in namespace for ADL. MSVC can't find correct overload when the declaration is present.
+/// @brief Add the value of the lazy string to a `llamalog::LogLine`.
+/// @tparam kSize The buffer size of the string.
+/// @tparam CharT The character type.
+/// @param logLine The output target.
+/// @param arg A `m3c::basic_lazy_string`.
 template <std::uint16_t kSize, typename CharT>
-llamalog::LogLine& operator<<(llamalog::LogLine& logLine, const basic_lazy_string<kSize, CharT>& arg);
-#endif
+llamalog::LogLine& operator<<(llamalog::LogLine& logLine, const basic_lazy_string<kSize, CharT>& arg) {
+	return logLine << arg.sv();
+}
 
 }  // namespace m3c
 
@@ -661,14 +664,3 @@ struct std::hash<m3c::basic_lazy_string<kSize, CharT>> {
 		return str.hash();
 	}
 };
-
-
-/// @brief Add the value of the lazy string to a `llamalog::LogLine`.
-/// @tparam kSize The buffer size of the string.
-/// @tparam CharT The character type.
-/// @param logLine The output target.
-/// @param arg A `m3c::basic_lazy_string`.
-template <std::uint16_t kSize, typename CharT>
-llamalog::LogLine& operator<<(llamalog::LogLine& logLine, const m3c::basic_lazy_string<kSize, CharT>& arg) {
-	return logLine << arg.sv();
-}

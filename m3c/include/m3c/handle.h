@@ -163,8 +163,8 @@ private:
 	Closer m_closer;
 };
 
-extern template base_handle<handle_closer>;
-extern template base_handle<find_closer>;
+extern template class base_handle<handle_closer>;
+extern template class base_handle<find_closer>;
 
 //
 // operator==

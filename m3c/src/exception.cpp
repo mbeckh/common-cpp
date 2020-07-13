@@ -19,6 +19,7 @@ limitations under the License.
 #include "m3c/exception.h"
 
 #include <fmt/core.h>
+#include <llamalog/LogLine.h>
 #include <llamalog/llamalog.h>
 #include <llamalog/winapi_format.h>  // IWYU pragma: keep
 
@@ -46,7 +47,7 @@ public:
 		return m_name;
 	}
 
-	/// @brief The message in the format '<text> (0x<code>)'.
+	/// @brief The message in the format '\<text\> (0x\<code\>)'.
 	/// @return The message as a UTF-8 encoded string.
 	[[nodiscard]] std::string message(const int condition) const final {
 		return fmt::format("{:%}", lg::error_code{condition});

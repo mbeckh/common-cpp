@@ -21,8 +21,6 @@ limitations under the License.
 
 #pragma once
 
-#include <llamalog/llamalog.h>
-
 #include <unknwn.h>
 #include <windows.h>
 

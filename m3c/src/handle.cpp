@@ -21,7 +21,7 @@ limitations under the License.
 
 namespace m3c::internal {
 
-template base_handle<handle_closer>;
-template base_handle<find_closer>;
+template class base_handle<handle_closer>;
+template class base_handle<find_closer>;
 
 }  // namespace m3c::internal
