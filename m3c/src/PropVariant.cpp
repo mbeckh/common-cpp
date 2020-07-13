@@ -135,7 +135,7 @@ PropVariant::PropVariant(PropVariant&& oth) noexcept
 // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init): PROPVARIANT is initialized using PropVariantInit.
 PropVariant::PropVariant(const PROPVARIANT& pv) {
 	PropVariantInit(static_cast<PROPVARIANT*>(this));
-	COM_HR(PropVariantCopy(static_cast<PROPVARIANT*>(this), &pv), "PropVariantCopy for {}", pv);
+	COM_HR(PropVariantCopy(static_cast<PROPVARIANT*>(this), &pv), "PropVariantCopy");
 }
 
 PropVariant::PropVariant(PROPVARIANT&& pv) noexcept {
@@ -162,14 +162,14 @@ PropVariant& PropVariant::operator=(PropVariant&& oth) {
 }
 
 PropVariant& PropVariant::operator=(const PROPVARIANT& pv) {
-	COM_HR(PropVariantClear(static_cast<PROPVARIANT*>(this)), "PropVariantClear for {}", static_cast<const PROPVARIANT&>(*this));
-	COM_HR(PropVariantCopy(static_cast<PROPVARIANT*>(this), &pv), "PropVariantCopy for {}", pv);
+	COM_HR(PropVariantClear(static_cast<PROPVARIANT*>(this)), "PropVariantClear");
+	COM_HR(PropVariantCopy(static_cast<PROPVARIANT*>(this), &pv), "PropVariantCopy");
 
 	return *this;
 }
 
 PropVariant& PropVariant::operator=(PROPVARIANT&& pv) {
-	COM_HR(PropVariantClear(static_cast<PROPVARIANT*>(this)), "PropVariantClear for {}", static_cast<const PROPVARIANT&>(*this));
+	COM_HR(PropVariantClear(static_cast<PROPVARIANT*>(this)), "PropVariantClear");
 
 	static_assert(std::is_trivially_copyable_v<PROPVARIANT>, "PROPVARIANT is not trivially copyable");
 	std::memcpy(static_cast<PROPVARIANT*>(this), &pv, sizeof(PROPVARIANT));
@@ -181,7 +181,7 @@ PropVariant& PropVariant::operator=(PROPVARIANT&& pv) {
 }
 
 llamalog::LogLine& operator<<(llamalog::LogLine& logLine, const PropVariant& arg) {
-	return logLine.AddCustomArgument(static_cast<const PROPVARIANT&>(arg));
+	return logLine.AddCustomArgument(arg);
 }
 
 }  // namespace m3c
