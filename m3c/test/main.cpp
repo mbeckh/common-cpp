@@ -18,13 +18,16 @@ limitations under the License.
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <llamalog/LogLine.h>
 #include <llamalog/LogWriter.h>
 #include <llamalog/llamalog.h>
 #include <m4t/memory.h>
 
 #include <objbase.h>
+#include <windows.h>
 
 #include <memory>
+#include <new>
 #include <utility>
 
 namespace t = testing;

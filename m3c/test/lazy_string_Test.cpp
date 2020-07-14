@@ -1,5 +1,5 @@
 /*
-Copyright 2019 Michael Beckh
+Copyright 2020 Michael Beckh
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,10 +16,19 @@ limitations under the License.
 
 #include "m3c/lazy_string.h"
 
+#include <fmt/core.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <m4t/m4t.h>
+
+#include <compare>
+#include <cwchar>
+#include <string>
+#include <string_view>
+#include <utility>
 
 namespace m3c::test {
+
+namespace t = testing;
 
 namespace {
 
@@ -37,7 +46,7 @@ static constexpr wchar_t kMinString[] = L"00123456789012345678901234567890123456
 static constexpr wchar_t kMaxString[] = L"zz2345678901234567890123456789012345678901234567890123456789";
 
 class lazy_string_Test : public t::Test {
-protected:
+public:
 	using CharT = wchar_t;
 
 	using StringT = lazy_wstring<32>;
