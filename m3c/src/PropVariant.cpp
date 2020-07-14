@@ -209,7 +209,13 @@ PropVariant::~PropVariant() noexcept {
 namespace {
 
 /// @brief Helper type for formatting `PropVariant` objects with reference types.
-struct VariantWrapper {
+struct VariantWrapper {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
+	/// @brief Create a new `VariantWrapper` object.
+	/// @param varType The `VARTYPE` of the original object.
+	VariantWrapper(VARTYPE varType) noexcept
+		: vt(varType) {
+		// empty
+	}
 	VARTYPE vt;       ///< @brief The type of the original `PropVariant`.
 	Variant variant;  ///< @brief The data container for logging.
 };
@@ -225,6 +231,7 @@ struct fmt::formatter<m3c::VariantWrapper> {
 	/// @brief Parse the format string.
 	/// @param ctx see `fmt::formatter::parse`.
 	/// @return see `fmt::formatter::parse`.
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static=: Specialization of fmt::formatter.
 	fmt::format_parse_context::iterator parse(fmt::format_parse_context& ctx) {
 		return ctx.end();
 	}
@@ -233,6 +240,7 @@ struct fmt::formatter<m3c::VariantWrapper> {
 	/// @param arg A `m3c::VariantWrapper` object.
 	/// @param ctx see `fmt::formatter::format`.
 	/// @return see `fmt::formatter::format`.
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static=: Specialization of fmt::formatter.
 	fmt::format_context::iterator format(const m3c::VariantWrapper& arg, fmt::format_context& ctx) {
 		const std::string vt = m3c::VariantTypeToString(arg.vt);
 		std::string value;
@@ -260,8 +268,7 @@ llamalog::LogLine& operator<<(llamalog::LogLine& logLine, const PropVariant& arg
 		Variant variant;
 		COM_HR(PropVariantToVariant(&arg, &variant), "PropVariantToVariant for {}", arg.GetVariantType());
 
-		VariantWrapper wrapper;
-		wrapper.vt = arg.vt;
+		VariantWrapper wrapper(arg.vt);
 		COM_HR(VariantCopyInd(&wrapper.variant, &variant), "VariantCopyInd for {}", variant.GetVariantType());
 
 		return logLine.AddCustomArgument(wrapper);
