@@ -11,7 +11,7 @@
       <AdditionalIncludeDirectories Condition="'$(ProjectGuid)'=='{823B4768-A89C-47C2-A51F-68180D4B752B}'">$(m3cDirectory)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-	  <AdditionalDependencies>ole32.lib;rpcrt4.lib;propsys.lib;%(AdditionalDependencies)</AdditionalDependencies>
+	  <AdditionalDependencies>ole32.lib;oleaut32.lib;propsys.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
 	  <AdditionalDependencies Condition="'$(ProjectGuid)'!='{823B4768-A89C-47C2-A51F-68180D4B752B}'">$(MSBuildThisFileName)_$(PlatformShortName)$(DebugSuffix).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
