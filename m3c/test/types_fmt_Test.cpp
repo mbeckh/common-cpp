@@ -17,17 +17,24 @@ limitations under the License.
 #include "m3c/types_fmt.h"  // IWYU pragma: keep
 
 #include "m3c/PropVariant.h"
+#include "m3c/com_ptr.h"
 
 #include <fmt/core.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <m4t/IStream_Mock.h>
 #include <m4t/m4t.h>
 
 #include <objbase.h>
+#include <objidl.h>
+#include <oleauto.h>
+#include <propidl.h>
 #include <propkey.h>
 #include <propvarutil.h>
 #include <rpc.h>
+#include <unknwn.h>
 #include <wincodec.h>
+#include <windows.h>
 #include <wtypes.h>
 
 #include <string>
@@ -93,15 +100,25 @@ TEST(types_fmt_Test, PROPVARIANT_IsStringVector_PrintVector) {
 // PropVariant
 //
 
-TEST(types_fmt_Test, PropVariant_IsBooleanTrue_PrintMinus1) {
+TEST(types_fmt_Test, PropVariant_IsEmpty_PrintEmpty) {
 	std::string str;
 	{
 		PropVariant arg;
-		InitPropVariantFromBoolean(true, &arg);
 		str = fmt::format("{}", arg);
 	}
 
-	EXPECT_EQ(str, "(BOOL: -1)");
+	EXPECT_EQ(str, "(EMPTY: )");
+}
+
+TEST(types_fmt_Test, PropVariant_IsNull_PrintNull) {
+	std::string str;
+	{
+		PropVariant arg;
+		arg.vt = VT_NULL;
+		str = fmt::format("{}", arg);
+	}
+
+	EXPECT_EQ(str, "(NULL: )");
 }
 
 TEST(types_fmt_Test, PropVariant_IsInt16_PrintI2) {
@@ -113,6 +130,126 @@ TEST(types_fmt_Test, PropVariant_IsInt16_PrintI2) {
 	}
 
 	EXPECT_EQ(str, "(I2: 37)");
+}
+
+TEST(types_fmt_Test, PropVariant_IsInt32_PrintI4) {
+	std::string str;
+	{
+		PropVariant arg;
+		InitPropVariantFromInt32(37, &arg);
+		str = fmt::format("{}", arg);
+	}
+
+	EXPECT_EQ(str, "(I4: 37)");
+}
+
+TEST(types_fmt_Test, PropVariant_IsFloat_PrintR4) {
+	std::string str;
+	{
+		PropVariant arg;
+		arg.vt = VT_R4;
+		arg.fltVal = 37;
+		str = fmt::format("{}", arg);
+	}
+
+	EXPECT_EQ(str, "(R4: 37)");
+}
+
+TEST(types_fmt_Test, PropVariant_IsDouble_PrintR8) {
+	std::string str;
+	{
+		PropVariant arg;
+		InitPropVariantFromDouble(37, &arg);
+		str = fmt::format("{}", arg);
+	}
+
+	EXPECT_EQ(str, "(R8: 37)");
+}
+
+TEST(types_fmt_Test, PropVariant_IsCurrency_PrintCY) {
+	std::string str;
+	{
+		PropVariant arg;
+		arg.vt = VT_CY;
+		arg.cyVal.int64 = 37;
+		str = fmt::format("{}", arg);
+	}
+
+	EXPECT_EQ(str, "(CY)");
+}
+
+TEST(types_fmt_Test, PropVariant_IsDate_PrintDate) {
+	std::string str;
+	{
+		PropVariant arg;
+		arg.vt = VT_DATE;
+		arg.date = 3456.78;
+		str = fmt::format("{}", arg);
+	}
+
+	EXPECT_EQ(str, "(DATE: 1909/06/17:18:43:12.000)");
+}
+
+TEST(types_fmt_Test, PropVariant_IsBSTR_PrintBSTR) {
+	std::string str;
+	{
+		PropVariant arg;
+		arg.vt = VT_BSTR;
+		arg.bstrVal = SysAllocString(L"Test");
+		str = fmt::format("{}", arg);
+	}
+
+	EXPECT_EQ(str, "(BSTR: Test)");
+}
+
+TEST(types_fmt_Test, PropVariant_IsError_PrintError) {
+	std::string str;
+	{
+		PropVariant arg;
+		arg.vt = VT_ERROR;
+		arg.scode = ERROR_ACCOUNT_EXPIRED;
+		str = fmt::format("{}", arg);
+	}
+
+	EXPECT_EQ(str, "(ERROR)");
+}
+
+TEST(types_fmt_Test, PropVariant_IsBooleanTrue_PrintMinus1) {
+	std::string str;
+	{
+		PropVariant arg;
+		InitPropVariantFromBoolean(true, &arg);
+		str = fmt::format("{}", arg);
+	}
+
+	EXPECT_EQ(str, "(BOOL: -1)");
+}
+
+TEST(types_fmt_Test, PropVariant_IsVariant_PrintVariant) {
+	std::string str;
+	{
+		PROPVARIANT variant;
+		InitPropVariantFromInt32(37, &variant);
+
+		PropVariant arg;
+		arg.vt = VT_VARIANT | VT_BYREF;
+		arg.pvarVal = &variant;
+		str = fmt::format("{}", arg);
+	}
+
+	EXPECT_EQ(str, "(VARIANT|BYREF: 37)");
+}
+
+TEST(types_fmt_Test, PropVariant_IsString_PrintString) {
+	// longer than the internal buffer in EncodeUtf8
+	std::string str;
+	{
+		PropVariant arg;
+		InitPropVariantFromString(std::wstring(512, L'x').c_str(), &arg);
+		str = fmt::format("{}", arg);
+	}
+
+	EXPECT_EQ(str, "(LPWSTR: " + std::string(512, L'x') + ")");
 }
 
 TEST(types_fmt_Test, PropVariant_IsStringVector_PrintVector) {

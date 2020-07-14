@@ -17,26 +17,35 @@ limitations under the License.
 #pragma once
 
 #include <fmt/core.h>
-#include <fmt/format.h>
 
 #include <guiddef.h>
 #include <objbase.h>
 #include <objidl.h>
+#include <oleauto.h>
 #include <propidl.h>
 #include <propsys.h>
+#include <propvarutil.h>
 #include <rpc.h>
 #include <sal.h>
 #include <unknwn.h>
+#include <wincodec.h>
 #include <windows.h>
 #include <wtypes.h>
 
 #include <algorithm>
+#include <cassert>
+#include <chrono>
+#include <compare>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <cwchar>
 #include <exception>
 #include <functional>
+#include <iterator>
+#include <limits>
 #include <memory>
+#include <mutex>
 #include <new>
 #include <string>
 #include <string_view>
