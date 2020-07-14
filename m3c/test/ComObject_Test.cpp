@@ -14,13 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "m3c/ComObject.h"
-
 #include "Bar.h"
 #include "Foo.h"
 
 #include "m3c/COM.h"
-#include "m3c/exception.h"
 
 #include <gtest/gtest.h>
 #include <m4t/m4t.h>
@@ -30,6 +27,10 @@ limitations under the License.
 #include <windows.h>
 
 #include <new>
+
+namespace m3c {
+class com_exception;
+}
 
 namespace m3c::test {
 

@@ -23,6 +23,8 @@ limitations under the License.
 #include <guiddef.h>
 #include <objbase.h>
 #include <objidl.h>
+#include <oleauto.h>
+#include <propidl.h>
 #include <propkey.h>
 #include <propvarutil.h>
 #include <rpc.h>
@@ -31,11 +33,14 @@ limitations under the License.
 #include <windows.h>
 #include <wtypes.h>
 
+#include <compare>
 #include <cstddef>
+#include <cwchar>
 #include <exception>
 #include <functional>
 #include <memory>
 #include <new>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <utility>

@@ -61,7 +61,7 @@ TEST(types_log_Test, UUID_Default_PrintMessage) {
 	}
 	const std::string str = logLine.GetLogMessage();
 
-	EXPECT_EQ(str, "a5063846-0d67-4140-8562-af1aaf99a341");
+	EXPECT_EQ("a5063846-0d67-4140-8562-af1aaf99a341", str);
 }
 
 
@@ -78,7 +78,7 @@ TEST(types_log_Test, PROPVARIANT_Default_PrintMessage) {
 	}
 	const std::string str = logLine.GetLogMessage();
 
-	EXPECT_EQ(str, "(LPWSTR|VECTOR: red; green; blue)");
+	EXPECT_EQ("(LPWSTR|VECTOR: red; green; blue)", str);
 }
 
 
@@ -162,7 +162,7 @@ TEST(types_log_Test, PropVariant_StringArray_PrintMessage) {
 	}
 	const std::string str = logLine.GetLogMessage();
 
-	EXPECT_EQ(str, "(LPWSTR|VECTOR: red; green; blue)");
+	EXPECT_EQ("(LPWSTR|VECTOR: red; green; blue)", str);
 }
 
 

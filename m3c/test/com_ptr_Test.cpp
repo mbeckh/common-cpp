@@ -19,12 +19,9 @@ limitations under the License.
 #include "Foo.h"
 
 #include "m3c/COM.h"
-#include "m3c/ComObject.h"
-#include "m3c/exception.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <llamalog/llamalog.h>
 #include <m4t/IStream_Mock.h>
 #include <m4t/m4t.h>
 
@@ -35,9 +32,11 @@ limitations under the License.
 
 #include <cstddef>
 #include <functional>
-#include <string>
 #include <utility>
 
+namespace m3c {
+class com_exception;
+}
 
 namespace m3c::test {
 
