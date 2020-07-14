@@ -73,7 +73,7 @@ public:
 	/// @note This constructor is used if both strings have different sizes of the internal buffer.
 	/// @tparam kOthSize The size of the internal buffer of @p oth.
 	/// @param oth The other `basic_lazy_string` object.
-	template <std::size_t kOthSize>
+	template <size_type kOthSize>
 	basic_lazy_string(const basic_lazy_string<kOthSize, CharT>& oth) {
 		m_inline = oth.size() < kSize;
 		if (m_inline) {
