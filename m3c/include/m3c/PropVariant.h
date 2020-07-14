@@ -18,6 +18,7 @@ limitations under the License.
 #pragma once
 
 #include <propidl.h>
+#include <wtypes.h>
 
 #include <string>
 
@@ -27,10 +28,35 @@ class LogLine;
 
 namespace m3c {
 
-/// @brief Returns a string representation of the type of a `PROPVARIANT`.
-/// @param pv A `PROPVARIANT`.
+/// @brief Returns a string representation of the type of a `VARIANT` or `PROPVARIANT`.
+/// @param pv A `VARTYPE` from a `Variant` or `PropVariant`.
 /// @return The type as a string.
-[[nodiscard]] std::string VariantTypeToString(const PROPVARIANT& pv);  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
+[[nodiscard]] std::string VariantTypeToString(VARTYPE vt);  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
+
+/// @brief A class to manage stack unwinding for `VARIANT` objects.
+class Variant final : public VARIANT {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
+public:
+	/// @brief Ensures that `VariantInit` is called for an empty instance.
+	Variant() noexcept;
+
+	Variant(const Variant& oth);
+	Variant(Variant&& oth) noexcept;
+
+	explicit Variant(const VARIANT& pv);
+	explicit Variant(VARIANT&& pv) noexcept;
+
+	/// @brief Internally calls `VariantClear`.
+	~Variant() noexcept;
+
+public:
+	Variant& operator=(const Variant&) = delete;
+	Variant& operator=(Variant&&) = delete;
+
+public:
+	[[nodiscard]] std::string GetVariantType() const {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
+		return VariantTypeToString(vt);
+	}
+};
 
 /// @brief A class to manage stack unwinding for `PROPVARIANT` objects.
 class PropVariant final : public PROPVARIANT {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
@@ -44,7 +70,7 @@ public:
 	explicit PropVariant(const PROPVARIANT& pv);
 	explicit PropVariant(PROPVARIANT&& pv) noexcept;
 
-	/// @brief Internally calls PropVariantClear.
+	/// @brief Internally calls `PropVariantClear`.
 	~PropVariant() noexcept;
 
 public:
@@ -53,11 +79,11 @@ public:
 
 public:
 	[[nodiscard]] std::string GetVariantType() const {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
-		return VariantTypeToString(*this);
+		return VariantTypeToString(vt);
 	}
 };
 
-/// @brief Log a `m3c::PropVariant` as `VT_xx|<value>`.
+/// @brief Log a `m3c::PropVariant` as `VT_xx: \<value\>`.
 /// @param logLine The `llamalog::LogLine`.
 /// @param arg The value.
 /// @return @p logLine to allow method chaining.

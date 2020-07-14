@@ -38,12 +38,10 @@ limitations under the License.
 #include <windows.h>
 #include <wtypes.h>
 
-#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <iterator>
 #include <string>
-#include <string_view>
 
 namespace m3c::internal {
 
@@ -87,22 +85,18 @@ fmt::format_context::iterator fmt::formatter<UUID>::format(const UUID& arg, fmt:
 //
 
 fmt::format_context::iterator fmt::formatter<PROPVARIANT>::format(const PROPVARIANT& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
-	const std::string vt = m3c::VariantTypeToString(arg);
-	*ctx.out() = '(';
-	std::copy(vt.cbegin(), vt.cend(), ctx.out());
+	const std::string vt = m3c::VariantTypeToString(arg.vt);
+	std::string value;
 	try {
 		m3c::com_heap_ptr<wchar_t> pwsz;
 		COM_HR(PropVariantToStringAlloc(arg, &pwsz), "PropVariantToStringAlloc for {}", vt);
 
-		*ctx.out() = ':';
-		*ctx.out() = ' ';
-		const std::string str = m3c::EncodeUtf8(pwsz.get());
-		std::copy(str.cbegin(), str.cend(), ctx.out());
+		value = m3c::EncodeUtf8(pwsz.get());
 	} catch (const m3c::com_exception& e) {
 		LLAMALOG_INTERNAL_ERROR("{}", e);
+		return fmt::format_to(ctx.out(), "({})", vt);
 	}
-	*ctx.out() = ')';
-	return ctx.out();
+	return fmt::format_to(ctx.out(), "({}: {})", vt, value);
 }
 
 
@@ -139,16 +133,22 @@ fmt::format_context::iterator Format(IStream* arg, fmt::format_context& ctx) {  
 	const ULONG ref = arg->AddRef();
 	arg->Release();
 
-	STATSTG statstg{};
-	auto f = m3c::finally([&statstg]() noexcept {
-		CoTaskMemFree(statstg.pwcsName);
-	});
-	COM_HR(arg->Stat(&statstg, STATFLAG_DEFAULT), "IStream.Stat");
+	std::string name;
+	try {
+		STATSTG statstg{};
+		auto f = m3c::finally([&statstg]() noexcept {
+			CoTaskMemFree(statstg.pwcsName);
+		});
+		COM_HR(arg->Stat(&statstg, STATFLAG_DEFAULT), "IStream.Stat");
+		name = statstg.pwcsName ? m3c::EncodeUtf8(statstg.pwcsName) : "(IStream)";
+	} catch (const m3c::com_exception& e) {
+		LLAMALOG_INTERNAL_ERROR("{}", e);
+		name = "(ERROR)";
+	}
 
-	const std::string str = statstg.pwcsName ? m3c::EncodeUtf8(statstg.pwcsName) : "";
 
 	// do not count AddRef and the reference held by the logger
-	return fmt::format_to(ctx.out(), "({}, ref={}, this={})", str, ref - 2, static_cast<void*>(arg));
+	return fmt::format_to(ctx.out(), "({}, ref={}, this={})", name, ref - 2, static_cast<void*>(arg));
 }
 
 }  // namespace

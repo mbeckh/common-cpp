@@ -17,18 +17,23 @@ limitations under the License.
 #include "m3c/types_log.h"
 
 #include "m3c/PropVariant.h"
-
-#include <m3c/com_ptr.h>
+#include "m3c/com_ptr.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <llamalog/llamalog.h>
+#include <llamalog/LogLine.h>
 #include <m4t/IStream_Mock.h>
 #include <m4t/m4t.h>
 
+#include <objbase.h>
+#include <objidl.h>
+#include <oleauto.h>
+#include <propidl.h>
 #include <propkey.h>
 #include <propvarutil.h>
 #include <rpc.h>
+#include <unknwn.h>
+#include <wtypes.h>
 
 #include <string>
 
@@ -81,7 +86,74 @@ TEST(types_log_Test, PROPVARIANT_Default_PrintMessage) {
 // PropVariant
 //
 
-TEST(types_log_Test, PropVariant_Default_PrintMessage) {
+TEST(types_log_Test, PropVariant_IntPtr_PrintValue) {
+	lg::LogLine logLine = GetLogLine();
+	{
+		int i = 20;
+		PropVariant arg;
+		arg.vt = VT_I4 | VT_BYREF;
+		arg.pintVal = &i;
+		logLine << arg;
+	}
+	const std::string str = logLine.GetLogMessage();
+
+	EXPECT_EQ("(I4|BYREF: 20)", str);
+}
+
+TEST(types_log_Test, PropVariant_CLSID_PrintString) {
+	lg::LogLine logLine = GetLogLine();
+	{
+		PropVariant arg;
+		InitPropVariantFromCLSID(IID_IClassFactory, &arg);
+		logLine << arg;
+	}
+	const std::string str = logLine.GetLogMessage();
+
+	EXPECT_EQ("(CLSID: {00000001-0000-0000-C000-000000000046})", str);
+}
+TEST(types_log_Test, PropVariant_BSTR_PrintString) {
+	lg::LogLine logLine = GetLogLine();
+	{
+		PropVariant arg;
+		arg.vt = VT_BSTR;
+		arg.bstrVal = SysAllocString(L"Test");
+		logLine << arg;
+	}
+	const std::string str = logLine.GetLogMessage();
+
+	EXPECT_EQ("(BSTR: Test)", str);
+}
+
+TEST(types_log_Test, PropVariant_BSTRPtr_PrintString) {
+	lg::LogLine logLine = GetLogLine();
+	{
+		BSTR bstr = SysAllocString(L"Test");
+
+		PropVariant arg;
+		arg.vt = VT_BSTR | VT_BYREF;
+		arg.pbstrVal = &bstr;
+		logLine << arg;
+
+		SysFreeString(bstr);
+	}
+	const std::string str = logLine.GetLogMessage();
+
+	EXPECT_EQ("(BSTR|BYREF: Test)", str);
+}
+
+TEST(types_log_Test, PropVariant_LPWSTR_PrintString) {
+	lg::LogLine logLine = GetLogLine();
+	{
+		PropVariant arg;
+		InitPropVariantFromString(L"Test", &arg);
+		logLine << arg;
+	}
+	const std::string str = logLine.GetLogMessage();
+
+	EXPECT_EQ("(LPWSTR: Test)", str);
+}
+
+TEST(types_log_Test, PropVariant_StringArray_PrintMessage) {
 	lg::LogLine logLine = GetLogLine();
 	{
 		PropVariant arg;
