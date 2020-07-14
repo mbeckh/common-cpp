@@ -212,7 +212,7 @@ namespace {
 struct VariantWrapper {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 	/// @brief Create a new `VariantWrapper` object.
 	/// @param varType The `VARTYPE` of the original object.
-	VariantWrapper(VARTYPE varType) noexcept
+	explicit VariantWrapper(VARTYPE varType) noexcept
 		: vt(varType) {
 		// empty
 	}
