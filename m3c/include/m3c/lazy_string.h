@@ -44,9 +44,8 @@ public:
 	using string_type = std::basic_string<CharT>;
 	///< @brief The type of `std::basic_string_view` objects which are handled by this class.
 	using string_view_type = std::basic_string_view<CharT>;
-
-private:
 	using size_type = std::uint16_t;  ///< @brief The type used for the @p kSize template parameter.
+	static constexpr size_type kInternalBufferSize = kSize;
 
 public:
 	/// @brief Create a new empty `basic_lazy_string` object.
