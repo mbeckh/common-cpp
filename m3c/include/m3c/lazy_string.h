@@ -161,6 +161,7 @@ public:
 
 	/// @brief Create a new instance by moving a `std::basic_string` into the newly created instance.
 	/// @param str The `std::basic_string` object.
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init): m_size is only set for inline strings.
 	basic_lazy_string(string_type&& str) noexcept  // NOLINT(google-explicit-constructor): Allow implicit conversion from std::basic_string objects.
 		: m_inline(false) {
 		// always move-in string which might save copying all data

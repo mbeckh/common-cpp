@@ -56,7 +56,7 @@ public:
 
 	/// @brief Access the wrapped type.
 	/// @return The wrapped pointer.
-	constexpr T* get() const noexcept {
+	[[nodiscard]] constexpr T* get() const noexcept {
 		return m_p;
 	}
 

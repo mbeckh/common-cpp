@@ -121,7 +121,7 @@ public:
 	/// @brief Creates a copy of a smart pointer and increases the reference count.
 	/// @param ptr Another instance.
 	/// @return This instance.
-	com_ptr& operator=(const com_ptr& ptr) noexcept {  // NOLINT(bugprone-unhandled-self-assignment): reset handles self assignment properly.
+	com_ptr& operator=(const com_ptr& ptr) noexcept {  // NOLINT(bugprone-unhandled-self-assignment, cert-oop54-cpp): reset handles self assignment properly.
 		reset(ptr.m_ptr);
 		return *this;
 	}
