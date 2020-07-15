@@ -89,7 +89,7 @@ public:
 	}
 
 	/// @brief Creates an empty instance.
-	constexpr com_ptr(std::nullptr_t) noexcept {
+	constexpr explicit com_ptr(std::nullptr_t) noexcept {
 		// empty
 	}
 

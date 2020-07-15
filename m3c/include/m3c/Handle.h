@@ -49,7 +49,7 @@ struct FindCloser final {  // NOLINT(readability-identifier-naming): Windows/COM
 	/// @brief Close the handle.
 	/// @param hNative The handle to close.
 	/// @return `true` if the operation was successful, else `false`.
-	bool operator()(const HANDLE hNative) const noexcept {
+	bool operator()(const HANDLE hNative) const noexcept {  // NOLINT(misc-misplaced-const): Want const HANDLE.
 		return FindClose(hNative);
 	}
 };

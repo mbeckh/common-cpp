@@ -43,7 +43,7 @@ class fmt_ptr {
 public:
 	/// @brief Create a new object by wrapping a pointer.
 	/// @param p The pointer to be wrapped.
-	constexpr fmt_ptr(T* p)
+	constexpr explicit fmt_ptr(T* p)
 		: m_p(p) {
 	}
 	fmt_ptr(const fmt_ptr&) noexcept = default;

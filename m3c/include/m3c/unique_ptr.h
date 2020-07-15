@@ -297,7 +297,7 @@ public:
 		// empty
 	}
 
-	constexpr unique_ptr(std::nullptr_t) noexcept {
+	constexpr explicit unique_ptr(std::nullptr_t) noexcept {
 		// empty
 	}
 
