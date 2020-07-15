@@ -50,12 +50,12 @@ public:
 	}
 
 	/// @brief Creates an empty instance.
-	constexpr basic_rpc_string(std::nullptr_t) noexcept {
+	constexpr explicit basic_rpc_string(std::nullptr_t) noexcept {
 		// empty
 	}
 
 	/// @brief Releases any memory using `RpcStringFree`.
-	inline ~basic_rpc_string() noexcept {
+	~basic_rpc_string() noexcept {
 		const RPC_STATUS status = destroy();
 		if (status != RPC_S_OK) {
 			// destructor SHOULD NOT throw
