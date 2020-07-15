@@ -28,13 +28,19 @@ limitations under the License.
 #include <propkey.h>
 #include <propvarutil.h>
 #include <rpc.h>
+#include <sal.h>
 #include <unknwn.h>
 #include <wincodec.h>
 #include <windows.h>
 #include <wtypes.h>
 
+#include <algorithm>
+#include <cassert>
+#include <chrono>
 #include <compare>
 #include <cstddef>
+#include <cstdint>
+#include <cstring>
 #include <cwchar>
 #include <exception>
 #include <functional>
@@ -43,4 +49,5 @@ limitations under the License.
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <type_traits>
 #include <utility>
