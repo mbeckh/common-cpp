@@ -45,7 +45,7 @@ limitations under the License.
 
 namespace m3c::internal {
 
-fmt::format_parse_context::iterator base_formatter::parse(fmt::format_parse_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
+fmt::format_parse_context::iterator BaseFormatter::parse(fmt::format_parse_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
 	auto it = ctx.begin();
 	const auto last = ctx.end();
 	if (it != last && *it == ':') {
@@ -156,12 +156,12 @@ fmt::format_context::iterator Format(IStream* arg, fmt::format_context& ctx) {  
 
 fmt::format_context::iterator fmt::formatter<m3c::fmt_ptr<IUnknown>>::format(const m3c::fmt_ptr<IUnknown>& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
 	// there is nothing such as a const COM object :-)
-	return Format(arg, ctx);
+	return Format(arg.get(), ctx);
 }
 
 fmt::format_context::iterator fmt::formatter<m3c::fmt_ptr<IStream>>::format(const m3c::fmt_ptr<IStream>& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
 	// there is nothing such as a const COM object :-)
-	return Format(arg, ctx);
+	return Format(arg.get(), ctx);
 }
 
 

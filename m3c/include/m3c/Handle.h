@@ -37,7 +37,7 @@ struct HandleCloser final {  // NOLINT(readability-identifier-naming): Windows/C
 	/// @brief Close the handle.
 	/// @param hNative The handle to close.
 	/// @return `true` if the operation was successful, else `false`.
-	bool operator()(const HANDLE hNative) const noexcept {
+	bool operator()(const HANDLE hNative) const noexcept {  // NOLINT(misc-misplaced-const): Want const HANDLE.
 		return CloseHandle(hNative);
 	}
 };
@@ -73,7 +73,7 @@ public:
 
 	/// @brief Transfer ownership of an existing handle.
 	/// @param hNative The native `HANDLE`.
-	constexpr BaseHandle(const HANDLE hNative) noexcept  // NOLINT(google-explicit-constructor): Type should act as a drop-in replacement.
+	constexpr BaseHandle(const HANDLE hNative) noexcept  // NOLINT(google-explicit-constructor, misc-misplaced-const): Type should act as a drop-in replacement. Want const HANDLE.
 		: m_hNative(hNative) {
 		// empty
 	}
@@ -194,7 +194,7 @@ template <typename Closer>
 /// @param hNative A native handle.
 /// @return `true` if @p handle is the same handle as @p hNative.
 template <typename Closer>
-[[nodiscard]] inline bool operator==(const BaseHandle<Closer>& handle, const HANDLE hNative) noexcept {
+[[nodiscard]] inline bool operator==(const BaseHandle<Closer>& handle, const HANDLE hNative) noexcept {  // NOLINT(misc-misplaced-const): Want const HANDLE.
 	return handle.get() == hNative;
 }
 
@@ -204,7 +204,7 @@ template <typename Closer>
 /// @param handle A `BaseHandle` object.
 /// @return `true` if @p handle is the same handle as @p hNative.
 template <typename Closer>
-[[nodiscard]] inline bool operator==(const HANDLE hNative, const BaseHandle<Closer>& handle) noexcept {
+[[nodiscard]] inline bool operator==(const HANDLE hNative, const BaseHandle<Closer>& handle) noexcept {  // NOLINT(misc-misplaced-const): Want const HANDLE.
 	return handle.get() == hNative;
 }
 
@@ -229,7 +229,7 @@ template <typename Closer>
 /// @param hNative A native handle.
 /// @return `true` if @p handle is not the same handle as @p hNative.
 template <typename Closer>
-[[nodiscard]] inline bool operator!=(const BaseHandle<Closer>& handle, const HANDLE hNative) noexcept {
+[[nodiscard]] inline bool operator!=(const BaseHandle<Closer>& handle, const HANDLE hNative) noexcept {  // NOLINT(misc-misplaced-const): Want const HANDLE.
 	return handle.get() != hNative;
 }
 
@@ -239,7 +239,7 @@ template <typename Closer>
 /// @param handle A `BaseHandle` object.
 /// @return `true` if @p handle is not the same handle as @p hNative.
 template <typename Closer>
-[[nodiscard]] inline bool operator!=(const HANDLE hNative, const BaseHandle<Closer>& handle) noexcept {
+[[nodiscard]] inline bool operator!=(const HANDLE hNative, const BaseHandle<Closer>& handle) noexcept {  // NOLINT(misc-misplaced-const): Want const HANDLE.
 	return handle.get() != hNative;
 }
 

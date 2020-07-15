@@ -34,7 +34,7 @@ struct WICRect;
 
 namespace m3c {
 
-class PropVariant;
+class PropVariant;  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 
 /// @brief Helper class to allow formatting of pointer types.
 /// @tparam T The type of the pointer.
@@ -54,15 +54,9 @@ public:
 	fmt_ptr& operator=(const fmt_ptr&) noexcept = default;
 	fmt_ptr& operator=(fmt_ptr&&) noexcept = default;
 
-	/// @brief Allow conversion to the wrapped type.
+	/// @brief Access the wrapped type.
 	/// @return The wrapped pointer.
-	operator T*() {
-		return m_p;
-	}
-
-	/// @brief Allow conversion to the wrapped type.
-	/// @return The wrapped pointer.
-	operator T*() const {
+	constexpr T* get() const noexcept {
 		return m_p;
 	}
 
@@ -73,14 +67,14 @@ private:
 namespace internal {
 
 /// @brief Common base class to keep code out of the templates.
-struct base_formatter {
+struct BaseFormatter {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 	/// @brief Parse the format string.
 	/// @param ctx see `fmt::formatter::parse`.
 	/// @return see `fmt::formatter::parse`.
 	fmt::format_parse_context::iterator parse(fmt::format_parse_context& ctx);
 
 protected:
-	const std::string& GetFormat() const noexcept {
+	[[nodiscard]] const std::string& GetFormat() const noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 		return m_format;
 	}
 
@@ -99,7 +93,7 @@ private:
 
 /// @brief Specialization of `fmt::formatter` for a `UUID`.
 template <>
-struct fmt::formatter<UUID> : public m3c::internal::base_formatter {
+struct fmt::formatter<UUID> : public m3c::internal::BaseFormatter {
 	/// @brief Format the `UUID`.
 	/// @param arg A `UUID`.
 	/// @param ctx see `fmt::formatter::format`.
@@ -114,7 +108,7 @@ struct fmt::formatter<UUID> : public m3c::internal::base_formatter {
 
 /// @brief Specialization of `fmt::formatter` for a `PROPVARIANT`.
 template <>
-struct fmt::formatter<PROPVARIANT> : public m3c::internal::base_formatter {
+struct fmt::formatter<PROPVARIANT> : public m3c::internal::BaseFormatter {
 	/// @brief Format the `PROPVARIANT` (or `PropVariant`).
 	/// @param arg A `PROPVARIANT`.
 	/// @param ctx see `fmt::formatter::format`.
@@ -135,7 +129,7 @@ struct fmt::formatter<m3c::PropVariant> : public fmt::formatter<PROPVARIANT> {
 
 /// @brief Specialization of `fmt::formatter` for a `IUnknown*`.
 template <>
-struct fmt::formatter<m3c::fmt_ptr<IUnknown>> : public m3c::internal::base_formatter {
+struct fmt::formatter<m3c::fmt_ptr<IUnknown>> : public m3c::internal::BaseFormatter {
 	/// @brief Format the `IUnknown*`.
 	/// @param arg A pointer to a COM object.
 	/// @param ctx see `fmt::formatter::format`.
@@ -146,7 +140,7 @@ struct fmt::formatter<m3c::fmt_ptr<IUnknown>> : public m3c::internal::base_forma
 
 /// @brief Specialization of `fmt::formatter` for a `IStream*`.
 template <>
-struct fmt::formatter<m3c::fmt_ptr<IStream>> : public m3c::internal::base_formatter {
+struct fmt::formatter<m3c::fmt_ptr<IStream>> : public m3c::internal::BaseFormatter {
 	/// @brief Format the `IStream*`.
 	/// @param arg A pointer to a COM object.
 	/// @param ctx see `fmt::formatter::format`.
@@ -156,7 +150,7 @@ struct fmt::formatter<m3c::fmt_ptr<IStream>> : public m3c::internal::base_format
 
 /// @brief Specialization of `fmt::formatter` for a `m3c::com_ptr<IUnknown>`.
 template <>
-struct fmt::formatter<m3c::com_ptr<IUnknown>> : public m3c::internal::base_formatter {
+struct fmt::formatter<m3c::com_ptr<IUnknown>> : public m3c::internal::BaseFormatter {
 	/// @brief Format the `m3c::com_ptr<IUnknown>`.
 	/// @param arg A smart pointer to a COM object.
 	/// @param ctx see `fmt::formatter::format`.
@@ -166,7 +160,7 @@ struct fmt::formatter<m3c::com_ptr<IUnknown>> : public m3c::internal::base_forma
 
 /// @brief Specialization of `fmt::formatter` for a `m3c::com_ptr<IStream>`.
 template <>
-struct fmt::formatter<m3c::com_ptr<IStream>> : public m3c::internal::base_formatter {
+struct fmt::formatter<m3c::com_ptr<IStream>> : public m3c::internal::BaseFormatter {
 	/// @brief Format the `m3c::com_ptr<IStream>`.
 	/// @param arg A smart pointer to a COM object.
 	/// @param ctx see `fmt::formatter::format`.
@@ -181,7 +175,7 @@ struct fmt::formatter<m3c::com_ptr<IStream>> : public m3c::internal::base_format
 
 /// @brief Specialization of `fmt::formatter` for a `PROPERTYKEY`.
 template <>
-struct fmt::formatter<PROPERTYKEY> : public m3c::internal::base_formatter {
+struct fmt::formatter<PROPERTYKEY> : public m3c::internal::BaseFormatter {
 	/// @brief Format the `PROPERTYKEY`.
 	/// @param arg An object.
 	/// @param ctx see `fmt::formatter::format`.

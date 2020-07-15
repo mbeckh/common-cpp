@@ -30,7 +30,7 @@ limitations under the License.
 
 namespace llamalog {
 class LogLine;
-}
+}  // namespace llamalog
 
 namespace m3c {
 
@@ -73,7 +73,7 @@ public:
 	/// @tparam kOthSize The size of the internal buffer of @p oth.
 	/// @param oth The other `basic_lazy_string` object.
 	template <size_type kOthSize>
-	basic_lazy_string(const basic_lazy_string<kOthSize, CharT>& oth) {
+	basic_lazy_string(const basic_lazy_string<kOthSize, CharT>& oth) {  // NOLINT(google-explicit-constructor): Allow implicit conversion from other basic_lazy_string objects.
 		m_inline = oth.size() < kSize;
 		if (m_inline) {
 			m_size = static_cast<size_type>(oth.size());
@@ -105,7 +105,7 @@ public:
 	/// @tparam kOthSize The size of the internal buffer of @p oth.
 	/// @param oth The other `basic_lazy_string` object.
 	template <size_type kOthSize>
-	basic_lazy_string(basic_lazy_string<kOthSize, CharT>&& oth) {
+	basic_lazy_string(basic_lazy_string<kOthSize, CharT>&& oth) {  // NOLINT(google-explicit-constructor): Allow implicit conversion from other basic_lazy_string objects.
 		if (oth.m_inline) {
 			m_inline = oth.m_size < kSize;
 			if (m_inline) {
@@ -123,7 +123,7 @@ public:
 
 	/// @brief Create a new instance from a null-terminated character sequence.
 	/// @param str A pointer to a null-terminated character sequence.
-	basic_lazy_string(_In_z_ const CharT* str)
+	basic_lazy_string(_In_z_ const CharT* str)  // NOLINT(google-explicit-constructor, cppcoreguidelines-pro-type-member-init): Allow implicit conversion from character sequences, forward to other constructor.
 		: basic_lazy_string(str, std::char_traits<CharT>::length(str)) {
 		// empty
 	}
@@ -147,7 +147,7 @@ public:
 
 	/// @brief Create a new instance as a copy of a `std::basic_string`.
 	/// @param str The `std::basic_string` object.
-	basic_lazy_string(const string_type& str) {
+	basic_lazy_string(const string_type& str) {  // NOLINT(google-explicit-constructor): Allow implicit conversion from std::basic_string objects.
 		const std::size_t length = str.size();
 		m_inline = length < kSize;
 		if (m_inline) {
@@ -161,7 +161,7 @@ public:
 
 	/// @brief Create a new instance by moving a `std::basic_string` into the newly created instance.
 	/// @param str The `std::basic_string` object.
-	basic_lazy_string(string_type&& str) noexcept
+	basic_lazy_string(string_type&& str) noexcept  // NOLINT(google-explicit-constructor): Allow implicit conversion from std::basic_string objects.
 		: m_inline(false) {
 		// always move-in string which might save copying all data
 		new (&m_string) string_type(std::move(str));
@@ -169,7 +169,8 @@ public:
 
 	/// @brief Create a new instance as a copy of a `std::basic_string_view`.
 	/// @param str The `std::basic_string_view` object.
-	basic_lazy_string(const string_view_type& str) noexcept
+	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init): Forwards to other constructor.
+	basic_lazy_string(const string_view_type& str) noexcept  // NOLINT(google-explicit-constructor): Allow implicit conversion from std::basic_string_view objects.
 		: basic_lazy_string(str.data(), str.size()) {
 		// empty
 	}
@@ -191,7 +192,9 @@ public:
 	/// @param oth The other `basic_lazy_string` object.
 	/// @return A reference to this instance.
 	basic_lazy_string& operator=(const basic_lazy_string& oth) {
-		if (oth.size() < kSize) {
+		if (this == std::addressof(oth)) {
+			// do nothing
+		} else if (oth.size() < kSize) {
 			if (!m_inline) {
 				m_string.~basic_string();
 				m_inline = true;
@@ -247,7 +250,9 @@ public:
 	/// @param oth The other `basic_lazy_string` object.
 	/// @return A reference to this instance.
 	basic_lazy_string& operator=(basic_lazy_string&& oth) noexcept {
-		if (oth.m_inline) {
+		if (this == std::addressof(oth)) {
+			// do nothing
+		} else if (oth.m_inline) {
 			if (!m_inline) {
 				m_string.~basic_string();
 				m_inline = true;
@@ -677,12 +682,15 @@ public:
 	}
 
 	/// @brief Get a suitable hash value.
+	/// @details The hash algorithm is taken from the Java language.
 	/// @return A value that can be used in hash functions.
 	[[nodiscard]] std::size_t hash() const noexcept {
+		constexpr std::size_t kMagicHashMultiplier = 31;
+
 		const CharT* const ptr = c_str();
 		std::size_t h = 0;
 		for (std::size_t i = 0; i < size(); ++i) {
-			h = 31 * h + ptr[i];
+			h = kMagicHashMultiplier * h + ptr[i];
 		}
 		return h;
 	}
@@ -806,9 +814,9 @@ public:
 
 private:
 	/// @brief `true` if the data is stored in the internal buffer, `false` if using a `std::basic_string`.
-	bool m_inline;  // NOLINT(readability-identifier-naming): All constructors are explicitly defined.
+	bool m_inline;  // NOLINT(readability-identifier-naming, modernize-use-default-member-init): All constructors are explicitly defined and initialize as required.
 	/// @brief The number of characters stored in the internal buffer. Undefined if data is stored in a `std::basic_string`.
-	size_type m_size;  // NOLINT(readability-identifier-naming): All constructors are explicitly defined.
+	size_type m_size;  // NOLINT(readability-identifier-naming, modernize-use-default-member-init): All constructors are explicitly defined and initialize as required.
 	union {
 		/// @brief The internal buffer for storing data.
 		CharT m_buffer[kSize];  // NOLINT(readability-identifier-naming): Member of anonymous union is part of enclosing scope.

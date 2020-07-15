@@ -77,7 +77,7 @@ public:
 	/// @tparam S The COM interface type of the source.
 	/// @param ptr Another instance of a different type.
 	template <typename S>
-	com_ptr(const com_ptr<S>& ptr)
+	com_ptr(const com_ptr<S>& ptr)  // NOLINT(google-explicit-constructor): Allow implicit conversion from other com_ptr.
 		: m_ptr(ptr.template get_owner<T>()) {
 		// empty
 	}
@@ -121,7 +121,7 @@ public:
 	/// @brief Creates a copy of a smart pointer and increases the reference count.
 	/// @param ptr Another instance.
 	/// @return This instance.
-	com_ptr& operator=(const com_ptr& ptr) noexcept {
+	com_ptr& operator=(const com_ptr& ptr) noexcept {  // NOLINT(bugprone-unhandled-self-assignment): reset handles self assignment properly.
 		reset(ptr.m_ptr);
 		return *this;
 	}

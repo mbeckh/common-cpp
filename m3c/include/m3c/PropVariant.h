@@ -23,7 +23,7 @@ limitations under the License.
 #include <string>
 
 namespace llamalog {
-class LogLine;
+class LogLine;  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 }  // namespace llamalog
 
 namespace m3c {
