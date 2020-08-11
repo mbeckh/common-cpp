@@ -1,0 +1,35 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    - cron: '0 15 * * 5'
+
+jobs:
+  analyse:
+    name: Analyse
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v1
+      with:
+        languages: cpp
+        config-file: ./.github/codeql/codeql-config.yml
+
+    - name: Build
+      uses: mbeckh/msvc-common/actions/build@v2
+      with:
+        projects: m3c
+        configuration: Release
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v1
