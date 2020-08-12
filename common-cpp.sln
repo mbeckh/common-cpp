@@ -17,7 +17,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "llamalog_Test", "lib\llamal
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ext-lib", "ext-lib", "{4FB54B00-F675-4D07-916E-0330B5F08193}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fmt", "lib\llamalog\msvc-common\fmt\fmt.vcxproj", "{B26BAF12-CE1D-4B36-A422-9E87DCC482C6}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fmt", "msvc-common\fmt\fmt.vcxproj", "{B26BAF12-CE1D-4B36-A422-9E87DCC482C6}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Detours", "msvc-common\Detours\Detours.vcxproj", "{81966AD9-2949-4BEA-92D6-B74B756DC615}"
 EndProject
