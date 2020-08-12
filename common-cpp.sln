@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2036
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30320.27
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "m3c", "m3c\msvc\m3c\m3c.vcxproj", "{823B4768-A89C-47C2-A51F-68180D4B752B}"
 EndProject
@@ -15,11 +15,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "llamalog", "lib\llamalog\ms
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "llamalog_Test", "lib\llamalog\msvc\llamalog_Test\llamalog_Test.vcxproj", "{93310B90-C28F-431F-A0CC-F5627BD5545C}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lib", "lib", "{4FB54B00-F675-4D07-916E-0330B5F08193}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ext-lib", "ext-lib", "{4FB54B00-F675-4D07-916E-0330B5F08193}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fmt", "lib\llamalog\msvc-common\fmt\fmt.vcxproj", "{B26BAF12-CE1D-4B36-A422-9E87DCC482C6}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Detours", "msvc-common\Detours\Detours.vcxproj", "{81966AD9-2949-4BEA-92D6-B74B756DC615}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lib", "lib", "{A5DA90BB-5219-4198-9A36-59798269FE5C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -99,6 +101,8 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{79D754C6-014A-4882-8CD8-EE7A45E0C9D9} = {4FB54B00-F675-4D07-916E-0330B5F08193}
+		{661E79C3-C7C3-4C6D-8F80-F4EBAB9C412A} = {A5DA90BB-5219-4198-9A36-59798269FE5C}
+		{93310B90-C28F-431F-A0CC-F5627BD5545C} = {A5DA90BB-5219-4198-9A36-59798269FE5C}
 		{B26BAF12-CE1D-4B36-A422-9E87DCC482C6} = {4FB54B00-F675-4D07-916E-0330B5F08193}
 		{81966AD9-2949-4BEA-92D6-B74B756DC615} = {4FB54B00-F675-4D07-916E-0330B5F08193}
 	EndGlobalSection
