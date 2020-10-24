@@ -27,6 +27,7 @@ limitations under the License.
 namespace m3c {
 
 namespace internal {
+
 /// @brief The base class of all `ComObject` objects.
 class __declspec(novtable) AbstractComObject {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
 protected:
