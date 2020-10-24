@@ -25,7 +25,6 @@ limitations under the License.
 #include <windows.h>
 
 #include <cassert>
-#include <cstdint>
 #include <cwchar>
 #include <limits>
 
@@ -42,7 +41,7 @@ std::string EncodeUtf8(_In_reads_(length) const wchar_t* __restrict const wstr, 
 	assert(length <= std::numeric_limits<int>::max());
 
 	DWORD lastError;  // NOLINT(cppcoreguidelines-init-variables): Guaranteed to be initialized before first read.
-	if (constexpr std::uint_fast16_t kFixedBufferSize = 256; length <= kFixedBufferSize) {
+	if (constexpr std::size_t kFixedBufferSize = 256; length <= kFixedBufferSize) {
 		char result[kFixedBufferSize];
 		const int sizeInBytes = WideCharToMultiByte(CP_UTF8, 0, wstr, static_cast<int>(length), result, sizeof(result), nullptr, nullptr);
 		if (sizeInBytes) {

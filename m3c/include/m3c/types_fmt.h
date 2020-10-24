@@ -217,6 +217,6 @@ struct fmt::formatter<FILE_ID_128> : public fmt::formatter<UUID> {
 	/// @return see `fmt::formatter::format`.
 	fmt::format_context::iterator format(const FILE_ID_128& arg, fmt::format_context& ctx) {
 		static_assert(sizeof(FILE_ID_128) == sizeof(UUID));
-		__super::format(*reinterpret_cast<const UUID*>(&arg), ctx);
+		return __super::format(*reinterpret_cast<const UUID*>(&arg), ctx);
 	}
 };
