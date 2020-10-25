@@ -71,12 +71,12 @@ jobs:
 
     - name: Configure Debug arguments
       if: matrix.configuration == 'Debug'
-      run: echo "::set-env name=analyze_args::-D_DEBUG -DLLAMALOG_LEVEL_DEBUG"
+      run: echo "analyze_args=-D_DEBUG -DLLAMALOG_LEVEL_DEBUG" >> $GITHUB_ENV
       shell: bash
 
     - name: Configure Release arguments
       if: matrix.configuration != 'Debug'
-      run: echo "::set-env name=analyze_args::-DNDEBUG LLAMALOG_LEVEL_INFO"
+      run: echo "analyze_args=-DNDEBUG LLAMALOG_LEVEL_INFO" >> $GITHUB_ENV
       shell: bash
 
     - name: Analyze code
