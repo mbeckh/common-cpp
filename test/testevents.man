@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<instrumentationManifest
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://schemas.microsoft.com/win/2004/08/events"
+    xmlns:win="http://manifests.microsoft.com/win/2004/08/windows/events"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:xi="http://www.w3.org/2001/XInclude">
+  <!-- https://github.com/intel/IntelSEAPI/blob/7997a782fd3fa5621e275bd31060f9795564e6ca/sea_itt_lib/IntelSEAPI.man -->
+  <!-- C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um -->
+  <instrumentation>
+	<events>
+	  <provider name="m3c-Test"
+          guid="{7F241D8A-F704-4399-8F1B-91D1B22EA3E2}"
+          symbol="M3C_TEST"
+          resourceFileName="m3c_Testd.exe"
+          messageFileName="m3c_Testd.exe"
+          message="$(string.Provider.Name)">
+		<channels>
+		  <!--
+		  <importChannel chid="appl" name="Application" />
+		  -->
+		  <channel name="m3c-Test/Test" chid="test" value="17" symbol="M3C_CHANNEL_TEST" type="Debug" enabled="true" message="$(string.m3c.channel.test)" />
+		</channels>
+		<levels>
+		  <level value="100" name="foolevel" message="$(string.foolevel)" />
+		</levels>
+		<opcodes>
+		  <opcode name="test_opcode" symbol="TEST_OPCODE" value="101" message="$(string.opcode.TEST.message)" />
+		</opcodes>
+		<templates>
+		  <template tid="m3c_CoInitialize">
+			<data name="code" inType="win:Int32" outType="win:HResult" />
+		  </template>
+
+		  <template tid="m3c_TestEvent0">
+			<data name="message" inType="win:AnsiString" outType="xs:string" />
+		  </template>
+		  <template tid="m3c_TestEvent1">
+			<data name="int" inType="win:Int32" outType="xs:int" />
+		  </template>
+		  <template tid="m3c_TestEvent2">
+			<data name="message" inType="win:AnsiString" outType="xs:string" />
+			<data name="code" inType="win:Int32" outType="win:HResult" />
+		  </template>
+		  <template tid="m3c_FormattingEvent">
+			<data name="arg1" inType="win:Int32" outType="xs:int" />
+			<data name="arg2" inType="win:Int32" outType="xs:int" />
+			<data name="arg3" inType="win:Int32" outType="xs:int" />
+			<data name="arg4" inType="win:UnicodeString" outType="xs:string" />
+		  </template>
+
+		  <!--
+		  Types
+		  win:UnicodeString ls
+		  win:AnsiString s
+		  win:Int8 i8 hhi
+		  win:UInt8 u8 hhu 
+		  win:Int16 i16 hi
+		  win:UInt16 u16 hu
+		  win:Int32 i32 i
+		  win:UInt32 u32 u
+		  win:Int64 i64 lli
+		  win:UInt64 u64 llu
+		  win:Float f16 f
+		  win:Double f32 lf
+		  win:Boolean 
+		  win:Binary
+		  win:GUID
+		  win:Pointer p
+		  win:FILETIME
+		  win:SYSTEMTIME
+		  win:SID
+		  -->
+		  <template tid="ptr">
+			<data name="ptr" inType="win:Pointer" />
+		  </template>
+		  <template tid="lg">
+			<data name="File" inType="win:AnsiString" outType="xs:string" />
+			<data name="Line" inType="win:UInt32" outType="xs:unsignedInt" />
+			<data name="Function" inType="win:AnsiString" outType="xs:string" />
+		  </template>
+		  <template tid="ex">
+			<data name="CauseFile" inType="win:AnsiString" outType="xs:string" />
+			<data name="CauseLine" inType="win:UInt32" outType="xs:unsignedInt" />
+			<data name="CauseFunction" inType="win:AnsiString" outType="xs:string" />
+			<data name="File" inType="win:AnsiString" outType="xs:string" />
+			<data name="Line" inType="win:UInt32" outType="xs:unsignedInt" />
+			<data name="Function" inType="win:AnsiString" outType="xs:string" />
+		  </template>
+		  <template tid="ex2">
+			<data name="Code" inType="win:UInt32" outType="win:Win32Error" />
+			<data name="CauseFile" inType="win:AnsiString" outType="xs:string" />
+			<data name="CauseLine" inType="win:UInt32" outType="xs:unsignedInt" />
+			<data name="CauseFunction" inType="win:AnsiString" outType="xs:string" />
+			<data name="File" inType="win:AnsiString" outType="xs:string" />
+			<data name="Line" inType="win:UInt32" outType="xs:unsignedInt" />
+			<data name="Function" inType="win:AnsiString" outType="xs:string" />
+		  </template>
+
+
+		  <template tid="bool_template">
+			<data name="bool" inType="win:UInt8" outType="xs:boolean" />
+		  </template>
+		  <template tid="int_template">
+			<data name="int" inType="win:Int32" outType="xs:int" />
+		  </template>
+		  <template tid="bool_as_int_template">
+			<data name="bool" inType="win:UInt8" outType="xs:unsignedByte" />
+		  </template>
+		  <template tid="test_template2">
+			<data name="data1" inType="win:AnsiString" outType="xs:string" />
+			<data name="data2" inType="win:Int32" outType="xs:int" />
+		  </template>
+		</templates>
+		<events>
+		  <event symbol="m3c_CoInitialize" value="200" version="0" template="m3c_CoInitialize" channel="test" level="win:Informational" message="$(string.m3c_CoInitialize)" />
+		  <event symbol="m3c_TestEvent0" value="500" version="0" template="m3c_TestEvent0" channel="test" level="win:Informational" message="$(string.m3c_TestEvent0)" />
+		  <event symbol="m3c_TestEvent1" value="501" version="0" template="m3c_TestEvent1" channel="test" level="win:Informational" message="$(string.m3c_TestEvent1)" />
+		  <event symbol="m3c_TestEvent2" value="502" version="0" template="m3c_TestEvent2" channel="test" level="win:Informational" message="$(string.m3c_TestEvent2)" />
+		  <event symbol="m3c_FormatReversed" value="510" version="0" template="m3c_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_FormatReversed)" />
+		  <event symbol="m3c_FormatWidth" value="511" version="0" template="m3c_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_FormatWidth)" />
+		  <event symbol="m3c_FormatWidthLeft" value="512" version="0" template="m3c_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_FormatWidthLeft)" />
+		  <event symbol="m3c_FormatWidthZeroPadded" value="513" version="0" template="m3c_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_FormatWidthZeroPadded)" />
+		  <event symbol="m3c_FormatPrecision" value="514" version="0" template="m3c_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_FormatPrecision)" />
+		  <event symbol="m3c_FormatDynamicWidth" value="515" version="0" template="m3c_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_FormatDynamicWidth)" />
+		  <event symbol="m3c_FormatDynamicWidthZeroPadded" value="516" version="0" template="m3c_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_FormatDynamicWidthZeroPadded)" />
+		  <event symbol="m3c_FormatDynamicPrecision" value="517" version="0" template="m3c_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_FormatDynamicPrecision)" />
+		  <event symbol="m3c_FormatDynamicWidthAndPrecision" value="518" version="0" template="m3c_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_FormatDynamicWidthAndPrecision)" />
+		  <event symbol="m3c_FormatDynamicWidthLeftAndPrecision" value="519" version="0" template="m3c_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_FormatDynamicWidthLeftAndPrecision)" />
+		  <event symbol="m3c_FormatSpecialCharacters" value="520" version="0" template="m3c_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_FormatSpecialCharacters)" />
+
+		  <event symbol="m3c_ptr" value="999" version="0" template="ptr" channel="test" level="win:Informational" message="$(string.m3c_CoInitialize)" />
+		  <event symbol="m3c_bool_event" value="213" version="0" opcode="test_opcode" template="bool_template" channel="test" message="$(string.event.test1.message)" level="win:Informational" />
+		  <event symbol="m3c_bool_as_int_event" value="229" version="0" opcode="test_opcode" template="bool_as_int_template" channel="test" message="$(string.event.test1.message)" level="win:Informational" />
+		  <event symbol="m3c_TEST_SYMBOL3" value="214" version="0" opcode="test_opcode" template="test_template2" channel="test" message="$(string.event.test2.message)" level="win:Informational" />
+		  <event symbol="m3c_TEST_SYMBOL2" value="221" version="0" opcode="test_opcode" template="test_template2" channel="test" message="$(string.event.test.message2)" level="win:Informational" />
+		  <event symbol="m3c_kStdExceptionEvent" value="2100" version="0" template="bool_template" channel="test" message="$(string.event.std_exception.message)" level="win:Informational" />
+		  <event symbol="m3c_kUnknownExceptionEvent" value="2101" version="0" template="bool_template" channel="test" message="$(string.event.unknown_exception.message)" level="win:Informational" />
+		  <event symbol="m3c_kIntExceptionEvent" value="2102" version="0" template="int_template" channel="test" message="$(string.kIntExceptionEvent)" level="win:Informational" />
+		  <event symbol="m3c_kIntExceptionEvent2" value="2103" version="0" template="int_template" channel="test" message="$(string.kIntExceptionEvent)" level="win:Error" />
+		</events>
+	  </provider>
+	</events>
+  </instrumentation>
+
+  <localization>
+	<resources culture="en-US">
+	  <stringTable>
+		<string id="m3c_CoInitialize" value="CoInitialize:%n%1" />
+		<string id="m3c_TestEvent0" value="Testing event 0: %1" />
+		<string id="m3c_TestEvent1" value="Testing event 1: %1" />
+		<string id="m3c_TestEvent2" value="Testing event 2: %1:%n%2" />
+		<string id="m3c_FormatReversed" value="Reversed: %4; %3; %2; %1" />
+		<string id="m3c_FormatWidth" value="Width: %1!4d!; %4!8s!" />
+		<string id="m3c_FormatWidthLeft" value="Width left: %1!-4d!; %4!-8s!" />
+		<string id="m3c_FormatWidthZeroPadded" value="Width zero padded: %1!04d!" />
+		<string id="m3c_FormatPrecision" value="Precision: %4!.2s!" />
+		<string id="m3c_FormatDynamicWidth" value="Dynamic width: %1!*d!" />
+		<string id="m3c_FormatDynamicWidthZeroPadded" value="Dynamic width zero padded: %1!0*d!" />
+		<string id="m3c_FormatDynamicPrecision" value="Dynamic precision: %3!.*s!" />
+		<string id="m3c_FormatDynamicWidthAndPrecision" value="Dynamic width and precision: %2!*.*s!" />
+		<string id="m3c_FormatDynamicWidthLeftAndPrecision" value="Dynamic width left and precision: %2!-*.*s!" />
+		<string id="m3c_FormatSpecialCharacters" value="Special characters: {%b%n%r%t}; %1%!" />
+
+		<string id="Provider.Name" value="m3c-Test" />
+		<string id="m3c.channel.test" value="m3c-Test/Test" />
+
+		<string id="event.test1.message" value="%t%1%t%0" />
+		<string id="event.test2.message" value="%t%1%t%2%t" />
+		<string id="event.test.message2" value="My Testing-Event2: %1 %2" />
+		<string id="opcode.TEST.message" value="MY_TEST_OPCODE" />
+		<string id="event.std_exception.message" value="Exception: %1" />
+		<string id="event.unknown_exception.message" value="Exception" />
+		<string id="kIntExceptionEvent" value="MyMessage %1" />
+		<string id="foolevel" value="FooLevel" />
+	  </stringTable>
+	</resources>
+  </localization>
+
+</instrumentationManifest>

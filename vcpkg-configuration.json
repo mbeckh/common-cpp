@@ -1,0 +1,11 @@
+{
+  "registries": [
+	{
+	  "kind": "git",
+	  "$repository": "https://github.com/mbeckh/vcpkg-registry.git",
+	  "repository": "D:/Projects/vcpkg-registry",
+	  "baseline": "84223b07471253132d80f268b6014f0044bcc69f",
+	  "packages": [ "common-cpp-testing", "detours", "detours-gmock", "gtest" ]
+	}
+  ]
+}

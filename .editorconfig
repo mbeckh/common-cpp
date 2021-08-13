@@ -11,6 +11,11 @@ guidelines=80
 [*.{cpp,h}]
 guidelines=80,120
 
+[{*.cmake,CMakeLists.txt}]
+indent_style=space
+tab_width=4
+guidelines=80,120
+
 [*.md]
 indent_style=space
 tab_width=2

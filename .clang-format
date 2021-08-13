@@ -16,10 +16,14 @@ IncludeCategories:
     Priority: 2
   - Regex:    '^<[[:alnum:]]+/.*\.h[hpx]{0,2}>'
     Priority: 3
+  - Regex:    '^<windows.h>'
+    Priority: 4
+    SortPriority: 4
   - Regex:    '^<.*\.h[hpx]{0,2}>'
     Priority: 4
+    SortPriority: 5
   - Regex:    '^<.*>'
-    Priority: 5
+    Priority: 6
   - Regex:    '.*'
     Priority: 1
 IncludeIsMainRegex: '(_Test)?$'
@@ -30,4 +34,6 @@ SpaceAfterCStyleCast: true
 SpacesBeforeTrailingComments: 2
 Standard: Cpp11
 TabWidth: 4
-UseTab: ForContinuationAndIndentation
+UseTab: AlignWithSpaces
+BreakBeforeConceptDeclarations: true
+IndentRequires: false
