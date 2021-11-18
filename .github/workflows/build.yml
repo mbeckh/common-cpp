@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Build and Test
+    name: Build and Analyze
     runs-on: windows-latest
     strategy:
       matrix:
@@ -17,95 +17,75 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+
+    - name: Cache vcpkg
+      uses: actions/cache@v2
       with:
-        submodules: true
+        path: build/${{matrix.configuration}}/vcpkg_installed
+        key: vcpkg_installed-${{matrix.configuration}}-${{hashFiles('**/vcpkg.json', '**/vcpkg-configuration.json', '!build/**')}}
+
+    - name: Setup MSVC Environment
+      uses: mbeckh/msvc-dev-cmd@master
+
+    - name: Configure
+      uses: mbeckh/cmake-utils/configure@master
+      with:
+        build-root: build
+        binary-dir: build/${{matrix.configuration}}
+        configuration: ${{matrix.configuration}}
 
     - name: Build
-      uses: mbeckh/msvc-common/actions/build@v2
-      with:
-        projects: m3c, m3c_Test, m4t
-        configuration: ${{ matrix.configuration }}
+      shell: cmd
+      working-directory: build/${{matrix.configuration}}
+      run: cmake --build .
 
-    - name: Run tests
+    - name: Test
       if: matrix.configuration != 'Debug'
-      uses: mbeckh/msvc-common/actions/run@v2
-      with:
-        projects: m3c_Test
-        configuration: ${{ matrix.configuration }}
+      shell: cmd
+      working-directory: build/${{matrix.configuration}}
+      run: ctest --output-on-failure
 
-    - name: Run tests and get coverage
+    - name: Coverage
       if: matrix.configuration == 'Debug'
-      uses: mbeckh/msvc-common/actions/coverage@v2
+      uses: mbeckh/code-quality-actions/coverage@master
       with:
-        projects: m3c_Test
-        configuration: ${{ matrix.configuration }}
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}
+        binary-dir: build/${{matrix.configuration}}
+        codecov: true
+        codacy-token: ${{secrets.CODACY_PROJECT_API_TOKEN}}
 
-    - name: Save output
+    - name: Analyze
+      shell: cmd
+      working-directory: build/${{matrix.configuration}}
+      run: cmake --build . --target clang-tidy
+
+    - name: Report
+      uses: mbeckh/code-quality-actions/report@master
+      with:
+        mode: partial
+        binary-dir: build/${{matrix.configuration}}
+        codacy-token: ${{secrets.CODACY_PROJECT_API_TOKEN}}
+
+    - name: Save Logs
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: output
-        path: .mbeckh/output
-        
-    - name: Save coverage reports
-      if: matrix.configuration == 'Debug'
-      uses: actions/upload-artifact@v2
-      with:
-        name: coverage
-        path: .mbeckh/coverage
+        name: ${{matrix.configuration}}-Logs
+        path: |
+            build/**/vcpkg-buildtrees/*/*.log
+            build/${{matrix.configuration}}/Testing/**/*.log
+            build/${{matrix.configuration}}/clang-tidy-*.log
 
-  analyze:
-    name: Analyze code
+  final:
+    name: Send Completion Message
     runs-on: windows-latest
-    strategy:
-      matrix:
-        configuration: [ Debug, Release ]
-
+    needs: build
+    
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+
+    - name: Report
+      uses: mbeckh/code-quality-actions/report@master
       with:
-        submodules: true
-
-    - name: Configure Debug arguments
-      if: matrix.configuration == 'Debug'
-      run: echo "analyze_args=-D_DEBUG -DLLAMALOG_LEVEL_DEBUG" >> $GITHUB_ENV
-      shell: bash
-
-    - name: Configure Release arguments
-      if: matrix.configuration != 'Debug'
-      run: echo "analyze_args=-DNDEBUG LLAMALOG_LEVEL_INFO" >> $GITHUB_ENV
-      shell: bash
-
-    - name: Analyze code
-      uses: mbeckh/msvc-common/actions/analyze-clang-tidy@v2
-      with:
-        id: ${{ matrix.configuration }}
-        clang-args: -D_WIN32_WINNT=0x0602 ${{ env.analyze_args }}
-    
-    - name: Save logs
-      if: always()
-      uses: actions/upload-artifact@v2
-      with:
-        name: clang-tidy
-        path: .mbeckh/clang-tidy-*.log
-
-  report:
-    name: Report code analysis
-    runs-on: windows-latest
-    needs: analyze
-
-    steps:
-    - name: Get logs
-      uses: actions/download-artifact@v2
-      with:
-        name: clang-tidy
-        path: .mbeckh
-
-    - name: Report to Codacy
-      uses: mbeckh/msvc-common/actions/analyze-report@v2
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        codacy-token: ${{ secrets.CODACY_PROJECT_API_TOKEN }}
+        mode: final
+        codacy-token: ${{secrets.CODACY_PROJECT_API_TOKEN}}

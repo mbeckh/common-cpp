@@ -1,8 +1,0 @@
-name: "CodeQL config"
-
-disable-default-queries: false
-
-queries:
-  - name: Extended analysis
-    uses: security-and-quality
- 
