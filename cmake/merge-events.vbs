@@ -1,9 +1,9 @@
 Option Explicit
 
 Dim mainDoc, includeDoc
-Dim providers, provider
+Dim providers, provider, templates, template
 Dim index
-Dim name
+Dim name, namespace
 Dim parents, parent, node, appendTo, firstChild, prev
 Dim languages, language
 Dim stringTables, stringTable, appendToStringTable
@@ -24,8 +24,8 @@ For index = WScript.Arguments.Count - 1 To 2 Step -1
 			Set parents = includeDoc.selectNodes("/instrumentationManifest/instrumentation/events/provider/" & name)
 			For Each parent In parents
 				If parent.childNodes.Length > 0 Then
-					If name = "channels" Then
-						For Each node in parent.childNodes
+					If name = "channels" And provider.getAttribute("name") <> "_include" Then
+						For Each node In parent.childNodes
 							node.setAttribute "name", provider.getAttribute("name") & "/" & node.getAttribute("name")
 							Set regex = New RegExp
 							regex.Pattern = "^\$\([Ss]tring.([^)]+)\)$"
@@ -81,6 +81,27 @@ For index = WScript.Arguments.Count - 1 To 2 Step -1
 			End If
 		Next
 	Next
+Next
+
+Set templates = mainDoc.selectNodes("/instrumentationManifest/instrumentation/events/provider/templates/template")
+For Each template In templates
+	Set node = mainDoc.createNode(1, "data", template.namespaceURI)
+	node.setAttribute "name", "source"
+	node.setAttribute "inType", "win:AnsiString"
+	node.setAttribute "outType", "xs:string"
+	template.appendChild node
+
+	Set node = mainDoc.createTextNode(vbNewLine & String(6, vbTab))
+	template.appendChild node
+
+	Set node = mainDoc.createNode(1, "data", template.namespaceURI)
+	node.setAttribute "name", "line"
+	node.setAttribute "inType", "win:UInt32"
+	node.setAttribute "outType", "xs:unsignedInt"
+	template.appendChild node
+
+	Set node = mainDoc.createTextNode(vbNewLine & String(5, vbTab))
+	template.appendChild node
 Next
 
 mainDoc.save(WScript.Arguments(1))

@@ -14,15 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "m3c/mutex.h"
+/// @file
 
-#include "m3c_events.h"
+#include "m3c/mutex.h"
 
 #include "m3c/exception.h"
 
-//#include <llamalog/exception.h>
-
-#include <mutex>
+#include "m3c.events.h"
 
 namespace m3c {
 
@@ -51,11 +49,14 @@ _Requires_shared_lock_held_(m_lock) _Releases_shared_lock_(m_lock) void mutex::u
 // scoped_lock
 //
 
-_Acquires_exclusive_lock_(mtx) _Requires_lock_not_held_(mtx) _Post_same_lock_(mtx, m_mutex) scoped_lock::scoped_lock(mutex& mtx) noexcept
-	: m_mutex(mtx) {
+_Acquires_exclusive_lock_(mtx.m_lock) _Requires_lock_not_held_(mtx.m_lock)
+    _Post_same_lock_(mtx.m_lock, m_mutex.m_lock) scoped_lock::scoped_lock(mutex& mtx) noexcept
+    : m_mutex(mtx) {
 	mtx.lock();
 }
-_Requires_shared_lock_held_(m_mutex) _Releases_shared_lock_(m_mutex) scoped_lock::~scoped_lock() noexcept {
+
+_Requires_shared_lock_held_(m_mutex.m_lock) _Releases_shared_lock_(m_mutex.m_lock)
+    scoped_lock::~scoped_lock() noexcept {
 	m_mutex.unlock();
 }
 
@@ -64,11 +65,14 @@ _Requires_shared_lock_held_(m_mutex) _Releases_shared_lock_(m_mutex) scoped_lock
 // shared_lock
 //
 
-_Acquires_shared_lock_(mtx) _Requires_lock_not_held_(mtx) _Post_same_lock_(mtx, m_mutex) shared_lock::shared_lock(mutex& mtx) noexcept
-	: m_mutex(mtx) {
+_Acquires_shared_lock_(mtx.m_lock) _Requires_lock_not_held_(mtx.m_lock)
+    _Post_same_lock_(mtx.m_lock, m_mutex.m_lock) shared_lock::shared_lock(mutex& mtx) noexcept
+    : m_mutex(mtx) {
 	mtx.lock_shared();
 }
-_Requires_shared_lock_held_(m_mutex) _Releases_shared_lock_(m_mutex) shared_lock::~shared_lock() noexcept {
+
+_Requires_shared_lock_held_(m_mutex.m_lock) _Releases_shared_lock_(m_mutex.m_lock)
+    shared_lock::~shared_lock() noexcept {
 	m_mutex.unlock_shared();
 }
 
@@ -79,20 +83,20 @@ _Requires_shared_lock_held_(m_mutex) _Releases_shared_lock_(m_mutex) shared_lock
 
 void condition_variable::wait(scoped_lock& lock) {
 	if (!SleepConditionVariableSRW(&m_conditionVariable, &lock.m_mutex.m_lock, INFINITE, 0)) {
-		throw windows_error(GetLastError()) + evt::SleepConditionVariableSRW;
+		throw windows_error() + evt::condition_variable_Wait_E;
 	}
 }
 
 void condition_variable::wait(shared_lock& lock) {
 	if (!SleepConditionVariableSRW(&m_conditionVariable, &lock.m_mutex.m_lock, INFINITE, CONDITION_VARIABLE_LOCKMODE_SHARED)) {
-		throw windows_error(GetLastError()) + evt::SleepConditionVariableSRW;
+		throw windows_error() + evt::condition_variable_Wait_E;
 	}
 }
 
 bool condition_variable::wait_for(scoped_lock& lock, const DWORD milliseconds) {
 	if (!SleepConditionVariableSRW(&m_conditionVariable, &lock.m_mutex.m_lock, milliseconds, 0)) {
 		if (const DWORD lastError = GetLastError(); lastError != ERROR_TIMEOUT) {
-			throw windows_error(lastError) + evt::SleepConditionVariableSRW;
+			throw windows_error(lastError) + evt::condition_variable_Wait_E;
 		}
 		return false;
 	}
@@ -102,7 +106,7 @@ bool condition_variable::wait_for(scoped_lock& lock, const DWORD milliseconds) {
 bool condition_variable::wait_for(shared_lock& lock, const DWORD milliseconds) {
 	if (!SleepConditionVariableSRW(&m_conditionVariable, &lock.m_mutex.m_lock, milliseconds, CONDITION_VARIABLE_LOCKMODE_SHARED)) {
 		if (const DWORD lastError = GetLastError(); lastError != ERROR_TIMEOUT) {
-			throw windows_error(lastError) + evt::SleepConditionVariableSRW;
+			throw windows_error(lastError) + evt::condition_variable_Wait_E;
 		}
 		return false;
 	}

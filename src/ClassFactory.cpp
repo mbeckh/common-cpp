@@ -1,5 +1,5 @@
 /*
-Copyright 2019 Michael Beckh
+Copyright 2019-2021 Michael Beckh
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,15 +18,16 @@ limitations under the License.
 
 #include "m3c/ClassFactory.h"
 
-#include "m3c_events.h"
-
 #include "m3c/COM.h"
 #include "m3c/ComObject.h"
+#include "m3c/Log.h"
 #include "m3c/exception.h"
 #include "m3c/finally.h"
-//#include "m3c/types_log.h"  // IWYU pragma: keep
 
-//#include <llamalog/llamalog.h>
+#include "m3c.events.h"
+
+#include <windows.h>
+#include <unknwn.h>
 
 namespace m3c::internal {
 
@@ -34,35 +35,43 @@ namespace m3c::internal {
 // IClassFactory
 //
 
-HRESULT AbstractClassFactory::CreateInstance(_In_opt_ IUnknown* pOuter, REFIID riid, _COM_Outptr_result_maybenull_ void** ppObject) noexcept {
+HRESULT AbstractClassFactory::CreateInstance(_In_opt_ IUnknown* const pOuter, REFIID riid, _COM_Outptr_ void** const ppObject) noexcept {
 	Log::Trace("pOuter={}, riid={}", pOuter, riid);
 
 	try {
-		if (!ppObject) [[unlikely]] {
+		if (!ppObject) {
+			[[unlikely]];
 			throw com_invalid_argument_error("object") + evt::Default;
 		}
 
-		if (pOuter) [[unlikely]] {
-			throw com_invalid_argument_error(CLASS_E_NOAGGREGATION, "outer") + evt::Default;
+		if (pOuter && !IsEqualIID(riid, IID_IUnknown)) {
+			[[unlikely]];
+			// aggregation requires query for IUnknown during creation
+			throw com_invalid_argument_error(E_NOINTERFACE, "outer") + evt::Default;
 		}
 
 		AbstractComObject* const pObject = CreateObject();
-		auto f = finally([pObject]() noexcept {
-			pObject->Release();
+		const auto release = finally([pObject]() noexcept {
+			pObject->ReleaseNonDelegated();
 		});
 		*ppObject = pObject->QueryInterface(riid);
+		if (pOuter) {
+			// delegate public IUnknown to outer
+			pObject->m_pUnknown = pOuter;
+		}
 		return S_OK;
 	} catch (...) {
-		if (ppObject) [[likely]] {
+		if (ppObject) {
+			[[likely]];
 			*ppObject = nullptr;
 		}
-		return ExceptionToHRESULT(Priority::kError, evt::IClassFactory_CreateInstance, riid);
+		return Log::ExceptionToHResult(Priority::kError, evt::IClassFactory_CreateInstance_H, riid);
 	}
 }
 
-HRESULT AbstractClassFactory::LockServer(BOOL lock) noexcept {
-	const ULONG count = lock ? InterlockedIncrement(&COM::m_lockCount) : InterlockedDecrement(&COM::m_lockCount);
-	Log::Trace("lock={1}, locks={0}", count, lock);
+HRESULT AbstractClassFactory::LockServer(const BOOL lock) noexcept {
+	const ULONG count = lock ? InterlockedIncrement(&COM::s_lockCount) : InterlockedDecrement(&COM::s_lockCount);
+	Log::Trace("lock={}, locks={}", lock, count);
 	return S_OK;
 }
 

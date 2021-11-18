@@ -1,7 +1,7 @@
 include_guard(GLOBAL)
 
-function(target_events target events #[[ LEVEL <level> DEBUG STDERR EVENT ]])
-    cmake_parse_arguments(PARSE_ARGV 2 arg "DEBUG;STDERR;EVENT" "LEVEL" "")
+function(target_events target events #[[ LEVEL <level> PRINT EVENT ]])
+    cmake_parse_arguments(PARSE_ARGV 2 arg "PRINT;EVENT" "LEVEL" "")
 
     get_target_property(library "${target}" TYPE)
     string(REGEX MATCH [[^(STATIC_LIBRARY|OBJECT_LIBRARY|INTERFACE_LIBRARY)$]] library "${library}")
@@ -19,6 +19,7 @@ function(target_events target events #[[ LEVEL <level> DEBUG STDERR EVENT ]])
             endif()
         endif()
     endforeach()
+    list(REMOVE_DUPLICATES includes)
 
     if(IS_ABSOLUTE "${events}")
         cmake_path(RELATIVE_PATH events BASE_DIRECTORY "${src_dir}" OUTPUT_VARIABLE file)
@@ -45,33 +46,33 @@ function(target_events target events #[[ LEVEL <level> DEBUG STDERR EVENT ]])
     endif()
 
     add_custom_command(OUTPUT "${man_file}"
-        COMMAND "cscript" "//Nologo" "${CMAKE_CURRENT_LIST_DIR}/cmake/merge-events.vbs" "${src_dir}/${file}" "${man_file}" "${includes}"
-        DEPENDS "${src_dir}/${file}" "${CMAKE_CURRENT_LIST_DIR}/cmake/merge-events.vbs" "${includes}"
+        COMMAND "cscript" "//Nologo" "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/merge-events.vbs" "${src_dir}/${file}" "${man_file}" "${includes}"
+        DEPENDS "${src_dir}/${file}" "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/merge-events.vbs" "${includes}"
         COMMAND_EXPAND_LISTS)
 
     add_custom_command(OUTPUT "${cpp_file}"
-        COMMAND "${CMAKE_COMMAND}" "-DMODE=MAP" "-DFILE=${man_file}" "-DOUT=${cpp_file}" -P "${CMAKE_CURRENT_LIST_DIR}/cmake/process-events.cmake"
-        DEPENDS "${man_file}" "${CMAKE_CURRENT_LIST_DIR}/cmake/process-events.cmake")
+        COMMAND "${CMAKE_COMMAND}" "-DMODE=MAP" "-DFILE=${man_file}" "-DOUT=${cpp_file}" -P "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/process-events.cmake"
+        DEPENDS "${man_file}" "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/process-events.cmake")
 
     add_custom_command(OUTPUT "${rc_file}" "${htmp_file}"
         COMMAND mc -e th -h "${bin_dir}" -n -r "${bin_dir}" "${man_file}" 
         DEPENDS "${man_file}")
 
     add_custom_command(OUTPUT "${h_file}"
-        COMMAND "${CMAKE_COMMAND}" "-DMODE=HEADER" "-DFILE=${htmp_file}" "-DOUT=${h_file}" -P "${CMAKE_CURRENT_LIST_DIR}/cmake/process-events.cmake"
-        DEPENDS "${htmp_file}" "${CMAKE_CURRENT_LIST_DIR}/cmake/process-events.cmake")
+        COMMAND "${CMAKE_COMMAND}" "-DMODE=HEADER" "-DFILE=${htmp_file}" "-DOUT=${h_file}" -P "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/process-events.cmake"
+        DEPENDS "${htmp_file}" "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/process-events.cmake")
 
     target_sources("${target}" PRIVATE "${h_file}" "${man_file}" "${events}")
     if(library)
         cmake_path(GET file FILENAME filename)
-        target_sources("${target}" INTERFACE "$<BUILD_INTERFACE:${src_dir}/${file}>" "$<INSTALL_INTERFACE:${filename}>")
+        target_sources("${target}" INTERFACE "$<BUILD_INTERFACE:${src_dir}/${file}>" "$<INSTALL_INTERFACE:${filename}>" "${includes}")
     else()
         target_sources("${target}" PRIVATE "${rc_file}" "${cpp_file}")
         # Setting OBJECT_DEPENDS _should not_ be required, but actually is as of CMake 3.20
         set_source_files_properties("${rc_file}" PROPERTIES OBJECT_DEPENDS "${man_file}")
     endif()
 
-    target_include_directories("${target}" PRIVATE "${bin_dir}")
+    target_include_directories("${target}" SYSTEM PRIVATE "${bin_dir}")
     string(TOUPPER "${arg_LEVEL}" arg_LEVEL)
     if(arg_LEVEL STREQUAL "CRITICAL")
         target_compile_definitions("${target}" PRIVATE M3C_LOG_LEVEL=Critical)
@@ -90,11 +91,8 @@ function(target_events target events #[[ LEVEL <level> DEBUG STDERR EVENT ]])
     else()
         target_compile_definitions("${target}" PRIVATE M3C_LOG_LEVEL=Info)
     endif()
-    if(arg_DEBUG)
-        target_compile_definitions("${target}" PRIVATE M3C_LOG_OUTPUT_DEBUG=1)
-    endif()
-    if(arg_STDERR)
-        target_compile_definitions("${target}" PRIVATE M3C_LOG_OUTPUT_STDERR=1)
+    if(arg_PRINT)
+        target_compile_definitions("${target}" PRIVATE M3C_LOG_OUTPUT_PRINT=1)
     endif()
     if(arg_EVENT)
         target_compile_definitions("${target}" PRIVATE M3C_LOG_OUTPUT_EVENT=1)

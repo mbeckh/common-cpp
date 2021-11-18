@@ -15,73 +15,79 @@ limitations under the License.
 */
 
 /// @file
-/// @brief Include the header file to allow compilation and analyzer checks.
 
 #include "m3c/rpc_string.h"
 
-#include "m3c_events.h"
-
+#include "m3c/Log.h"
 #include "m3c/exception.h"
 
-namespace m3c::internal {
+#include "m3c.events.h"
 
-template <typename T>
+#include <memory>
+#include <type_traits>
+
+namespace m3c {
+
+template <AnyOf<char, wchar_t> T>
 basic_rpc_string<T>::basic_rpc_string(basic_rpc_string&& str) noexcept
-	: m_ptr(str.release()) {
+    : m_ptr(str.release()) {
 	// empty
 }
 
-template <typename T>
+template <AnyOf<char, wchar_t> T>
 basic_rpc_string<T>::~basic_rpc_string() noexcept {
 	const RPC_STATUS status = destroy();
-	if (status != RPC_S_OK) [[unlikely]] {
+	if (status != RPC_S_OK) {
+		[[unlikely]];
 		// destructor SHOULD NOT throw
-		Log::Error(evt::RpcStringFreeX, rpc_status{status});
+		Log::Error(evt::MemoryLeak_R, rpc_status(status));
 	}
 }
 
-template <typename T>
+template <AnyOf<char, wchar_t> T>
 basic_rpc_string<T>& basic_rpc_string<T>::operator=(basic_rpc_string<T>&& p) noexcept {
 	const RPC_STATUS status = destroy();
-	if (status != RPC_S_OK) [[unlikely]] {
+	if (status != RPC_S_OK) {
+		[[unlikely]];
 		// move operator SHOULD NOT throw
-		Log::Error(evt::RpcStringFreeX, rpc_status{status});
+		Log::Error(evt::MemoryLeak_R, rpc_status(status));
 	}
 	m_ptr = p.release();
 	return *this;
 }
 
-template <typename T>
+template <AnyOf<char, wchar_t> T>
 basic_rpc_string<T>& basic_rpc_string<T>::operator=(std::nullptr_t) {
 	const RPC_STATUS status = destroy();
-	if (status != RPC_S_OK) [[unlikely]] {
-		throw rpc_error(status) + evt::RpcStringFreeX;
+	if (status != RPC_S_OK) {
+		[[unlikely]];
+		throw rpc_error(status) + evt::MemoryLeak_R;
 	}
 	m_ptr = nullptr;
 	return *this;
 }
 
-template <typename T>
-_Ret_notnull_ T* basic_rpc_string<T>::operator&() {
+template <AnyOf<char, wchar_t> T>
+_Ret_notnull_ typename basic_rpc_string<T>::rpc_str_type* basic_rpc_string<T>::operator&() {
 	const RPC_STATUS status = destroy();
-	if (status != RPC_S_OK) [[unlikely]] {
-		throw rpc_error(status) + evt::RpcStringFreeX;
+	if (status != RPC_S_OK) {
+		[[unlikely]];
+		throw rpc_error(status) + evt::MemoryLeak_R;
 	}
 	return std::addressof(m_ptr);
 }
 
-template <typename T>
-RPC_STATUS basic_rpc_string<T>::destroy() noexcept {
-	if constexpr (std::is_same_v<T, RPC_CSTR>) {
-		return RpcStringFreeA(&m_ptr);
-	} else if constexpr (std::is_same_v<T, RPC_WSTR>) {
-		return RpcStringFreeW(&m_ptr);
-	} else {
-		__assume(0);
-	}
+template <>
+RPC_STATUS basic_rpc_string<char>::destroy() noexcept {
+	return RpcStringFreeA(&m_ptr);
 }
 
-template class basic_rpc_string<RPC_CSTR>;
-template class basic_rpc_string<RPC_WSTR>;
+template <>
+RPC_STATUS basic_rpc_string<wchar_t>::destroy() noexcept {
+	return RpcStringFreeW(&m_ptr);
+}
 
-}  // namespace m3c::internal
+template class basic_rpc_string<char>;
+template class basic_rpc_string<wchar_t>;
+
+}  // namespace m3c

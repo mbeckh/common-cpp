@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Michael Beckh
+Copyright 2020-2021 Michael Beckh
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,11 +22,10 @@ limitations under the License.
 namespace m3c {
 
 namespace internal {
-
-class AbstractClassFactory;  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
-class AbstractComObject;     // NOLINT(readability-identifier-naming): Windows/COM naming convention.
-
+class AbstractClassFactory;  // NOLINT(cppcoreguidelines-virtual-class-destructor): see AbstractClassFactory.
+class AbstractComObject;
 }  // namespace internal
+
 
 /// @brief Access internal counters for COM.
 /// @details The data is typically only required in main functions of COM DLLs.
@@ -44,19 +43,21 @@ public:
 public:
 	/// @brief Get the number of locks currently held by all `ClassFactory` objects.
 	/// @return The number of locks.
-	[[nodiscard]] static ULONG GetLockCount() noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
-		return m_lockCount;
+	[[nodiscard]] static ULONG GetLockCount() noexcept {
+		return s_lockCount;
 	}
 
 	/// @brief Get the number of currently instantiated COM objects.
 	/// @return The number of currently instantiated COM objects.
-	[[nodiscard]] static ULONG GetObjectCount() noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
-		return m_objectCount;
+	[[nodiscard]] static ULONG GetObjectCount() noexcept {
+		return s_objectCount;
 	}
 
 private:
-	inline static volatile ULONG m_lockCount;    ///< @brief The number of class factory locks currently held.
-	inline static volatile ULONG m_objectCount;  ///< @brief The global object count.
+	// NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables): Global variable to keep interface of AbstractClassFactory clean.
+	static inline volatile ULONG s_lockCount;    ///< @brief The number of class factory locks currently held.
+	static inline volatile ULONG s_objectCount;  ///< @brief The global object count.
+	// NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
 	friend class internal::AbstractClassFactory;
 	friend class internal::AbstractComObject;

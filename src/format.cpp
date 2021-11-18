@@ -1,5 +1,5 @@
 /*
-Copyright 2019 Michael Beckh
+Copyright 2019-2021 Michael Beckh
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,24 +18,18 @@ limitations under the License.
 
 #include "m3c/format.h"
 
-#include "m3c_events.h"
-
 #include "m3c/Log.h"
 #include "m3c/PropVariant.h"
 #include "m3c/com_heap_ptr.h"
-#include "m3c/exception.h"
 #include "m3c/finally.h"
 #include "m3c/rpc_string.h"
-#if 0
-#include "m3c/com_ptr.h"
-#include "m3c/finally.h"
-#include "m3c/format.h"
-#endif
 #include "m3c/string_encode.h"
+#include "m3c/type_traits.h"
 
-#include <fmt/chrono.h>
-#include <fmt/core.h>
-//#include <llamalog/llamalog.h>
+#include "m3c.events.h"
+
+#include <fmt/format.h>
+#include <fmt/xchar.h>
 
 #include <windows.h>
 #include <objbase.h>
@@ -44,77 +38,321 @@ limitations under the License.
 #include <propvarutil.h>
 #include <rpc.h>
 #include <sddl.h>
-#include <wincodec.h>
 #include <wtypes.h>
 
-#include <cassert>
-#include <cstddef>
-#include <iterator>
+#include <cstdint>
+#include <cstring>
+#include <exception>
 #include <span>
 #include <string>
-#include <string_view>
-#include <vector>
+#include <utility>
 
+namespace m3c {
 namespace {
 
-fmt::format_context::iterator FormatSystemTime(const SYSTEMTIME& arg, const std::string format, fmt::format_context& ctx) {
-	constexpr char kPattern[] = "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}.{:03}Z";
+/// @brief Helper to select functions and types dependent on character type.
+/// @tparam T The type used as a selector.
+template <typename T>
+struct FormatterTraits;
 
-	if (format.empty()) [[likely]] {
-		return fmt::format_to(ctx.out(), kPattern, arg.wYear, arg.wMonth, arg.wDay, arg.wHour, arg.wMinute, arg.wSecond, arg.wMilliseconds);
+template <>
+struct FormatterTraits<char> {
+	using RpcStringType = m3c::rpc_string;
+
+	static _Must_inspect_result_ RPC_STATUS ConvertToString(_In_ const UUID* uuid, _Outptr_ RPC_CSTR* result) noexcept {
+		return UuidToStringA(uuid, result);
 	}
-	const std::string str = fmt::format(kPattern, arg.wYear, arg.wMonth, arg.wDay, arg.wHour, arg.wMinute, arg.wSecond, arg.wMilliseconds);
-	return fmt::format_to(ctx.out(), format, str);
+
+	static _Success_(return != FALSE) BOOL ConvertToString(_In_ PSID sid, _Outptr_ LPSTR* result) noexcept {
+		return ConvertSidToStringSidA(sid, result);
+	}
+
+	static _Success_(return != 0) DWORD FormatToString(_In_ DWORD flags, _In_ DWORD messageId, _When_((flags & FORMAT_MESSAGE_ALLOCATE_BUFFER) != 0, _At_((LPSTR*) buffer, _Outptr_result_z_)) _When_((flags & FORMAT_MESSAGE_ALLOCATE_BUFFER) == 0, _Out_writes_z_(size)) LPSTR buffer, _In_ DWORD size) noexcept {
+		return FormatMessageA(flags, nullptr, messageId, 0, buffer, size, nullptr);
+	}
+
+	template <typename T>
+	static auto ToString(T&& arg) {
+		return fmt::to_string(std::forward<T>(arg));
+	}
+};
+
+template <>
+struct FormatterTraits<wchar_t> {
+	using RpcStringType = m3c::rpc_wstring;
+
+	static _Must_inspect_result_ RPC_STATUS ConvertToString(_In_ const UUID* uuid, _Outptr_ RPC_WSTR* result) noexcept {
+		return UuidToStringW(uuid, result);
+	}
+
+	static _Success_(return != FALSE) BOOL ConvertToString(_In_ PSID sid, _Outptr_ LPWSTR* result) noexcept {
+		return ConvertSidToStringSidW(sid, result);
+	}
+
+	static _Success_(return != 0) DWORD FormatToString(_In_ DWORD flags, _In_ DWORD messageId, _When_((flags & FORMAT_MESSAGE_ALLOCATE_BUFFER) != 0, _At_((LPWSTR*) buffer, _Outptr_result_z_)) _When_((flags & FORMAT_MESSAGE_ALLOCATE_BUFFER) == 0, _Out_writes_z_(size)) LPWSTR buffer, _In_ DWORD size) noexcept {
+		return FormatMessageW(flags, nullptr, messageId, 0, buffer, size, nullptr);
+	}
+
+	template <typename T>
+	static auto ToString(T&& arg) {
+		return fmt::to_wstring(std::forward<T>(arg));
+	}
+};
+
+template <>
+struct FormatterTraits<VARIANT> {
+	static _Check_return_ HRESULT ConvertToString(_In_ const VARIANT& arg, _Outptr_result_nullonfailure_ PWSTR* result) noexcept {
+		return VariantToStringAlloc(arg, result);
+	}
+};
+
+template <>
+struct FormatterTraits<PROPVARIANT> {
+	static _Check_return_ HRESULT ConvertToString(_In_ const PROPVARIANT& arg, _Outptr_result_nullonfailure_ PWSTR* result) noexcept {
+		return PropVariantToStringAlloc(arg, result);
+	}
+};
+
+/// @brief Helper to decode a value if required.
+/// @tparam From The source character type.
+/// @tparam To The target character type.
+template <typename From, typename To>
+struct EncodingTraits {
+	template <typename T>
+	constexpr static T&& Convert(T&& arg) noexcept {
+		return std::forward<T>(arg);
+	}
+};
+
+template <>
+struct EncodingTraits<char, wchar_t> {
+	template <typename T>
+	static auto Convert(T&& arg) {
+		return EncodeUtf16(std::forward<T>(arg));
+	}
+};
+
+template <>
+struct EncodingTraits<wchar_t, char> {
+	template <typename T>
+	static auto Convert(T&& arg) {
+		return EncodeUtf8(std::forward<T>(arg));
+	}
+};
+
+}  // namespace
+}  // namespace m3c
+
+
+//
+// String encoding
+//
+
+template <typename T, typename CharT>
+requires requires {
+	requires !std::same_as<CharT, T>;
+}
+std::basic_string<CharT> fmt::formatter<m3c::fmt_encode<T>, CharT>::encode(const std::basic_string_view<T>& arg) {
+	try {
+		return m3c::EncodingTraits<T, CharT>::Convert(arg);
+	} catch (const std::exception&) {
+		m3c::Log::ErrorExceptionOnce(m3c::evt::FormatEncode, arg.size());
+		return m3c::SelectString<CharT>("<Error>", L"<Error>");
+	}
 }
 
-/// @brief Remove trailing line feeds from an error message and print.
-/// @remarks This function is a helper for `#FormatSystemErrorCodeTo()`.
+
+//
+// GUID
+//
+
+template <typename CharT>
+std::basic_string<CharT> fmt::formatter<GUID, CharT>::to_string(const GUID& arg) {
+	typename m3c::FormatterTraits<CharT>::RpcStringType rpc;
+	const RPC_STATUS status = m3c::FormatterTraits<CharT>::ConvertToString(&arg, &rpc);
+
+	if (status != RPC_S_OK) {
+		[[unlikely]];
+		m3c::Log::ErrorOnce(m3c::evt::FormatUuid_R, arg, m3c::rpc_status(status));
+		return FMT_FORMAT(
+		    m3c::SelectString<CharT>(
+		        "{:08x}-{:04x}-{:04x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
+		        L"{:08x}-{:04x}-{:04x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}"),
+		    arg.Data1, arg.Data2, arg.Data3, arg.Data4[0], arg.Data4[1], arg.Data4[2], arg.Data4[3], arg.Data4[4], arg.Data4[5], arg.Data4[6], arg.Data4[7]);  // NOLINT(readability-magic-numbers): Fixed GUID format.
+	}
+	return rpc.c_str();
+}
+
+
+//
+// FILETIME, SYSTEMTIME
+//
+
+template <typename CharT>
+std::basic_string<CharT> fmt::formatter<FILETIME, CharT>::to_string(const FILETIME& arg) {
+	SYSTEMTIME st;
+	if (!FileTimeToSystemTime(&arg, &st)) {
+		[[unlikely]];
+		m3c::Log::ErrorOnce(m3c::evt::FormatFileTime_E, arg, m3c::last_error());
+		return m3c::FormatterTraits<CharT>::ToString(ULARGE_INTEGER{.u{.LowPart = arg.dwLowDateTime, .HighPart = arg.dwHighDateTime}}.QuadPart);
+	}
+
+	return fmt::formatter<SYSTEMTIME, CharT>::to_string(st);
+}
+
+template std::basic_string<char> fmt::formatter<FILETIME, char>::to_string(const FILETIME& arg);
+template std::basic_string<wchar_t> fmt::formatter<FILETIME, wchar_t>::to_string(const FILETIME& arg);
+
+
+template <typename CharT>
+std::basic_string<CharT> fmt::formatter<SYSTEMTIME, CharT>::to_string(const SYSTEMTIME& arg) {
+	return FMT_FORMAT(
+	    m3c::SelectString<CharT>(
+	        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}.{:03}Z",
+	        L"{:04}-{:02}-{:02}T{:02}:{:02}:{:02}.{:03}Z"),
+	    arg.wYear, arg.wMonth, arg.wDay, arg.wHour, arg.wMinute, arg.wSecond, arg.wMilliseconds);
+}
+
+template std::basic_string<char> fmt::formatter<SYSTEMTIME, char>::to_string(const SYSTEMTIME& arg);
+template std::basic_string<wchar_t> fmt::formatter<SYSTEMTIME, wchar_t>::to_string(const SYSTEMTIME& arg);
+
+
+//
+// SID
+//
+
+template <typename CharT>
+std::basic_string<CharT> fmt::formatter<SID, CharT>::to_string(const SID& arg) {
+	// ConvertSidToStringSid requires non-const argument
+	_SE_SID sid;  // NOLINT(cppcoreguidelines-pro-type-member-init): Initialized by std::memcpy.
+	std::memcpy(&sid, &arg, SECURITY_SID_SIZE(arg.SubAuthorityCount));
+	CharT* str;  // NOLINT(cppcoreguidelines-init-variables): Initialized by call to ConvertSidToStringSidA.
+	const BOOL result = m3c::FormatterTraits<CharT>::ConvertToString(&sid, &str);
+	if (!result) {
+		[[unlikely]];
+		m3c::Log::ErrorOnce(m3c::evt::FormatSid_E, arg, m3c::last_error());
+		const std::uint64_t authority = (static_cast<std::uint64_t>(arg.IdentifierAuthority.Value[0]) << 40)
+		                                | (static_cast<std::uint64_t>(arg.IdentifierAuthority.Value[1]) << 32)
+		                                | (static_cast<std::uint64_t>(arg.IdentifierAuthority.Value[2]) << 24)
+		                                | (static_cast<std::uint64_t>(arg.IdentifierAuthority.Value[3]) << 16)
+		                                | (static_cast<std::uint64_t>(arg.IdentifierAuthority.Value[4]) << 8)
+		                                | static_cast<std::uint64_t>(arg.IdentifierAuthority.Value[5]);
+		return FMT_FORMAT(
+		    m3c::SelectString<CharT>("S-{}-{}-{}", L"S-{}-{}-{}"),
+		    arg.Revision, authority, fmt::join(std::span(arg.SubAuthority, arg.SubAuthorityCount), m3c::SelectString<CharT>("-", L"-")));
+	}
+
+	auto f = m3c::finally([str]() noexcept {
+		if (LocalFree(str)) {
+			[[unlikely]];
+			m3c::Log::ErrorOnce(m3c::evt::MemoryLeak_E, m3c::last_error());
+		}
+	});
+	return str;
+}
+
+template std::basic_string<char> fmt::formatter<SID, char>::to_string(const SID& arg);
+template std::basic_string<wchar_t> fmt::formatter<SID, wchar_t>::to_string(const SID& arg);
+
+
+//
+// Formatting of errors
+//
+
+namespace m3c {
+namespace {
+
+/// @brief Remove trailing line feeds from an error message.
+/// @remarks This function is a helper for `#FormatSystemErrorCode()`.
+/// @tparam CharT The character type of the formatter.
 /// @param message The error message.
 /// @param length The length of the error message NOT including a terminating null character.
-/// @param ctx The output target.
-/// @result The output iterator.
-fmt::format_context::iterator PostProcessErrorMessage(_In_reads_(length) char* __restrict const message, std::size_t length, fmt::format_context& ctx) {
-	while (length > 0 && (message[length - 1] == '\r' || message[length - 1] == '\n' || message[length - 1] == ' '))
-		[[likely]] {
-			--length;
-		}
-	return std::copy(message, message + length, ctx.out());
+/// @result The error message as a string.
+template <typename CharT>
+std::basic_string<CharT> PostProcessErrorMessage(_In_reads_(length) CharT* __restrict const message, std::size_t length) {
+	while (length > 0 && (message[length - 1] == '\r' || message[length - 1] == '\n' || message[length - 1] == ' ')) {
+		[[likely]];
+		--length;
+	}
+	return std::basic_string<CharT>(message, length);
 }
 
-/// @brief Create an error message from a system error code and print.
+/// @brief Create an error message from a system error code.
+/// @tparam CharT The character type of the formatter.
 /// @param errorCode The system error code.
-/// @param ctx The output target.
-/// @result The output iterator.
-fmt::format_context::iterator FormatSystemErrorCodeTo(const std::uint32_t errorCode, fmt::format_context& ctx) {
+/// @result The error message as a string.
+template <typename CharT>
+std::basic_string<CharT> FormatSystemErrorCode(const std::uint32_t errorCode) {
 	constexpr std::size_t kDefaultBufferSize = 256;
-	char buffer[kDefaultBufferSize];
-	DWORD length = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK, nullptr, errorCode, 0, buffer, sizeof(buffer) / sizeof(*buffer), nullptr);
-	if (length) [[likely]] {
-		return PostProcessErrorMessage(buffer, length, ctx);
+	CharT buffer[kDefaultBufferSize];
+	DWORD length = m3c::FormatterTraits<CharT>::FormatToString(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK, errorCode, buffer, sizeof(buffer) / sizeof(*buffer));
+	if (length) {
+		[[likely]];
+		return PostProcessErrorMessage(buffer, length);
 	}
 
 	DWORD lastError = GetLastError();
 	if (lastError == ERROR_INSUFFICIENT_BUFFER) {
-		char* pBuffer = nullptr;
+		CharT* pBuffer = nullptr;
 
 		auto freeBuffer = m3c::finally([&pBuffer]() noexcept {
-			if (LocalFree(pBuffer)) [[unlikely]] {
-				m3c::Log::ErrorOnce(m3c::evt::LocalFree, m3c::make_win32_error());
+			if (LocalFree(pBuffer)) {
+				[[unlikely]];
+				m3c::Log::ErrorOnce(m3c::evt::MemoryLeak_E, m3c::last_error());
 			}
 		});
-		length = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK, nullptr, errorCode, 0, reinterpret_cast<char*>(&pBuffer), 0, nullptr);
-		if (length) [[likely]] {
-			return PostProcessErrorMessage(pBuffer, length, ctx);
+		length = m3c::FormatterTraits<CharT>::FormatToString(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK, errorCode, reinterpret_cast<CharT*>(&pBuffer), 0);
+		if (length) {
+			[[likely]];
+			return PostProcessErrorMessage(pBuffer, length);
 		}
 		lastError = GetLastError();
 	}
-	m3c::Log::ErrorOnce(m3c::evt::FormatMessageX, errorCode, m3c::make_win32_error(lastError));
-	const std::string_view sv("<Error>");
-	return std::copy(sv.cbegin(), sv.cend(), ctx.out());
+	m3c::Log::ErrorOnce(m3c::evt::FormatMessageId_E, errorCode, m3c::win32_error(lastError));
+	return SelectString<CharT>("<Error>", L"<Error>");
 }
 
-bool IsConvertibleToString(const PROPVARIANT& pv) noexcept {
-	switch (pv.vt & ~VARENUM::VT_TYPEMASK) {
+}  // namespace
+}  // namespace m3c
+
+
+template <m3c::AnyOf<m3c::win32_error, m3c::hresult, m3c::rpc_status> T, typename CharT>
+std::basic_string<CharT> fmt::formatter<T, CharT>::to_string(const T& arg) {
+	const auto& code = arg.code();
+	if constexpr (std::is_same_v<T, m3c::hresult>) {
+		return FMT_FORMAT(
+		    m3c::SelectString<CharT>("{} (0x{:X})", L"{} (0x{:X})"),
+		    m3c::FormatSystemErrorCode<CharT>(code), static_cast<std::make_unsigned_t<HRESULT>>(code));
+	} else {
+		return FMT_FORMAT(
+		    m3c::SelectString<CharT>("{} ({})", L"{} ({})"),
+		    m3c::FormatSystemErrorCode<CharT>(code), code);
+	}
+}
+
+template std::basic_string<char> fmt::formatter<m3c::win32_error, char>::to_string(const m3c::win32_error& arg);
+template std::basic_string<wchar_t> fmt::formatter<m3c::win32_error, wchar_t>::to_string(const m3c::win32_error& arg);
+template std::basic_string<char> fmt::formatter<m3c::rpc_status, char>::to_string(const m3c::rpc_status& arg);
+template std::basic_string<wchar_t> fmt::formatter<m3c::rpc_status, wchar_t>::to_string(const m3c::rpc_status& arg);
+template std::basic_string<char> fmt::formatter<m3c::hresult, char>::to_string(const m3c::hresult& arg);
+template std::basic_string<wchar_t> fmt::formatter<m3c::hresult, wchar_t>::to_string(const m3c::hresult& arg);
+
+
+//
+// VARIANT, PROPVARIANT
+//
+
+namespace m3c::internal {
+
+namespace {
+
+/// @brief Check if a `VARIANT` or `PROPVARIANT` object is convertible to a string.
+/// @tparam T The type of the object.
+/// @param arg The object.
+/// @return `true` if the object has a string representation, else `false`.
+template <AnyOf<VARIANT, PROPVARIANT> T>
+bool IsConvertibleToString(const T& arg) noexcept {
+	switch (arg.vt & ~VARENUM::VT_TYPEMASK) {
 	case 0:
 	case VARENUM::VT_VECTOR:
 	case VARENUM::VT_BYREF:
@@ -123,7 +361,7 @@ bool IsConvertibleToString(const PROPVARIANT& pv) noexcept {
 		return false;
 	}
 
-	switch (pv.vt & VARENUM::VT_TYPEMASK) {
+	switch (arg.vt & VARENUM::VT_TYPEMASK) {
 	case VARENUM::VT_I2:
 	case VARENUM::VT_I4:
 	case VARENUM::VT_R4:
@@ -151,301 +389,104 @@ bool IsConvertibleToString(const PROPVARIANT& pv) noexcept {
 	case VARENUM::VT_CLSID:
 		return true;
 	case VARENUM::VT_VARIANT:
-		return !(pv.vt & VARENUM::VT_VECTOR) && pv.pvarVal && IsConvertibleToString(*pv.pvarVal);
+		return (arg.vt & VARENUM::VT_VECTOR) == 0 && arg.pvarVal != nullptr && IsConvertibleToString(*arg.pvarVal);
 	default:
 		return false;
 	}
-};
+}
 
 }  // namespace
 
-//
-// GUID
-//
 
-fmt::format_context::iterator fmt::formatter<GUID>::format(const GUID& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
-	const std::string& format = GetFormat();
-
-	m3c::rpc_string rpc;
-	const RPC_STATUS status = UuidToStringA(&arg, &rpc);
-	if (status != RPC_S_OK) [[unlikely]] {
-		m3c::Log::ErrorOnce(m3c::evt::UuidToStringX, arg, m3c::make_rpc_status(status));
-		constexpr char kPattern[] = "{:08x}-{:04x}-{:04x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}";
-		if (format.empty()) [[likely]] {
-			return fmt::format_to(ctx.out(), kPattern, arg.Data1, arg.Data2, arg.Data3, arg.Data4[0], arg.Data4[1], arg.Data4[2], arg.Data4[3], arg.Data4[4], arg.Data4[5], arg.Data4[6], arg.Data4[7]);
+template <AnyOf<VARIANT, PROPVARIANT> T, typename CharT>
+std::basic_string<CharT> BaseVariantFormatter<T, CharT>::to_string(const T& arg) const {
+	std::string vt;
+	if (m_presentation != 'v') {
+		vt = m3c::VariantTypeToString(arg.vt);
+		if (arg.vt == (VARENUM::VT_VARIANT | VARENUM::VT_BYREF)) {
+			vt += "->";
+			vt += m3c::VariantTypeToString(arg.pvarVal->vt);
 		}
-		const std::string str = fmt::format(kPattern, arg.Data1, arg.Data2, arg.Data3, arg.Data4[0], arg.Data4[1], arg.Data4[2], arg.Data4[3], arg.Data4[4], arg.Data4[5], arg.Data4[6], arg.Data4[7]);
-		return fmt::format_to(ctx.out(), format, str);
 	}
-
-	if (format.empty()) [[likely]] {
-		const std::string_view sv(rpc.as_native());
-		return std::copy(sv.cbegin(), sv.cend(), ctx.out());
+	if (m_presentation == 't') {
+		return m3c::EncodingTraits<char, CharT>::Convert(std::move(vt));
 	}
-	return fmt::format_to(ctx.out(), format, rpc.as_native());
-}
-
-fmt::format_context::iterator fmt::formatter<FILETIME>::format(const FILETIME& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
-	const std::string& format = GetFormat();
-	constexpr char kPattern[] = "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}.{:03}Z";
-
-	SYSTEMTIME st;
-	if (!FileTimeToSystemTime(&arg, &st)) [[unlikely]] {
-		m3c::Log::ErrorOnce(m3c::evt::FileTimeToSystemTime, arg, m3c::make_win32_error());
-		if (format.empty()) [[likely]] {
-			return fmt::format_to(ctx.out(), "{}", ULARGE_INTEGER{.LowPart = arg.dwLowDateTime, .HighPart = arg.dwHighDateTime}.QuadPart);
+	if (m3c::internal::IsConvertibleToString(arg)) {
+		m3c::com_heap_ptr<wchar_t> pwsz;
+		const HRESULT hr = m3c::FormatterTraits<T>::ConvertToString(arg, &pwsz);
+		if (FAILED(hr)) {
+			[[unlikely]];
+			m3c::Log::ErrorOnce(m3c::evt::FormatVariant_H, vt, m3c::hresult(hr));
+		} else {
+			if (m_presentation == 'v') {
+				return m3c::EncodingTraits<wchar_t, CharT>::Convert(pwsz.get());
+			}
+			return FMT_FORMAT(
+			    m3c::SelectString<CharT>("({}: {})", L"({}: {})"),
+			    m3c::fmt_encode(vt), m3c::fmt_encode(pwsz.get()));
 		}
-		const std::string str = fmt::format("{}", ULARGE_INTEGER{.LowPart = arg.dwLowDateTime, .HighPart = arg.dwHighDateTime}.QuadPart);
-		return fmt::format_to(ctx.out(), format, str);
 	}
-
-	return FormatSystemTime(st, format, ctx);
-}
-
-fmt::format_context::iterator fmt::formatter<SYSTEMTIME>::format(const SYSTEMTIME& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
-	return FormatSystemTime(arg, GetFormat(), ctx);
-}
-
-fmt::format_context::iterator fmt::formatter<SID>::format(const SID& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
-	const std::string& format = GetFormat();
-
-	LPSTR sid;
-	if (!ConvertSidToStringSidA(const_cast<SID*>(&arg), &sid)) [[unlikely]] {
-		m3c::Log::ErrorOnce(m3c::evt::ConvertSidToStringSidX, arg, m3c::make_win32_error());
-		const std::uint64_t authority = (static_cast<std::uint64_t>(arg.IdentifierAuthority.Value[0]) << 40)
-		                                | (static_cast<std::uint64_t>(arg.IdentifierAuthority.Value[1]) << 32)
-		                                | (static_cast<std::uint64_t>(arg.IdentifierAuthority.Value[2]) << 24)
-		                                | (static_cast<std::uint64_t>(arg.IdentifierAuthority.Value[3]) << 16)
-		                                | (static_cast<std::uint64_t>(arg.IdentifierAuthority.Value[4]) << 8)
-		                                | static_cast<std::uint64_t>(arg.IdentifierAuthority.Value[5]);
-		if (format.empty()) [[likely]] {
-			return fmt::format_to(ctx.out(), "S-{}-{}-{}", arg.Revision, authority, fmt::join(std::span(arg.SubAuthority, arg.SubAuthorityCount), "-"));
+	// not convertible to string
+	if (m_presentation == 'v') {
+		if (arg.vt == VARENUM::VT_EMPTY || (arg.vt == (VARENUM::VT_VARIANT | VARENUM::VT_BYREF) && arg.pvarVal->vt == VARENUM::VT_EMPTY)) {
+			return SelectString<CharT>("", L"");
 		}
-		const std::string str = fmt::format("S-{}-{}-{}", arg.Revision, authority, fmt::join(std::span(arg.SubAuthority, arg.SubAuthorityCount), "-"));
-		return fmt::format_to(ctx.out(), format, str);
+		return SelectString<CharT>("<?>", L"<?>");
 	}
-
-	auto f = m3c::finally([sid]() noexcept {
-		if (LocalFree(sid)) [[unlikely]] {
-			m3c::Log::ErrorOnce(m3c::evt::LocalFree, m3c::make_win32_error());
-		}
-	});
-	std::string_view sv(sid);
-
-	if (format.empty()) [[likely]] {
-		return std::copy(sv.cbegin(), sv.cend(), ctx.out());
-	}
-	return fmt::format_to(ctx.out(), format, sv);
+	return FMT_FORMAT(m3c::SelectString<CharT>("({})", L"({})"), m3c::fmt_encode(vt));
 }
 
-fmt::format_context::iterator fmt::formatter<m3c::internal::win32_error>::format(const m3c::internal::win32_error& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
-	const std::string& format = GetFormat();
+template std::basic_string<char> BaseVariantFormatter<VARIANT, char>::to_string(const VARIANT& arg) const;
+template std::basic_string<wchar_t> BaseVariantFormatter<VARIANT, wchar_t>::to_string(const VARIANT& arg) const;
+template std::basic_string<char> BaseVariantFormatter<PROPVARIANT, char>::to_string(const PROPVARIANT& arg) const;
+template std::basic_string<wchar_t> BaseVariantFormatter<PROPVARIANT, wchar_t>::to_string(const PROPVARIANT& arg) const;
 
-	if (format.empty()) [[likely]] {
-		return fmt::format_to(FormatSystemErrorCodeTo(arg.code, ctx), " ({})", arg.code);
-	}
-
-	const std::string str = fmt::format("{}", m3c::make_win32_error(arg.code));
-	return fmt::format_to(ctx.out(), format, str);
-}
-
-fmt::format_context::iterator fmt::formatter<m3c::internal::rpc_status>::format(const m3c::internal::rpc_status& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
-	const std::string& format = GetFormat();
-
-	if (format.empty()) [[likely]] {
-		return fmt::format_to(FormatSystemErrorCodeTo(arg.code, ctx), " ({})", arg.code);
-	}
-
-	const std::string str = fmt::format("{}", m3c::make_rpc_status(arg.code));
-	return fmt::format_to(ctx.out(), format, str);
-}
-
-fmt::format_context::iterator fmt::formatter<m3c::internal::hresult>::format(const m3c::internal::hresult& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
-	const std::string& format = GetFormat();
-
-	if (format.empty()) [[likely]] {
-		return fmt::format_to(FormatSystemErrorCodeTo(arg.code, ctx), " (0x{:X})", static_cast<std::make_unsigned_t<HRESULT>>(arg.code));
-	}
-
-	const std::string str = fmt::format("{}", m3c::make_hresult(arg.code));
-	return fmt::format_to(ctx.out(), format, str);
-}
-
-//
-// PROPVARIANT
-//
-
-fmt::format_context::iterator fmt::formatter<PROPVARIANT>::format(const PROPVARIANT& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
-	const std::string& format = GetFormat();
-
-	const std::string vt = m3c::VariantTypeToString(arg.vt);
-	if (IsConvertibleToString(arg)) {
-		std::string value;
-		try {
-			m3c::com_heap_ptr<wchar_t> pwsz;
-			M3C_COM_HR(PropVariantToStringAlloc(arg, &pwsz), m3c::evt::PropVariantToStringAlloc, vt);
-
-			value = m3c::EncodeUtf8(pwsz.get());
-		} catch (const std::exception&) {
-			m3c::Log::ErrorExceptionOnce(m3c::evt::formatter_format);
-			goto fallback;
-		}
-		if (format.empty()) [[likely]] {
-			return fmt::format_to(ctx.out(), "({}: {})", vt, value);
-		}
-		const std::string str = fmt::format("({}: {})", vt, value);
-		return fmt::format_to(ctx.out(), format, str);
-	}
-
-fallback:
-	if (format.empty()) [[likely]] {
-		return fmt::format_to(ctx.out(), "({})", vt);
-	}
-	const std::string str = fmt::format("({})", vt);
-	return fmt::format_to(ctx.out(), format, str);
-}
+}  // namespace m3c::internal
 
 
 //
 // IUnknown, IStream
 //
 
-namespace {
+namespace m3c::internal {
 
-fmt::format_context::iterator Format(IUnknown* arg, const std::string& format, fmt::format_context& ctx) {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
-	if (!arg) [[unlikely]] {
-		if (format.empty()) [[likely]] {
-			*ctx.out() = '0';
-			*ctx.out() = 'x';
-			*ctx.out() = '0';
-			return ctx.out();
-		}
-		return fmt::format_to(ctx.out(), format, "0x0");
+std::wstring BaseIStreamFormatter::GetName(IStream* const ptr) {
+	if (!ptr) {
+		[[unlikely]];
+		return L"<Empty>";
 	}
 
-	// AddRef to get the ref count
-	const ULONG ref = arg->AddRef();
-	arg->Release();
-	// do not count AddRef
-	if (format.empty()) [[likely]] {
-		return fmt::format_to(ctx.out(), "(ref={}, this={})", ref - 1, static_cast<void*>(arg));
+	STATSTG statstg{};
+	auto f = m3c::finally([&statstg]() noexcept {
+		CoTaskMemFree(statstg.pwcsName);
+	});
+	const HRESULT hr = ptr->Stat(&statstg, STATFLAG_DEFAULT);
+	if (FAILED(hr)) {
+		[[unlikely]];
+		m3c::Log::ErrorOnce(m3c::evt::FormatIStream_H, m3c::hresult(hr));
+		return L"<Error>";
 	}
-	const std::string str = fmt::format("(ref={}, this={})", ref - 1, static_cast<void*>(arg));
-	return fmt::format_to(ctx.out(), format, str);
+	return statstg.pwcsName ? statstg.pwcsName : L"<IStream>";
 }
 
-fmt::format_context::iterator Format(IStream* arg, const std::string& format, fmt::format_context& ctx) {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
-	if (!arg) [[unlikely]] {
-		if (format.empty()) [[likely]] {
-			*ctx.out() = '0';
-			*ctx.out() = 'x';
-			*ctx.out() = '0';
-			return ctx.out();
-		}
-		return fmt::format_to(ctx.out(), format, "0x0");
-	}
-
-	// AddRef to get the ref count
-	const ULONG ref = arg->AddRef();
-	arg->Release();
-
-	std::string name;
-	try {
-		STATSTG statstg{};
-		auto f = m3c::finally([&statstg]() noexcept {
-			CoTaskMemFree(statstg.pwcsName);
-		});
-		M3C_COM_HR(arg->Stat(&statstg, STATFLAG_DEFAULT), m3c::evt::IStream_Stat);
-		name = statstg.pwcsName ? m3c::EncodeUtf8(statstg.pwcsName) : "(IStream)";
-	} catch (const std::exception&) {
-		m3c::Log::ErrorExceptionOnce(m3c::evt::formatter_format);
-		name = "<Error>";
-	}
-
-	// do not count AddRef
-	if (format.empty()) [[likely]] {
-		return fmt::format_to(ctx.out(), "({}, ref={}, this={})", name, ref - 1, static_cast<void*>(arg));
-	}
-	const std::string str = fmt::format("({}, ref={}, this={})", name, ref - 1, static_cast<void*>(arg));
-	return fmt::format_to(ctx.out(), format, str);
-}
-
-}  // namespace
-
-
-fmt::format_context::iterator fmt::formatter<m3c::fmt_ptr<IUnknown>>::format(const m3c::fmt_ptr<IUnknown>& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
-	// there is nothing such as a const COM object :-)
-	return Format(arg.get(), GetFormat(), ctx);
-}
-
-fmt::format_context::iterator fmt::formatter<m3c::fmt_ptr<IStream>>::format(const m3c::fmt_ptr<IStream>& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
-	// there is nothing such as a const COM object :-)
-	return Format(arg.get(), GetFormat(), ctx);
-}
-
-
-fmt::format_context::iterator fmt::formatter<m3c::com_ptr<IUnknown>>::format(const m3c::com_ptr<IUnknown>& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
-	return Format(arg.get(), GetFormat(), ctx);
-}
-
-fmt::format_context::iterator fmt::formatter<m3c::com_ptr<IStream>>::format(const m3c::com_ptr<IStream>& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
-	return Format(arg.get(), GetFormat(), ctx);
-}
+}  // namespace m3c::internal
 
 
 //
 // PROPERTYKEY
 //
 
-fmt::format_context::iterator fmt::formatter<PROPERTYKEY>::format(const PROPERTYKEY& arg, fmt::format_context& ctx) {  // NOLINT(readability-convert-member-functions-to-static): Specialization of fmt::formatter.
-	const std::string& format = GetFormat();
+namespace m3c::internal {
 
-	std::string str;
-	try {
-		m3c::com_heap_ptr<wchar_t> key;
-		M3C_COM_HR(PSGetNameFromPropertyKey(arg, &key), m3c::evt::PSGetNameFromPropertyKey, arg.fmtid);
-		str = m3c::EncodeUtf8(key.get());
-	} catch (std::exception&) {
-		m3c::Log::ErrorExceptionOnce(m3c::evt::formatter_format);
-		return fmt::format_to(ctx.out(), format.empty() ? "{}" : format, arg.fmtid);
+std::wstring BasePropertyKeyFormatter::GetName(const PROPERTYKEY& arg) {
+	m3c::com_heap_ptr<wchar_t> key;
+	const HRESULT hr = PSGetNameFromPropertyKey(arg, &key);
+	if (FAILED(hr)) {
+		[[unlikely]];
+		m3c::Log::ErrorOnce(m3c::evt::FormatPropertyKey_H, arg.fmtid, m3c::hresult(hr));
+		return fmt::to_wstring(arg.fmtid);
 	}
-
-	if (format.empty()) [[likely]] {
-		std::copy(str.cbegin(), str.cend(), ctx.out());
-	}
-	return fmt::format_to(ctx.out(), format, str);
+	return key.get();
 }
 
-
-//
-// WICRect
-//
-
-fmt::format_parse_context::iterator fmt::formatter<WICRect>::parse(fmt::format_parse_context& ctx) {
-	auto it = ctx.begin();
-	const auto last = ctx.end();
-	if (it != last && *it == ':') {
-		++it;
-	}
-	auto end = it;
-	while (end != last && *end != '}') {
-		++end;
-	}
-	constexpr std::size_t kGroupingCharCount = 13;
-	m_format.reserve((end - it + 3) * 4 + kGroupingCharCount);
-	m_format.append("(@({:");
-	m_format.append(it, end);
-	m_format.append("}, {:");
-	m_format.append(it, end);
-	m_format.append("}) / {:");
-	m_format.append(it, end);
-	m_format.append("} x {:");
-	m_format.append(it, end);
-	m_format.append("})");
-	assert(m_format.size() == static_cast<std::size_t>((end - it + 3) * 4 + kGroupingCharCount));
-	return end;
-}
-
-fmt::format_context::iterator fmt::formatter<WICRect>::format(const WICRect& arg, fmt::format_context& ctx) {
-	return fmt::format_to(ctx.out(), m_format, arg.X, arg.Y, arg.Width, arg.Height);
-}
+}  // namespace m3c::internal

@@ -14,36 +14,35 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "testevents.h"
-
 #include "m3c/Log.h"
 #include "m3c/finally.h"
 
+#include "test.events.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-//#include <llamalog/LogLine.h>
-//#include <llamalog/LogWriter.h>
-//#include <llamalog/llamalog.h>
-//#include <m4t/memory.h>
 
 #include <windows.h>
 #include <objbase.h>
 
-#include <memory>
-#include <new>
-#include <utility>
+#include <string>
 
 namespace t = testing;
 
-int main(int argc, char** argv) {
-	// std::unique_ptr<lg::DebugWriter> writer = std::make_unique<lg::DebugWriter>(lg::Priority::kTrace);
-	// lg::Initialize(std::move(writer));
-	constexpr GUID kGUID = {0x7f241d8a, 0xf704, 0x4399, {0x8f, 0x1b, 0x91, 0xd1, 0xb2, 0x2e, 0xa3, 0xe2}};
-	m3c::Log::Register(kGUID);
+constinit const GUID m3c::Log::kGuid = m3c::Test_Provider;
 
+namespace m3c::log {
+
+void Print(const m3c::Priority priority, const std::string& message) {
+	Log::PrintDefault(priority, message);
+}
+
+}  // namespace m3c::log
+
+int main(int argc, char** argv) {
 	const HRESULT hr = CoInitialize(nullptr);
 	if (FAILED(hr)) {
-		m3c::Log::Critical(m3c::evt::CoInitialize, hr);
+		m3c::Log::Critical(m3c::evt::Test_Init_H, hr);
 		return 1;
 	}
 	auto f = m3c::finally([]() noexcept {
@@ -53,6 +52,5 @@ int main(int argc, char** argv) {
 	t::InitGoogleMock(&argc, argv);
 	const int result = RUN_ALL_TESTS();
 
-	// lg::Shutdown();
 	return result;
 }

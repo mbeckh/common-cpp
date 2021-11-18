@@ -1,5 +1,5 @@
 /*
-Copyright 2019 Michael Beckh
+Copyright 2019-2021 Michael Beckh
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@ limitations under the License.
 */
 
 /// @file
-
 #pragma once
 
 #include <m3c/ComObject.h>
@@ -23,6 +22,7 @@ limitations under the License.
 #include <windows.h>
 #include <unknwn.h>
 
+#include <concepts>
 #include <new>  // IWYU pragma: keep
 
 namespace m3c {
@@ -31,55 +31,53 @@ namespace internal {
 
 /// @brief The base class of all `ClassFactory` objects.
 /// @details The class also manages the number of locks acquired on all class factories.
-class __declspec(novtable) AbstractClassFactory : public ComObject<IClassFactory> {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
+class __declspec(novtable) AbstractClassFactory : public ComObject<IClassFactory> {  // NOLINT(cppcoreguidelines-virtual-class-destructor): COM uses reference counting.
 protected:
 	// Only allow creation from sub classes.
-	AbstractClassFactory() noexcept = default;
+	[[nodiscard]] AbstractClassFactory() noexcept = default;
 
 public:
 	AbstractClassFactory(const AbstractClassFactory&) = delete;
 	AbstractClassFactory(AbstractClassFactory&&) = delete;
 
 protected:
-	virtual ~AbstractClassFactory() noexcept = default;
+	~AbstractClassFactory() noexcept override = default;
 
 public:
 	AbstractClassFactory& operator=(const AbstractClassFactory&) = delete;
 	AbstractClassFactory& operator=(AbstractClassFactory&&) = delete;
 
 public:  // IClassFactory
-	[[nodiscard]] HRESULT __stdcall CreateInstance(_In_opt_ IUnknown* pOuter, REFIID riid, _COM_Outptr_result_maybenull_ void** ppObject) noexcept final;
+	[[nodiscard]] HRESULT __stdcall CreateInstance(_In_opt_ IUnknown* pOuter, REFIID riid, _COM_Outptr_ void** ppObject) noexcept final;
 	[[nodiscard]] HRESULT __stdcall LockServer(BOOL lock) noexcept final;
 
 private:
 	/// @brief Create a new COM object.
 	/// @return A newly created COM object.
-	[[nodiscard]] virtual AbstractComObject* CreateObject() const = 0;  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
+	[[nodiscard]] virtual _Ret_notnull_ AbstractComObject* CreateObject() const = 0;
 };
 
 }  // namespace internal
 
-template <typename T>
-concept IComObject = std::is_base_of_v<internal::AbstractComObject, T>;
 
 /// @brief Class factory for COM objects.
-template <IComObject T>                                             // Only valid for classes derived from `internal::AbstractComObject`.
-class ClassFactory final : public internal::AbstractClassFactory {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
-
+template <std::derived_from<internal::AbstractComObject> T>
+class ClassFactory final : public internal::AbstractClassFactory {  // NOLINT(cppcoreguidelines-virtual-class-destructor): COM uses reference counting.
 public:
-	ClassFactory() noexcept = default;
+	[[nodiscard]] ClassFactory() noexcept = default;
+
 	ClassFactory(const ClassFactory&) = delete;
 	ClassFactory(ClassFactory&&) = delete;
 
 protected:  // COM objects all have protected virtual destructors.
-	virtual ~ClassFactory() noexcept = default;
+	~ClassFactory() noexcept override = default;
 
 public:
 	ClassFactory& operator=(const ClassFactory&) = delete;
 	ClassFactory& operator=(ClassFactory&&) = delete;
 
 private:
-	[[nodiscard]] AbstractComObject* CreateObject() const final {
+	[[nodiscard]] _Ret_notnull_ AbstractComObject* CreateObject() const final {
 		return new T();
 	}
 };

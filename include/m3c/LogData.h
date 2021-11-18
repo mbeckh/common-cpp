@@ -1,5 +1,5 @@
 /*
-Copyright 2019 Michael Beckh
+Copyright 2019-2021 Michael Beckh
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -44,24 +44,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 */
 
-#include "source_location.h"
+#include <m3c/LogArgs.h>
+#include <m3c/format.h>
+#include <m3c/type_traits.h>
 
 #include <windows.h>
-//
-#include "type_traits.h"
-
-#include <evntprov.h>
-#include <rpc.h>
+#include <oaidl.h>
+#include <propidl.h>
 
 #include <cstddef>
 #include <cstdint>
-#include <exception>
+#include <cstring>
 #include <memory>
-#include <new>
 #include <string>
 #include <string_view>
-#include <system_error>
 #include <type_traits>
+#include <utility>
 
 #ifndef M3C_LOGDATA_SIZE
 /// @brief The size of a log line in bytes.
@@ -71,81 +69,80 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #define M3C_LOGDATA_SIZE 128
 #endif
 
+
 namespace m3c {
-
 namespace internal {
+namespace logdata {
 
-template <typename T>
-struct error_codeX {
-	T code;
+/// @brief The maximum size of a custom type.
+constexpr std::size_t kMaxCustomTypeSize = 0xFFFFFFFu;  // allow max. 255 MB
+
+using Size = std::uint32_t;    ///< @brief A data type for indexes in the buffer representing *bytes*.
+using Length = std::uint16_t;  ///< @brief The length of a string in number of *characters*.
+using Align = std::uint8_t;    ///<@ brief Alignment requirement of a data type in *bytes*.
+
+/// @brief A structure with management data for a custom type.
+struct FunctionTable {
+	/// @brief Type of the function to fill an event data descriptor.
+	using AddEventDataFunction = void (*)(_Inout_ LogEventArgs&, _In_ const std::byte* __restrict);
+	/// @brief Type of the function to add a formatter argument.
+	using AddFormatArgsFunction = void (*)(_Inout_ LogFormatArgs&, _In_ const std::byte* __restrict);
+
+	const Align align;                          ///< @brief Alignment requirement.
+	const Size size;                            ///< @brief Size of the type in bytes.
+	const AddEventDataFunction addEventData;    ///< @brief Function to add argument to an event data structure.
+	const AddFormatArgsFunction addFormatArgs;  ///< @brief Function to add argument to a formatter arguments structure.
 };
 
-struct win32_error final {
-	DWORD code;
+/// @brief A structure with additional management data for custom types which are not trivially copyable.
+struct FunctionTableNonTrivial : FunctionTable {
+	/// @brief Type of the function to destruct an argument in the buffer.
+	using DestructFunction = void (*)(_Inout_ std::byte* __restrict) noexcept;
 
-	operator DWORD() const noexcept {
-		return code;
-	}
+	const DestructFunction destruct;  ///< @brief Function to destruct argument in the buffer.
 };
-static_assert(sizeof(win32_error) == sizeof(DWORD));
 
-struct hresult final {
-	HRESULT code;
+/// @brief A structure with additional management data for custom types which are not no-throw constructible.
+struct FunctionTableNoThrowConstructible : FunctionTableNonTrivial {
+	/// @brief Type of the function to construct an argument in the buffer by copying.
+	using CopyFunction = void (*)(_In_ const std::byte* __restrict, _Out_ std::byte* __restrict) noexcept;
+	/// @brief Type of the function to construct an argument in the buffer by moving.
+	using MoveFunction = void (*)(_Inout_ std::byte* __restrict, _Out_ std::byte* __restrict) noexcept;
 
-	operator HRESULT() const noexcept {
-		return code;
-	}
+	const CopyFunction copy;  ///< @brief Function to copy argument into the buffer.
+	const MoveFunction move;  ///< @brief Function to move argument into the buffer.
 };
-static_assert(sizeof(hresult) == sizeof(HRESULT));
 
-struct rpc_status final {
-	RPC_STATUS code;
 
-	operator RPC_STATUS() const noexcept {
-		return code;
-	}
-};
-static_assert(sizeof(rpc_status) == sizeof(RPC_STATUS));
-}  // namespace internal
-
-constexpr inline internal::win32_error make_win32_error(const DWORD code = GetLastError()) noexcept {
-	return internal::win32_error{code};
+/// @brief Helper function to add a formatter or event argument to an arguments container.
+/// @tparam A The type of the arguments container.
+/// @tparam T The type of the argument.
+/// @param objectData The serialized byte stream of an object of type @p T.
+template <typename A, typename T>
+inline void AddLogArgs(_Inout_ A& args, _In_reads_bytes_(sizeof(T)) const std::byte* __restrict const objectData) noexcept(noexcept(args << std::declval<const T&>())) {
+	args << *reinterpret_cast<const T*>(objectData);
 }
-constexpr inline internal::hresult make_hresult(const HRESULT code) noexcept {
-	return internal::hresult{code};
-}
-constexpr inline internal::rpc_status make_rpc_status(const RPC_STATUS code) noexcept {
-	return internal::rpc_status{code};
-}
-
-}  // namespace m3c
-namespace m3c::internal {
-class LogData;
-
-/// @brief Type of the function to create a formatter argument.
-template <typename T, typename F>
-using Format = F (*)(_In_ const T* __restrict) noexcept;
-
-
-namespace internal {
 
 /// @brief Helper function to create a type by copying from the source.
 /// @tparam T The type of the argument.
 /// @param src The source address.
 /// @param dst The target address.
 template <typename T>
-void Copy(_In_reads_bytes_(sizeof(T)) const std::byte* const src, _Out_writes_bytes_(sizeof(T)) std::byte* __restrict const dst) {
-	new (dst) T(*reinterpret_cast<const T*>(src));
+requires std::is_nothrow_copy_constructible_v<T>
+inline void Copy(_In_reads_bytes_(sizeof(T)) const std::byte* __restrict const src, _Out_writes_bytes_(sizeof(T)) std::byte* __restrict const dst) noexcept {
+	static_assert(!std::is_trivially_copyable_v<T>, "Move MUST NOT be used for trivially copyable types");
+	std::construct_at(reinterpret_cast<T*>(dst), *reinterpret_cast<const T*>(src));
 }
 
 /// @brief Helper function to create a type by moving from the source.
 /// @tparam T The type of the argument.
 /// @param src The source address.
 /// @param dst The target address.
-template <typename T, typename std::enable_if_t<std::is_nothrow_move_constructible_v<T>, int> = 0>
-void Move(_Inout_updates_bytes_(sizeof(T)) std::byte* const src, _Out_writes_bytes_(sizeof(T)) std::byte* __restrict const dst) noexcept {
+template <typename T>
+requires std::is_nothrow_move_constructible_v<T>
+inline void Move(_Inout_updates_bytes_(sizeof(T)) std::byte* __restrict const src, _Out_writes_bytes_(sizeof(T)) std::byte* __restrict const dst) noexcept {
 	static_assert(!std::is_trivially_copyable_v<T>, "Move MUST NOT be used for trivially copyable types");
-	new (dst) T(std::move(*reinterpret_cast<T*>(src)));
+	std::construct_at(reinterpret_cast<T*>(dst), std::move(*reinterpret_cast<T*>(src)));
 }
 
 /// @brief Helper function to create a type by copying from the source.
@@ -153,363 +150,179 @@ void Move(_Inout_updates_bytes_(sizeof(T)) std::byte* const src, _Out_writes_byt
 /// @tparam T The type of the argument.
 /// @param src The source address.
 /// @param dst The target address.
-template <typename T, typename std::enable_if_t<!std::is_nothrow_move_constructible_v<T>, int> = 0>
-void Move(_In_reads_bytes_(sizeof(T)) std::byte* __restrict const src, _Out_writes_bytes_(sizeof(T)) std::byte* __restrict const dst) noexcept {
+template <typename T>
+requires requires {
+	requires !std::is_nothrow_move_constructible_v<T>;
+} && std::is_nothrow_copy_constructible_v<T>
+inline void Move(_In_reads_bytes_(sizeof(T)) std::byte* __restrict const src, _Out_writes_bytes_(sizeof(T)) std::byte* __restrict const dst) noexcept {
 	static_assert(!std::is_trivially_copyable_v<T>, "Move MUST NOT be used for trivially copyable types");
-	static_assert(std::is_nothrow_copy_constructible_v<T>, "type MUST be nothrow copy constructible of it's not nothrow move constructible");
-	new (dst) T(*reinterpret_cast<const T*>(src));
+	std::construct_at(reinterpret_cast<T*>(dst), *reinterpret_cast<const T*>(src));
 }
 
 /// @brief Helper function to call the destructor of the internal object.
 /// @tparam T The type of the argument.
 /// @param obj The object.
 template <typename T>
-void Destruct(_Inout_updates_bytes_(sizeof(T)) std::byte* __restrict const obj) noexcept {
+requires std::is_nothrow_destructible_v<T>
+inline void Destruct(_Inout_updates_bytes_(sizeof(T)) std::byte* __restrict const obj) noexcept {
 	static_assert(!std::is_trivially_copyable_v<T>, "Destruct MUST NOT be used for trivially copyable types");
-	static_assert(std::is_nothrow_destructible_v<T>, "type MUST be nothrow destructible");
-	reinterpret_cast<T*>(obj)->~T();
+	std::destroy_at(reinterpret_cast<T*>(obj));
 }
 
-using Format = void* (*) (_In_ const void* __restrict) noexcept;
+}  // namespace logdata
 
-/// @brief A struct with all functions to manage objects in the buffer.
-/// @details This is the version used to access the data of `FunctionTableInstance` in the buffer.
-struct FunctionTable {
-	/// @brief Type of the function to construct an argument in the buffer by copying.
-	using Copy = void (*)(_In_ const std::byte* __restrict, _Out_ std::byte* __restrict);
-	/// @brief Type of the function to construct an argument in the buffer by moving.
-	using Move = void (*)(_Inout_ std::byte* __restrict, _Out_ std::byte* __restrict) noexcept;
-	/// @brief Type of the function to destruct an argument in the buffer.
-	using Destruct = void (*)(_Inout_ std::byte* __restrict) noexcept;
 
-	/// @brief A pointer to a function which creates the custom type either by copying. Both addresses can be assumed to be properly aligned.
-	Copy copy;
-	/// @brief A pointer to a function which creates the custom type either by copy or move, whichever is
-	/// more efficient. Both addresses can be assumed to be properly aligned.
-	Move move;
-	/// @brief A pointer to a function which calls the type's destructor.
-	Destruct destruct;
-};
+/// @brief The base class for `LogData`.
+/// @remarks The alignment of the class MUST match the alignment of `new` to allow copying padded values.
+class alignas(__STDCPP_DEFAULT_NEW_ALIGNMENT__) LogDataBase {  // NOLINT(cppcoreguidelines-pro-type-member-init): m_stackBuffer is raw buffer.
+private:
+	using HeapBuffer = std::shared_ptr<std::byte[]>;
 
-/// @brief A struct with all functions to manage objects in the buffer.
-/// @details This is the actual function table with all pointers.
-/// @tparam T The type.
-/// @tparam kPointer `true` if this is a pointer value with null-safe formatting.
-template <typename T>
-struct FunctionTableInstance {
-	/// @brief A pointer to a function which creates the custom type either by copying. Both addresses can be assumed to be properly aligned.
-	FunctionTable::Copy copy = Copy<T>;
-	/// @brief A pointer to a function which creates the custom type either by copy or move, whichever is
-	/// more efficient. Both addresses can be assumed to be properly aligned.
-	FunctionTable::Move move = Move<T>;
-	/// @brief A pointer to a function which calls the type's destructor.
-	FunctionTable::Destruct destruct = Destruct<T>;
-};
+	using Size = internal::logdata::Size;      ///< @brief A data type for indexes in the buffer representing *bytes*.
+	using Length = internal::logdata::Length;  ///< @brief The length of a string in number of *characters*.
+	using Align = internal::logdata::Align;    ///<@ brief Alignment requirement of a data type in *bytes*.
 
-constexpr std::size_t kMaxCustomTypeSize = 0xFFFFFFFu;  // allow max. 255 MB
+	/// @brief Type of a structure with management data for a custom type.
+	using FunctionTable = internal::logdata::FunctionTable;
 
-}  // namespace internal
+	/// @brief Type of a structure with additional management data for custom types which are not trivially copyable.
+	using FunctionTableNonTrivial = internal::logdata::FunctionTableNonTrivial;
 
-/// @brief The class contains all data for formatting and output which happens asynchronously.
-/// @details @internal The stack buffer is allocated in the base class for a better memory layout.
-/// @copyright The interface of this class is based on `class NanoLogLine` from NanoLog.
-class alignas(__STDCPP_DEFAULT_NEW_ALIGNMENT__) LogData {
+	/// @brief Type of a structure with additional management data for custom types which are not no-throw constructible.
+	using FunctionTableNoThrowConstructible = internal::logdata::FunctionTableNoThrowConstructible;
+
 public:
-	/// @brief Create a new target for the various `operator<<` overloads.
-	/// @details The timestamp is not set until `#GenerateTimestamp` is called.
-	/// @param priority The `#Priority`.
-	/// @param message The logged message. This MUST be a literal string, i.e. the value is not copied but always referenced by the pointer.
-	/// @param sourceLocation The source location.
-	LogData() noexcept = default;
+	[[nodiscard]] constexpr LogDataBase() noexcept = default;  // NOLINT(cppcoreguidelines-pro-type-member-init): m_stackBuffer is raw buffer.
 
-	/// @brief Copy the buffers. @details The copy constructor is required for `std::curent_exception`.
-	/// @param logLine The source log line.
-	LogData(const LogData& logLine);
+	/// @brief Copy the buffers. @details The copy constructor is required for exceptions being no-throw copyable
+	/// @param other The source log data.
+	[[nodiscard]] LogDataBase(const LogDataBase& other) noexcept;
 
-	/// @brief Move the buffers.
-	/// @param logLine The source log line.
-	LogData(LogData&& logLine) noexcept;
+	/// @brief Move the buffers. @details The copy constructor is required for exceptions being no-throw moveable.
+	/// @param other The source log data.
+	[[nodiscard]] LogDataBase(LogDataBase&& other) noexcept;
 
 	/// @brief Calls the destructor of every custom argument.
-	~LogData() noexcept;
+	~LogDataBase() noexcept;
 
 public:
-	/// @brief Copy the buffers. @details The assignment operator is required for `std::exception`.
-	/// @param logLine The source log line.
+	/// @brief Copy the buffers. @details The copy constructor is required for exceptions being no-throw assignable.
+	/// @param other The source log data.
 	/// @return This object.
-	LogData& operator=(const LogData& logLine);
+	LogDataBase& operator=(const LogDataBase& other) noexcept;
 
-	/// @brief Move the buffers.
-	/// @param logLine The source log line.
+	/// @brief Move the buffers. @details The copy constructor is required for exceptions being no-throw move-assignable.
+	/// @param other The source log data.
 	/// @return This object.
-	LogData& operator=(LogData&& logLine) noexcept;
+	LogDataBase& operator=(LogDataBase&& other) noexcept;
 
 	/// @brief Add a log argument.
+	/// @tparam T The type of the argument.
 	/// @param arg The argument.
-	/// @return The current object for method chaining.
-	/// @copyright Based on `NanoLogLine::operator<<(int32_t)` from NanoLog.
-	LogData& operator<<(bool arg);
+	/// @copyright Based on `NanoLogLine::operator<<(T)` from NanoLog.
+	template <internal::TriviallyLoggable T>
+	void AddArgument(const T& arg) {
+		Write<std::remove_cv_t<T>>(arg);
+	}
 
-	/// @brief Add a log argument. @note A `char` is distinct from both `signed char` and `unsigned char`.
-	/// @param arg The argument.
-	/// @return The current object for method chaining.
-	/// @copyright Based on `NanoLogLine::operator<<(char)` from NanoLog.
-	LogData& operator<<(char arg);
-
-	/// @brief Add a log argument. @note A `char` is distinct from both `signed char` and `unsigned char`.
-	/// @param arg The argument.
-	/// @return The current object for method chaining.
-	/// @copyright Based on `NanoLogLine::operator<<(char)` from NanoLog.
-	LogData& operator<<(wchar_t arg);
-
-	/// @brief Add a log argument.
-	/// @param arg The argument.
-	/// @return The current object for method chaining.
-	/// @copyright Based on `NanoLogLine::operator<<(char)` from NanoLog.
-	LogData& operator<<(signed char arg);
-
-	/// @brief Add a log argument.
-	/// @param arg The argument.
-	/// @return The current object for method chaining.
-	/// @copyright Based on `NanoLogLine::operator<<(char)` from NanoLog.
-	LogData& operator<<(unsigned char arg);
-
-	/// @brief Add a log argument.
-	/// @param arg The argument.
-	/// @return The current object for method chaining.
-	/// @copyright Based on `NanoLogLine::operator<<(int32_t)` from NanoLog.
-	LogData& operator<<(signed short arg);
-
-	/// @brief Add a log argument.
-	/// @param arg The argument.
-	/// @return The current object for method chaining.
-	/// @copyright Based on `NanoLogLine::operator<<(uint32_t)` from NanoLog.
-	LogData& operator<<(unsigned short arg);
-
-	/// @brief Add a log argument.
-	/// @param arg The argument.
-	/// @return The current object for method chaining.
-	/// @copyright Based on `NanoLogLine::operator<<(int32_t)` from NanoLog.
-	LogData& operator<<(signed int arg);
-
-	/// @brief Add a log argument.
-	/// @param arg The argument.
-	/// @return The current object for method chaining.
-	/// @copyright Based on `NanoLogLine::operator<<(uint32_t)` from NanoLog.
-	LogData& operator<<(unsigned int arg);
-
-	/// @brief Add a log argument.
-	/// @param arg The argument.
-	/// @return The current object for method chaining.
-	/// @copyright Based on `NanoLogLine::operator<<(int32_t)` from NanoLog.
-	LogData& operator<<(signed long arg);
-
-	/// @brief Add a log argument.
-	/// @param arg The argument.
-	/// @return The current object for method chaining.
-	/// @copyright Based on `NanoLogLine::operator<<(uint32_t)` from NanoLog.
-	LogData& operator<<(unsigned long arg);
-
-	/// @brief Add a log argument.
-	/// @param arg The argument.
-	/// @return The current object for method chaining.
-	/// @copyright Based on `NanoLogLine::operator<<(int64_t)` from NanoLog.
-	LogData& operator<<(signed long long arg);
-
-	/// @brief Add a log argument.
-	/// @param arg The argument.
-	/// @return The current object for method chaining.
-	/// @copyright Based on `NanoLogLine::operator<<(uint64_t)` from NanoLog.
-	LogData& operator<<(unsigned long long arg);
-
-	/// @brief Add a log argument.
-	/// @param arg The argument.
-	/// @return The current object for method chaining.
-	/// @copyright Based on `NanoLogLine::operator<<(double)` from NanoLog.
-	LogData& operator<<(float arg);
-
-	/// @brief Add a log argument.
-	/// @param arg The argument.
-	/// @return The current object for method chaining.
-	/// @copyright Based on `NanoLogLine::operator<<(double)` from NanoLog.
-	LogData& operator<<(double arg);
-
-	/// @brief Add an address as a log argument. @note Please note that one MUST NOT use this pointer to access	an
+	/// @brief Add an address as a log argument. @note Please note that one MUST NOT use this pointer to access an
 	/// object because at the time of logging, the object might no longer exist.
 	/// @param arg The argument.
-	/// @return The current object for method chaining.
 	/// @copyright Based on `NanoLogLine::operator<<(uint64_t)` from NanoLog.
-	LogData& operator<<(_In_opt_ const void* __restrict arg);
+	void AddArgument(_In_opt_ const void* __restrict const arg) {
+		Write<const void* __restrict>(arg);
+	}
 
 	/// @brief Add a nullptr s a log argument. Same as providing a void* pointer but required for overload resolution.
-	/// @param arg The argument.
-	/// @return The current object for method chaining.
 	/// @copyright Based on `NanoLogLine::operator<<(uint64_t)` from NanoLog.
-	LogData& operator<<(std::nullptr_t /* arg */);
+	void AddArgument(std::nullptr_t /* arg */) {
+		Write<const void* __restrict>(nullptr);
+	}
 
 	/// @brief Add a log argument. @details The value is copied into the buffer. A maximum of 2^16 characters is printed.
+	/// @tparam CharT The character type.
 	/// @param arg The argument.
-	/// @return The current object for method chaining.
 	/// @copyright Based on `NanoLogLine::operator<<(const char*)` from NanoLog.
-	LogData& operator<<(_In_z_ const char* __restrict arg);
+	template <AnyOf<char, wchar_t> CharT>
+	void AddArgument(_In_z_ const CharT* __restrict const arg) {
+		WriteString(arg, std::char_traits<CharT>::length(arg));
+	}
 
 	/// @brief Add a log argument. @details The value is copied into the buffer. A maximum of 2^16 characters is printed.
+	/// @tparam T The type of the argument.
 	/// @param arg The argument.
-	/// @return The current object for method chaining.
 	/// @copyright Based on `NanoLogLine::operator<<(const char*)` from NanoLog.
-	LogData& operator<<(_In_z_ const wchar_t* __restrict arg);
+	template <internal::ConvertibleToCStr T>
+	void AddArgument(const T& arg) {
+		WriteString(arg.c_str(), internal::ConvertibleToCStrTraits<T>::length(arg));
+	}
 
 	/// @brief Add a log argument. @details The value is copied into the buffer. A maximum of 2^16 characters is printed.
+	/// @tparam Args Template arguments of `std::basic_string_view`.
 	/// @param arg The argument.
-	/// @return The current object for method chaining.
 	/// @copyright Based on `NanoLogLine::operator<<(const char*)` from NanoLog.
-	LogData& operator<<(const std::string& arg);
+	template <typename... Args>
+	void AddArgument(const std::basic_string_view<Args...>& arg) {
+		WriteString(arg.data(), arg.size());
+	}
 
-	/// @brief Add a log argument. @details The value is copied into the buffer. A maximum of 2^16 characters is printed.
+	/// @brief Add a log argument. @details The value is copied into the buffer.
 	/// @param arg The argument.
-	/// @return The current object for method chaining.
-	/// @copyright Based on `NanoLogLine::operator<<(const char*)` from NanoLog.
-	LogData& operator<<(const std::wstring& arg);
+	void AddArgument(_In_opt_ const SID& arg) {
+		WriteSID(arg);
+	}
 
-	/// @brief Add a log argument. @details The value is copied into the buffer. A maximum of 2^16 characters is printed.
+	/// @brief Add a custom argument.
+	/// @details Only this method if a custom `operator>>` MUST NOT be taken into account for adding the type.
+	/// @tparam T The type of the argument.
 	/// @param arg The argument.
-	/// @return The current object for method chaining.
-	/// @copyright Based on `NanoLogLine::operator<<(const char*)` from NanoLog.
-	LogData& operator<<(const std::string_view& arg);
-
-	/// @brief Add a log argument. @details The value is copied into the buffer. A maximum of 2^16 characters is printed.
-	/// @param arg The argument.
-	/// @return The current object for method chaining.
-	/// @copyright Based on `NanoLogLine::operator<<(const char*)` from NanoLog.
-	LogData& operator<<(const std::wstring_view& arg);
-
-	LogData& operator<<(const GUID& arg);
-	LogData& operator<<(const FILETIME& arg);
-	LogData& operator<<(const SYSTEMTIME& arg);
-	LogData& operator<<(const SID& arg);
-	LogData& operator<<(const win32_error& arg);
-	LogData& operator<<(const rpc_status& arg);
-	LogData& operator<<(const hresult& arg);
-
-public:
-	/// @brief Get the arguments for formatting the message.
-	/// @remarks Using a template removes the need to include the headers of {fmt} in all translation units.
-	/// MUST use argument for `std::vector` because guaranteed copy elision does not take place in debug builds.
-	/// @tparam T This MUST be `std::vector<fmt::format_context::format_arg>`.
-	/// @param args The `std::vector` to receive the message arguments.
 	template <typename T>
-	std::uint32_t CopyArgumentsTo(T& args) const;
-
-	/// @brief Returns the formatted log message. @note The name `GetMessage` would conflict with the function from the
-	/// Windows API having the same name.
-	/// @return The log message.
-	//[[nodiscard]] std::string GetLogMessage() const;
-
-	/// @brief Copy a log argument of a custom type to the argument buffer.
-	/// @details This function handles types which are trivially copyable.
-	/// @remark Include `<llamalog/custom_types.h>` in your implementation file before calling this function.
-	/// @tparam T The type of the argument. This type MUST have a copy constructor.
-	/// @param arg The object.
-	/// @return The current object for method chaining.
-	template <typename T, typename F, std::enable_if_t<std::is_trivially_copyable_v<T>, int> = 0>
-	LogData& AddCustomArgument(const T& arg, Format<T, F>& format) {
-		using X = std::remove_cv_t<T>;
-
-		static_assert(alignof(X) <= __STDCPP_DEFAULT_NEW_ALIGNMENT__, "alignment of custom type");
-		static_assert(sizeof(X) <= internal::kMaxCustomTypeSize, "custom type is too large");
-		static_assert(sizeof(void(*)()) == sizeof(format));
-		WriteTriviallyCopyable(reinterpret_cast<const std::byte*>(std::addressof(arg)), sizeof(X), alignof(X), reinterpret_cast<void (*)()>(format));
-		return *this;
+	requires requires {
+		requires !std::is_pointer_v<std::decay<T>>;
+		requires(std::is_trivially_copyable_v<std::remove_cvref_t<T>> || std::is_copy_constructible_v<std::remove_cvref_t<T>>);
 	}
-
-#if 0
-	/// @brief Copy a log argument of a pointer to a custom type to the argument buffer.
-	/// @details This function handles types which are trivially copyable.
-	/// @remark Include `<llamalog/custom_types.h>` in your implementation file before calling this function.
-	/// @tparam T The type of the argument. This type MUST have a copy constructor.
-	/// @param arg The pointer to an object.
-	/// @return The current object for method chaining.
-	template <typename T, typename F, std::enable_if_t<std::is_trivially_copyable_v<T>, int> = 0>
-	LogData& AddCustomArgument(const T* arg, Format<T, F>& format) {
-		if (arg) {
-			using X = std::remove_pointer_t<std::remove_cv_t<T>>;
-
-			static_assert(alignof(X) <= __STDCPP_DEFAULT_NEW_ALIGNMENT__, "alignment of custom type");
-			static_assert(sizeof(X) <= internal::kMaxCustomTypeSize, "custom type is too large");
-			WriteTriviallyCopyable(reinterpret_cast<const std::byte*>(arg), sizeof(X), alignof(X), reinterpret_cast<void (*)()>(format));
+	void AddCustomArgument(T&& arg) {
+		using X = std::decay_t<T>;
+		if constexpr (std::is_trivially_copyable_v<X>) {
+			X* __restrict const address = WriteTriviallyCopyable<std::decay_t<T>>();  // not writing X gives nicer error messages
+			std::memcpy(address, std::addressof(arg), sizeof(X));
 		} else {
-			WriteNullPointer();
+			X* __restrict const address = WriteNonTriviallyCopyable<std::decay_t<T>>();  // not writing X gives nicer error messages
+			if constexpr (std::is_move_constructible_v<X>) {
+				std::construct_at(address, std::forward<T>(arg));
+			} else {
+				std::construct_at(address, arg);
+			}
 		}
-		return *this;
 	}
-
-	/// @brief Copy a log argument of a custom type to the argument buffer.
-	/// @details This function handles types which are not trivially copyable. However, the type MUST support copy construction.
-	/// @note The type @p T MUST be both copy constructible and either nothrow move constructible or nothrow copy constructible.
-	/// @remark Include `<llamalog/custom_types.h>` in your implementation file before calling this function.
-	/// @tparam T The type of the argument.
-	/// @param arg The object.
-	/// @return The current object for method chaining.
-	template <typename T, std::enable_if_t<!std::is_trivially_copyable_v<T>, int> = 0>
-	LogData& AddCustomArgument(const T& arg) {
-		using X = std::remove_cv_t<T>;
-
-		static_assert(alignof(X) <= __STDCPP_DEFAULT_NEW_ALIGNMENT__, "alignment of custom type");
-		static_assert(sizeof(X) <= internal::kMaxCustomTypeSize, "custom type is too large");
-		static_assert(std::is_copy_constructible_v<X>, "type MUST be copy constructible");
-
-		using FunctionTable = internal::FunctionTableInstance<X, false, kEscape>;  // offsetof does not support , in type
-		static_assert(sizeof(FunctionTable) == sizeof(internal::FunctionTable));
-		static_assert(offsetof(FunctionTable, copy) == offsetof(internal::FunctionTable, copy));
-		static_assert(offsetof(FunctionTable, move) == offsetof(internal::FunctionTable, move));
-		static_assert(offsetof(FunctionTable, destruct) == offsetof(internal::FunctionTable, destruct));
-		static_assert(offsetof(FunctionTable, createFormatArg) == offsetof(internal::FunctionTable, createFormatArg));
-
-		static constexpr FunctionTable kFunctionTable;
-		std::byte* __restrict const ptr = WriteNonTriviallyCopyable(sizeof(X), alignof(X), static_cast<const void*>(&kFunctionTable));
-		new (ptr) X(arg);
-		return *this;
-	}
-
-	/// @brief Copy a log argument of a pointer to a custom type to the argument buffer.
-	/// @details This function handles types which are not trivially copyable. However, the type MUST support copy construction.
-	/// @note The type @p T MUST be both copy constructible and either nothrow move constructible or nothrow copy constructible.
-	/// @remark Include `<llamalog/custom_types.h>` in your implementation file before calling this function.
-	/// @tparam T The type of the argument.
-	/// @param arg The pointer to an object.
-	/// @return The current object for method chaining.
-	template <typename T, bool kEscaped = false, typename std::enable_if_t<!std::is_trivially_copyable_v<T>, int> = 0>
-	LogData& AddCustomArgument(const T* arg) {
-		if (arg) {
-			using X = std::remove_pointer_t<std::remove_cv_t<T>>;
-
-			static_assert(alignof(X) <= __STDCPP_DEFAULT_NEW_ALIGNMENT__, "alignment of custom type");
-			static_assert(sizeof(X) <= internal::kMaxCustomTypeSize, "custom type is too large");
-			static_assert(std::is_copy_constructible_v<X>, "type MUST be copy constructible");
-
-			using FunctionTable = internal::FunctionTableInstance<X, true, kEscape>;  // offsetof does not support , in type
-			static_assert(sizeof(FunctionTable) == sizeof(internal::FunctionTable));
-			static_assert(offsetof(FunctionTable, copy) == offsetof(internal::FunctionTable, copy));
-			static_assert(offsetof(FunctionTable, move) == offsetof(internal::FunctionTable, move));
-			static_assert(offsetof(FunctionTable, destruct) == offsetof(internal::FunctionTable, destruct));
-			static_assert(offsetof(FunctionTable, createFormatArg) == offsetof(internal::FunctionTable, createFormatArg));
-
-			static constexpr FunctionTable kFunctionTable;
-			std::byte* __restrict const ptr = WriteNonTriviallyCopyable(sizeof(X), alignof(X), static_cast<const void*>(&kFunctionTable));
-			new (ptr) X(*arg);
-		} else {
-			WriteNullPointer();
-		}
-		return *this;
-	}
-#endif
 
 public:
-	using Size = std::uint32_t;    ///< @brief A data type for indexes in the buffer representing *bytes*.
-	using Length = std::uint16_t;  ///< @brief The length of a string in number of *characters*.
-	using Align = std::uint8_t;    ///<@ brief Alignment requirement of a data type in *bytes*.
+	/// @brief Get the arguments for writing the message.
+	/// @tparam A The type of the log arguments.
+	/// @param args The target to receive the message arguments.
+	/// @copyright Derived from `NanoLogLine::stringify(std::ostream&)` from NanoLog.
+	template <LogArgs A>
+	void CopyArgumentsTo(_Inout_ A& args) const;
 
 private:
+	/// @brief Gets the heap buffer for writing.
+	/// @remarks The object does not yet exist, if `m_hasHeapBuffer` is false.
+	/// @return The heap buffer or uninitialized memory.
+	[[nodiscard]] HeapBuffer& GetHeapBuffer() noexcept;
+
+	/// @brief Gets the heap buffer for reading.
+	/// @remarks The object does not yet exist, if `m_hasHeapBuffer` is false.
+	/// @return The heap buffer or uninitialized memory.
+	[[nodiscard]] const HeapBuffer& GetHeapBuffer() const noexcept;
+
+	/// @brief Get the size of the heap buffer.
+	/// @return The size of the heap buffer.
+	[[nodiscard]] Size& GetHeapBufferSize() noexcept;
+
+	/// @brief Get the size of the heap buffer.
+	/// @return The size of the heap buffer.
+	[[nodiscard]] const Size& GetHeapBufferSize() const noexcept;
+
 	/// @brief Get the argument buffer for writing.
 	/// @return The start of the buffer.
 	/// @copyright Derived from `NanoLogLine::buffer` from NanoLog.
@@ -522,9 +335,10 @@ private:
 
 	/// @brief Get the current position in the argument buffer ensuring that enough space exists for the next argument.
 	/// @param additionalBytes The number of bytes that will be appended.
+	/// @param forceHeap If `true`, a heap buffer is allocated so that copying the object only requires a simple pointer copy.
 	/// @return The next write position.
 	/// @copyright Derived from `NanoLogLine::buffer` from NanoLog.
-	[[nodiscard]] _Ret_notnull_ __declspec(restrict) std::byte* GetWritePosition(Size additionalBytes);
+	[[nodiscard]] _Ret_notnull_ __declspec(restrict) std::byte* GetWritePosition(Size additionalBytes, bool forceHeap = false);
 
 	/// @brief Copy an argument to the buffer.
 	/// @details @internal The internal layout is the `TypeId` followed by the bytes of the value.
@@ -532,19 +346,7 @@ private:
 	/// @param arg The value to add.
 	/// @copyright Derived from both methods `NanoLogLine::encode` from NanoLog.
 	template <typename T>
-	void Write(T arg);
-
-	/// @brief Copy a pointer argument to the buffer.
-	/// @details @internal The internal layout is the `TypeId` followed by the bytes of the value.
-	/// If @p arg is the `nullptr`, a special NullValue argument is added.
-	/// @tparam T The type of the argument. The type MUST be copyable using `std::memcpy`.
-	/// @param arg The value to add.
-	// template <typename T>
-	// void WritePointer(const T* arg);
-
-	/// @brief Copy a nullptr argument to the buffer.
-	/// @remarks This function is used internally by `#WritePointer` and `#AddCustomArgument`.
-	void WriteNullPointer();
+	void Write(std::conditional_t<std::is_fundamental_v<T>, const T, const T&> arg);
 
 	/// @brief Copy a string to the argument buffer.
 	/// @details @internal The internal layout is the `TypeId` followed by the size of the string in characters (NOT
@@ -557,61 +359,140 @@ private:
 	template <typename T>
 	void WriteString(_In_reads_(len) const T* __restrict arg, std::size_t len);
 
+	/// @brief Copy a `SID` to the argument buffer.
+	/// @param arg The `SID` to add.
 	void WriteSID(const SID& arg);
 
-	/// @brief Copy a string to the argument buffer.
-	/// @details @internal The internal layout is the `TypeId` followed by the size of the string in characters (NOT
-	/// including a terminating null character), optional padding as required and finally the string's characters (again
-	/// NOT including a terminating null character).
-	/// @remarks The type of @p len is `std::size_t` because the check if the length exceeds the capacity of `#Length` happens inside this function.
-	/// @param arg The string to add.
-	/// @param len The string length in characters NOT including a terminating null character.
-	/// @copyright Derived from `NanoLogLine::encode_c_string` from NanoLog.
-	// void WriteString(_In_reads_(len) const wchar_t* __restrict arg, std::size_t len);
+	/// @brief Reserve space for a custom trivially copyable type in the argument buffer.
+	/// @tparam T The type of the argument.
+	/// @return The address where the type MUST be constructed by the caller.
+	template <typename T>
+	[[nodiscard]] _Ret_notnull_ T* WriteTriviallyCopyable() {
+		static_assert(std::is_same_v<T, std::decay_t<T>>, "unnecessary code duplication");
+		static_assert(std::is_trivially_copyable_v<T>, "type MUST be trivially copyable");
+		static_assert(alignof(T) <= __STDCPP_DEFAULT_NEW_ALIGNMENT__, "alignment of custom type");
+		static_assert(sizeof(T) <= internal::logdata::kMaxCustomTypeSize, "custom type is too large");
 
-	/// @brief Add a custom object to the argument buffer.
-	/// @details @internal The internal layout is the `TypeId` followed by the size of the padding for @p T, a pointer
-	/// to the function to create the formatter argument, the size of the data, padding as required and finally the
-	/// bytes of @p ptr.
-	/// @remark The function to create the formatter argument is supplied as a void (*)() pointer which removes the compile
-	/// time dependency to {fmt} from this header.
-	/// @param ptr A pointer to the argument data.
-	/// @param objectSize The size of the object.
-	/// @param align The alignment requirement of the type.
-	/// @param createFormatArg A pointer to a function which has a single argument of type `std::byte*` and returns a
-	/// newly created `fmt::format_context::format_arg` object.
-	void WriteTriviallyCopyable(_In_reads_bytes_(objectSize) const std::byte* __restrict ptr, Size objectSize, Align align, _In_ void (*format)());
+		constexpr static FunctionTable kFunctionTable{
+		    .align = alignof(T),
+		    .size = sizeof(T),
+		    .addEventData = internal::logdata::AddLogArgs<LogEventArgs, T>,
+		    .addFormatArgs = internal::logdata::AddLogArgs<LogFormatArgs, T>};
+		return static_cast<T*>(WriteCustomType<true, true>(&kFunctionTable));
+	}
 
-	/// @brief Add a custom object to the argument buffer.
-	/// @details @internal The internal layout is the `TypeId` followed by the size of the padding for @p T, the pointer
-	/// to the function table, the size of the data, padding as required and finally the bytes of the object.
-	/// @note This function does NOT copy the object but only returns the target address.
-	/// @remark @p functionTable is supplied as a void pointer to remove the compile time dependency to {fmt} from this header.
-	/// @param objectSize The size of the object.
-	/// @param align The alignment requirement of the type.
-	/// @param functionTable A pointer to the `internal::FunctionTable`.
-	/// @return An address where to copy the current argument.
-	[[nodiscard]] __declspec(restrict) std::byte* WriteNonTriviallyCopyable(Size objectSize, Align align, _In_ const void* functionTable);
+	/// @brief Reserve space for a custom, but not trivially copyable type in the argument buffer.
+	/// @tparam T The type of the argument.
+	/// @return The address where the type MUST be constructed by the caller.
+	template <typename T>
+	[[nodiscard]] _Ret_notnull_ T* WriteNonTriviallyCopyable() {
+		static_assert(std::is_same_v<T, std::decay_t<T>>, "unnecessary code duplication");
+		static_assert(!std::is_trivially_copyable_v<T>, "type MUST NOT be trivially copyable");
+		static_assert(alignof(T) <= __STDCPP_DEFAULT_NEW_ALIGNMENT__, "alignment of custom type");
+		static_assert(sizeof(T) <= internal::logdata::kMaxCustomTypeSize, "custom type is too large");
+
+		if constexpr (std::is_nothrow_copy_constructible_v<T>) {
+			constexpr static FunctionTableNoThrowConstructible kFunctionTable{
+			    {{.align = alignof(T),
+			      .size = sizeof(T),
+			      .addEventData = internal::logdata::AddLogArgs<LogEventArgs, T>,
+			      .addFormatArgs = internal::logdata::AddLogArgs<LogFormatArgs, T>},
+			     internal::logdata::Destruct<T>},
+			    internal::logdata::Copy<T>,
+			    internal::logdata::Move<T>,
+			};
+			return static_cast<T*>(WriteCustomType<false, true>(&kFunctionTable));
+		} else {
+			constexpr static FunctionTableNonTrivial kFunctionTable{
+			    {.align = alignof(T),
+			     .size = sizeof(T),
+			     .addEventData = internal::logdata::AddLogArgs<LogEventArgs, T>,
+			     .addFormatArgs = internal::logdata::AddLogArgs<LogFormatArgs, T>},
+			    internal::logdata::Destruct<T>};
+			return static_cast<T*>(WriteCustomType<false, false>(&kFunctionTable));
+		}
+	}
+
+	/// @brief Get space for a custom object in the argument buffer.
+	/// @details @internal The internal layout is the `TypeId` followed by a pointer to the function table, padding as
+	/// required and finally the bytes of the object.
+	/// @tparam kTriviallyCopyable `true` if the type is trivially copyable.
+	/// @tparam kNoThrowConstructible `true` if the type is no-throw constructible.
+	/// @param pFunctionTable A pointer to the `FunctionTable` or a derived type.
+	/// @return A pointer to the location where the custom type MUST be created.
+	template <bool kTriviallyCopyable, bool kNoThrowConstructible>
+	[[nodiscard]] _Ret_notnull_ void* WriteCustomType(_In_ const FunctionTable* __restrict pFunctionTable);
 
 private:
+	struct HeapBufferInfo {
+		/// @brief The heap buffer used for larger payloads.
+		/// @details Using std::shared_ptr to allow noexcept copy operation for use in exceptions.
+		/// @copyright Same as `NanoLogLine::m_heap_buffer` from NanoLog.
+		HeapBuffer heapBuffer;
+		/// @brief The current capacity of the buffer in bytes.
+		/// @copyright Same as `NanoLogLine::m_buffer_size` from NanoLog.
+		Size size;
+	};
+
 	/// @brief The stack buffer used for small payloads.
+	/// @remarks When `m_hashHeapBuffer` is `true`, an object of type `HeapBufferInfo` is present at this address.
+	/// Not using a union because that would add unwanted padding.
 	/// @copyright Same as `NanoLogLine::m_stack_buffer` from NanoLog.
-	std::byte m_stackBuffer[M3C_LOGDATA_SIZE                        // target size
-	                        - sizeof(bool)                          // m_hasNonTriviallyCopyable
-	                        - sizeof(Size) * 2                      // m_used, m_size
-	                        - sizeof(std::unique_ptr<std::byte[]>)  // m_heapBuffer
+	std::byte m_stackBuffer[M3C_LOGDATA_SIZE  // target size
+	                        - sizeof(bool)    // m_hasNonTriviallyCopyable
+	                        - sizeof(Size)    // m_used
 	];
+	static_assert(sizeof(m_stackBuffer) >= sizeof(HeapBufferInfo));
 
-	bool m_hasNonTriviallyCopyable = false;  ///< @brief `true` if at least one argument needs special handling on buffer operations. @hideinitializer
+	/// @brief `true` if a heap buffer is present inside `m_stackBuffer`. @hideinitializer
+	bool m_hasHeapBuffer : 1 = false;
+	/// @brief `true` if at least one argument needs special handling on buffer operations. @hideinitializer
+	bool m_hasNonTriviallyCopyable : 1 = false;
 
+	/// @brief The number of bytes used in the buffer.
 	/// @copyright Same as `NanoLogLine::m_bytes_used` from NanoLog. @hideinitializer
-	Size m_used = 0;  ///< @brief The number of bytes used in the buffer.
-
-	/// @copyright Same as `NanoLogLine::m_buffer_size` from NanoLog. @hideinitializer
-	Size m_size = sizeof(m_stackBuffer);  ///< @brief The current capacity of the buffer in bytes.
-
-	/// @copyright Same as `NanoLogLine::m_heap_buffer` from NanoLog.
-	std::unique_ptr<std::byte[]> m_heapBuffer;  ///< The buffer on the heap if the stack buffer became too small.
+	Size m_used = 0;
 };
 
-}  // namespace m3c::internal
+}  // namespace internal
+
+
+/// @brief The class contains additional data for logging exceptions.s
+/// @details The class is similar to a `std::vector` of `std::variant` objects, but more memory efficient.
+/// @remarks Modeled as a subclass of `internal::LogData` to hide access to methods `AddArgument` and `AddCustomArgument`.
+/// @copyright The interface of this class is based on `class NanoLogLine` from NanoLog.
+class LogData : private internal::LogDataBase {
+public:
+	using LogDataBase::LogDataBase;
+	using LogDataBase::operator=;
+	using LogDataBase::AddCustomArgument;
+	using LogDataBase::CopyArgumentsTo;
+
+	/// @brief Add a custom log argument, using custom operator >> if available.
+	/// @param arg The argument.
+	/// @return The current object for method chaining.
+	template <typename T>
+	LogData& operator<<(T&& arg) {
+		if constexpr (internal::LogCustomTo<T, LogData>) {
+			std::forward<T>(arg) >> *this;
+		} else if constexpr (internal::LogArgAddableTo<T, internal::LogDataBase>) {
+			AddArgument(std::forward<T>(arg));
+		} else {
+			AddCustomArgument(std::forward<T>(arg));
+		}
+		return *this;
+	}
+};
+
+}  // namespace m3c
+
+
+/// @brief Log a `PropVariant` as `VT_xx: \<value\>`.
+/// @param logData The `LogData`.
+/// @param arg The value.
+void operator>>(const VARIANT& arg, _Inout_ m3c::LogData& logData);
+
+/// @brief Log a `PropVariant` as `VT_xx: \<value\>`.
+/// @param logData The `LogData`.
+/// @param arg The value.
+void operator>>(const PROPVARIANT& arg, _Inout_ m3c::LogData& logData);

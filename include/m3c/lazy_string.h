@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+/// @file
 #pragma once
 
 #include <sal.h>
@@ -23,14 +24,11 @@ limitations under the License.
 #include <compare>
 #include <cstdint>
 #include <cstring>
-#include <cwchar>
 #include <functional>
-#include <new>
+#include <memory>
 #include <string>
-
-namespace llamalog {
-class LogLine;
-}  // namespace llamalog
+#include <string_view>
+#include <utility>
 
 namespace m3c {
 
@@ -40,6 +38,8 @@ namespace m3c {
 template <std::uint16_t kSize, typename CharT>
 class basic_lazy_string {
 public:
+	/// @brief The character type of this class.
+	using value_type = CharT;
 	/// @brief The type of `std::basic_string` objects which are handled by this class.
 	using string_type = std::basic_string<CharT>;
 	///< @brief The type of `std::basic_string_view` objects which are handled by this class.
@@ -49,22 +49,22 @@ public:
 
 public:
 	/// @brief Create a new empty `basic_lazy_string` object.
-	constexpr basic_lazy_string() noexcept
-		: m_inline(true)
-		, m_size(0) {
+	[[nodiscard]] constexpr basic_lazy_string() noexcept
+	    : m_inline(true)
+	    , m_size(0) {
 		m_buffer[0] = 0;
 	}
 
 	/// @brief Create a copy of another `basic_lazy_string` object.
 	/// @note This constructor is used if both strings share the same size of the internal buffer.
 	/// @param oth The other `basic_lazy_string` object.
-	basic_lazy_string(const basic_lazy_string& oth) {
-		m_inline = oth.size() < kSize;
+	[[nodiscard]] constexpr basic_lazy_string(const basic_lazy_string& oth)
+	    : m_inline(oth.size() < kSize) {
 		if (m_inline) {
 			m_size = static_cast<size_type>(oth.size());
 			std::memcpy(m_buffer, oth.c_str(), (m_size + 1) * sizeof(CharT));
 		} else {
-			new (&m_string) string_type(oth.m_string);
+			std::construct_at(&m_string, oth.m_string);
 		}
 	}
 
@@ -73,16 +73,16 @@ public:
 	/// @tparam kOthSize The size of the internal buffer of @p oth.
 	/// @param oth The other `basic_lazy_string` object.
 	template <size_type kOthSize>
-	basic_lazy_string(const basic_lazy_string<kOthSize, CharT>& oth) {  // NOLINT(google-explicit-constructor): Allow implicit conversion from other basic_lazy_string objects.
-		m_inline = oth.size() < kSize;
+	[[nodiscard]] constexpr basic_lazy_string(const basic_lazy_string<kOthSize, CharT>& oth)  // NOLINT(google-explicit-constructor): Allow implicit conversion from other basic_lazy_string objects.
+	    : m_inline(oth.size() < kSize) {
 		if (m_inline) {
 			m_size = static_cast<size_type>(oth.size());
 			std::memcpy(m_buffer, oth.c_str(), (m_size + 1) * sizeof(CharT));
 		} else {
 			if (oth.m_inline) {
-				new (&m_string) string_type(oth.m_buffer, oth.m_size);
+				std::construct_at(&m_string, oth.m_buffer, oth.m_size);
 			} else {
-				new (&m_string) string_type(oth.m_string);
+				std::construct_at(&m_string, oth.m_string);
 			}
 		}
 	}
@@ -90,13 +90,13 @@ public:
 	/// @brief Create a new instance by moving another `basic_lazy_string` into this instance.
 	/// @note This constructor is used if both strings share the same size of the internal buffer.
 	/// @param oth The other `basic_lazy_string` object.
-	basic_lazy_string(basic_lazy_string&& oth) noexcept
-		: m_inline(oth.m_inline) {
+	[[nodiscard]] constexpr basic_lazy_string(basic_lazy_string&& oth) noexcept
+	    : m_inline(oth.m_inline) {
 		if (m_inline) {
 			m_size = oth.m_size;
 			std::memcpy(m_buffer, oth.m_buffer, (m_size + 1) * sizeof(CharT));
 		} else {
-			new (&m_string) string_type(std::move(oth.m_string));
+			std::construct_at(&m_string, std::move(oth.m_string));
 		}
 	}
 
@@ -105,26 +105,26 @@ public:
 	/// @tparam kOthSize The size of the internal buffer of @p oth.
 	/// @param oth The other `basic_lazy_string` object.
 	template <size_type kOthSize>
-	basic_lazy_string(basic_lazy_string<kOthSize, CharT>&& oth) {  // NOLINT(google-explicit-constructor): Allow implicit conversion from other basic_lazy_string objects.
+	[[nodiscard]] constexpr basic_lazy_string(basic_lazy_string<kOthSize, CharT>&& oth) {  // NOLINT(google-explicit-constructor): Allow implicit conversion from other basic_lazy_string objects.
 		if (oth.m_inline) {
 			m_inline = oth.m_size < kSize;
 			if (m_inline) {
 				m_size = oth.m_size;
 				std::memcpy(m_buffer, oth.m_buffer, (m_size + 1) * sizeof(CharT));
 			} else {
-				new (&m_string) string_type(oth.m_buffer, oth.m_size);
+				std::construct_at(&m_string, oth.m_buffer, oth.m_size);
 			}
 		} else {
 			// move string even if it is smaller than our buffer
-			new (&m_string) string_type(std::move(oth.m_string));
+			std::construct_at(&m_string, std::move(oth.m_string));
 			m_inline = false;
 		}
 	}
 
 	/// @brief Create a new instance from a null-terminated character sequence.
 	/// @param str A pointer to a null-terminated character sequence.
-	basic_lazy_string(_In_z_ const CharT* str)  // NOLINT(google-explicit-constructor, cppcoreguidelines-pro-type-member-init): Allow implicit conversion from character sequences, forward to other constructor.
-		: basic_lazy_string(str, std::char_traits<CharT>::length(str)) {
+	[[nodiscard]] constexpr basic_lazy_string(_In_z_ const CharT* str)  // NOLINT(google-explicit-constructor, cppcoreguidelines-pro-type-member-init): Allow implicit conversion from character sequences, forward to other constructor.
+	    : basic_lazy_string(str, std::char_traits<CharT>::length(str)) {
 		// empty
 	}
 
@@ -132,7 +132,7 @@ public:
 	/// @note The characters sequence MUST have at least @p length non-null characters.
 	/// @param str A pointer to a character sequence.
 	/// @param length The number of non-null characters to create this string from.
-	basic_lazy_string(_In_reads_or_z_(length) const CharT* str, const std::size_t length) {
+	[[nodiscard]] constexpr basic_lazy_string(_In_reads_or_z_(length) const CharT* str, const std::size_t length) {
 		assert(!std::char_traits<CharT>::find(str, length, 0));
 
 		m_inline = length < kSize;
@@ -141,13 +141,13 @@ public:
 			std::memcpy(m_buffer, str, m_size * sizeof(CharT));
 			m_buffer[m_size] = 0;
 		} else {
-			new (&m_string) string_type(str, length);
+			std::construct_at(&m_string, str, length);
 		}
 	}
 
 	/// @brief Create a new instance as a copy of a `std::basic_string`.
 	/// @param str The `std::basic_string` object.
-	basic_lazy_string(const string_type& str) {  // NOLINT(google-explicit-constructor): Allow implicit conversion from std::basic_string objects.
+	[[nodiscard]] constexpr basic_lazy_string(const string_type& str) {  // NOLINT(google-explicit-constructor): Allow implicit conversion from std::basic_string objects.
 		const std::size_t length = str.size();
 		m_inline = length < kSize;
 		if (m_inline) {
@@ -155,31 +155,31 @@ public:
 			m_size = static_cast<size_type>(length);
 			std::memcpy(m_buffer, str.c_str(), (length + 1) * sizeof(CharT));
 		} else {
-			new (&m_string) string_type(str);
+			std::construct_at(&m_string, str);
 		}
 	}
 
 	/// @brief Create a new instance by moving a `std::basic_string` into the newly created instance.
 	/// @param str The `std::basic_string` object.
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init): m_size is only set for inline strings.
-	basic_lazy_string(string_type&& str) noexcept  // NOLINT(google-explicit-constructor): Allow implicit conversion from std::basic_string objects.
-		: m_inline(false) {
+	[[nodiscard]] constexpr basic_lazy_string(string_type&& str) noexcept  // NOLINT(google-explicit-constructor): Allow implicit conversion from std::basic_string objects.
+	    : m_inline(false) {
 		// always move-in string which might save copying all data
-		new (&m_string) string_type(std::move(str));
+		std::construct_at(&m_string, std::move(str));
 	}
 
 	/// @brief Create a new instance as a copy of a `std::basic_string_view`.
 	/// @param str The `std::basic_string_view` object.
 	// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init): Forwards to other constructor.
-	basic_lazy_string(const string_view_type& str) noexcept  // NOLINT(google-explicit-constructor): Allow implicit conversion from std::basic_string_view objects.
-		: basic_lazy_string(str.data(), str.size()) {
+	[[nodiscard]] constexpr basic_lazy_string(const string_view_type& str) noexcept  // NOLINT(google-explicit-constructor): Allow implicit conversion from std::basic_string_view objects.
+	    : basic_lazy_string(str.data(), str.size()) {
 		// empty
 	}
 
 	/// @brief Clears any allocated resources.
-	~basic_lazy_string() noexcept {
+	constexpr ~basic_lazy_string() noexcept {
 		if (!m_inline) {
-			m_string.~basic_string();
+			std::destroy_at(&m_string);
 		}
 	}
 
@@ -192,19 +192,20 @@ public:
 	/// @note This operator  is used if both strings share the same size of the internal buffer.
 	/// @param oth The other `basic_lazy_string` object.
 	/// @return A reference to this instance.
-	basic_lazy_string& operator=(const basic_lazy_string& oth) {
-		if (this == std::addressof(oth)) [[unlikely]] {
+	constexpr basic_lazy_string& operator=(const basic_lazy_string& oth) {
+		if (this == std::addressof(oth)) {
+			[[unlikely]];
 			// do nothing
 		} else if (oth.size() < kSize) {
 			if (!m_inline) {
-				m_string.~basic_string();
+				std::destroy_at(&m_string);
 				m_inline = true;
 			}
 			m_size = static_cast<size_type>(oth.size());
 			std::memcpy(m_buffer, oth.c_str(), (m_size + 1) * sizeof(CharT));
 		} else {
 			if (m_inline) {
-				new (&m_string) string_type(oth.m_string);
+				std::construct_at(&m_string, oth.m_string);
 				m_inline = false;
 			} else {
 				m_string = oth.m_string;
@@ -218,10 +219,10 @@ public:
 	/// @param oth The other `basic_lazy_string` object.
 	/// @return A reference to this instance.
 	template <size_type kOthSize>
-	basic_lazy_string& operator=(const basic_lazy_string<kOthSize, CharT>& oth) {
+	constexpr basic_lazy_string& operator=(const basic_lazy_string<kOthSize, CharT>& oth) {
 		if (oth.size() < kSize) {
 			if (!m_inline) {
-				m_string.~basic_string();
+				std::destroy_at(&m_string);
 				m_inline = true;
 			}
 			m_size = static_cast<size_type>(oth.size());
@@ -229,14 +230,14 @@ public:
 		} else {
 			if (oth.m_inline) {
 				if (m_inline) {
-					new (&m_string) string_type(oth.m_buffer, oth.m_size);
+					std::construct_at(&m_string, oth.m_buffer, oth.m_size);
 					m_inline = false;
 				} else {
 					m_string.assign(oth.m_buffer, oth.m_size);
 				}
 			} else {
 				if (m_inline) {
-					new (&m_string) string_type(oth.m_string);
+					std::construct_at(&m_string, oth.m_string);
 					m_inline = false;
 				} else {
 					m_string = oth.m_string;
@@ -250,19 +251,20 @@ public:
 	/// @note This operator is used if both strings share the same size of the internal buffer.
 	/// @param oth The other `basic_lazy_string` object.
 	/// @return A reference to this instance.
-	basic_lazy_string& operator=(basic_lazy_string&& oth) noexcept {
-		if (this == std::addressof(oth)) [[unlikely]] {
+	constexpr basic_lazy_string& operator=(basic_lazy_string&& oth) noexcept {
+		if (this == std::addressof(oth)) {
+			[[unlikely]];
 			// do nothing
 		} else if (oth.m_inline) {
 			if (!m_inline) {
-				m_string.~basic_string();
+				std::destroy_at(&m_string);
 				m_inline = true;
 			}
 			m_size = oth.m_size;
 			std::memcpy(m_buffer, oth.m_buffer, (m_size + 1) * sizeof(CharT));
 		} else {
 			if (m_inline) {
-				new (&m_string) string_type(std::move(oth.m_string));
+				std::construct_at(&m_string, std::move(oth.m_string));
 				m_inline = false;
 			} else {
 				m_string = std::move(oth.m_string);
@@ -276,24 +278,24 @@ public:
 	/// @param oth The other `basic_lazy_string` object.
 	/// @return A reference to this instance.
 	template <size_type kOthSize>
-	basic_lazy_string& operator=(basic_lazy_string<kOthSize, CharT>&& oth) {
+	constexpr basic_lazy_string& operator=(basic_lazy_string<kOthSize, CharT>&& oth) {
 		if (oth.m_inline) {
 			if (oth.m_size < kSize) {
 				if (!m_inline) {
-					m_string.~basic_string();
+					std::destroy_at(&m_string);
 					m_inline = true;
 				}
 				m_size = oth.m_size;
 				std::memcpy(m_buffer, oth.m_buffer, (m_size + 1) * sizeof(CharT));
 			} else if (m_inline) {
-				new (&m_string) string_type(oth.m_buffer, oth.m_size);
+				std::construct_at(&m_string, oth.m_buffer, oth.m_size);
 				m_inline = false;
 			} else {
 				m_string.assign(oth.m_buffer, oth.m_size);
 			}
 		} else {
 			if (m_inline) {
-				new (&m_string) string_type(std::move(oth.m_string));
+				std::construct_at(&m_string, std::move(oth.m_string));
 				m_inline = false;
 			} else {
 				m_string = std::move(oth.m_string);
@@ -305,8 +307,8 @@ public:
 	/// @brief Assign a null-terminated character sequence to this instance.
 	/// @param str A pointer to a null-terminated character sequence.
 	/// @return A reference to this instance.
-	basic_lazy_string& operator=(const CharT* const str) {
-		return assign(str, std::wcslen(str));
+	constexpr basic_lazy_string& operator=(const CharT* const str) {
+		return assign(str, std::char_traits<CharT>::length(str));
 	}
 
 	/// @brief Assign a character sequence to this instance.
@@ -314,12 +316,12 @@ public:
 	/// @param str A pointer to a null-terminated character sequence.
 	/// @param length The number of non-null characters to create this string from.
 	/// @return A reference to this instance.
-	basic_lazy_string& assign(const CharT* const str, const std::size_t length) {
+	constexpr basic_lazy_string& assign(const CharT* const str, const std::size_t length) {
 		assert(!std::char_traits<CharT>::find(str, length, 0));
 
 		if (length < kSize) {
 			if (!m_inline) {
-				m_string.~basic_string();
+				std::destroy_at(&m_string);
 				m_inline = true;
 			}
 			m_size = static_cast<size_type>(length);
@@ -327,7 +329,7 @@ public:
 			m_buffer[m_size] = 0;
 		} else {
 			if (m_inline) {
-				new (&m_string) string_type(str, length);
+				std::construct_at(&m_string, str, length);
 				m_inline = false;
 			} else {
 				m_string.assign(str, length);
@@ -339,16 +341,16 @@ public:
 	/// @brief Assign a copy of a `std::basic_string` to this instance.
 	/// @param str The `std::basic_string` object.
 	/// @return A reference to this instance.
-	basic_lazy_string& operator=(const string_type& str) {
+	constexpr basic_lazy_string& operator=(const string_type& str) {
 		return assign(str.c_str(), str.size());
 	}
 
 	/// @brief Move a `std::basic_string` into this instance.
 	/// @param str The `std::basic_string` object.
 	/// @return A reference to this instance.
-	basic_lazy_string& operator=(string_type&& str) {
+	constexpr basic_lazy_string& operator=(string_type&& str) {
 		if (m_inline) {
-			new (&m_string) string_type(std::move(str));
+			std::construct_at(&m_string, std::move(str));
 			m_inline = false;
 		} else {
 			m_string = std::move(str);
@@ -359,7 +361,7 @@ public:
 	/// @brief Assign a copy of a `std::basic_string_view` to this instance.
 	/// @param str The `std::basic_string_view` object.
 	/// @return A reference to this instance.
-	basic_lazy_string& operator=(const string_view_type& str) {
+	constexpr basic_lazy_string& operator=(const string_view_type& str) {
 		return assign(str.data(), str.size());
 	}
 
@@ -374,7 +376,7 @@ public:
 	/// @param add The other `basic_lazy_string` object.
 	/// @return A reference to this instance.
 	template <size_type kOthSize>
-	basic_lazy_string& operator+=(const basic_lazy_string<kOthSize, CharT>& add) {
+	constexpr basic_lazy_string& operator+=(const basic_lazy_string<kOthSize, CharT>& add) {
 		const string_view_type sv = add.sv();
 		return append(sv.data(), sv.size());
 	}
@@ -382,14 +384,14 @@ public:
 	/// @brief Append a single character to this instance.
 	/// @param ch The character to append.
 	/// @return A reference to this instance.
-	basic_lazy_string& operator+=(const CharT ch) {
+	constexpr basic_lazy_string& operator+=(const CharT ch) {
 		return append(&ch, 1);
 	}
 
 	/// @brief Append a null-terminated character sequence to this instance.
 	/// @param add A pointer to a null-terminated character sequence.
 	/// @return A reference to this instance.
-	basic_lazy_string& operator+=(const CharT* const add) {
+	constexpr basic_lazy_string& operator+=(const CharT* const add) {
 		return append(add, std::char_traits<CharT>::length(add));
 	}
 
@@ -397,7 +399,7 @@ public:
 	/// @note The characters sequence MUST have at least @p len non-null characters.
 	/// @param add A pointer to a character sequence.
 	/// @return A reference to this instance.
-	basic_lazy_string& append(const CharT* const add, const std::size_t len) {
+	constexpr basic_lazy_string& append(const CharT* const add, const std::size_t len) {
 		assert(!std::char_traits<CharT>::find(add, len, 0));
 
 		const std::size_t oldSize = size();
@@ -416,14 +418,14 @@ public:
 	/// @brief Append a `std::basic_string` to this instance.
 	/// @param add The `std::basic_string` object.
 	/// @return A reference to this instance.
-	basic_lazy_string& operator+=(const string_type& add) {
+	constexpr basic_lazy_string& operator+=(const string_type& add) {
 		return append(add.c_str(), add.size());
 	}
 
 	/// @brief Append a `std::basic_string_view` to this instance.
 	/// @param add The `std::basic_string_view` object.
 	/// @return A reference to this instance.
-	basic_lazy_string& operator+=(const string_view_type& add) {
+	constexpr basic_lazy_string& operator+=(const string_view_type& add) {
 		return append(add.data(), add.size());
 	}
 
@@ -437,7 +439,7 @@ public:
 	/// @param rhs The `basic_lazy_string` to append.
 	/// @return A newly created `basic_lazy_string` object.
 	template <size_type kOthSize>
-	basic_lazy_string operator+(const basic_lazy_string<kOthSize, CharT>& rhs) const {
+	[[nodiscard]] constexpr basic_lazy_string operator+(const basic_lazy_string<kOthSize, CharT>& rhs) const {
 		const string_view_type lsv = sv();
 		const string_view_type rsv = rhs.sv();
 		return concat(lsv.data(), lsv.size(), rsv.data(), rsv.size());
@@ -447,7 +449,7 @@ public:
 	/// @param str The `basic_lazy_string` to append to.
 	/// @param ch The character to append.
 	/// @return A newly created `basic_lazy_string` object.
-	friend basic_lazy_string operator+(const basic_lazy_string& str, const CharT ch) {
+	[[nodiscard]] friend constexpr basic_lazy_string operator+(const basic_lazy_string& str, const CharT ch) {
 		const string_view_type sv = str.sv();
 		return concat(sv.data(), sv.size(), &ch, 1);
 	}
@@ -456,7 +458,7 @@ public:
 	/// @param ch The character to append to.
 	/// @param str The `basic_lazy_string` to append.
 	/// @return A newly created `basic_lazy_string` object.
-	friend basic_lazy_string operator+(const CharT ch, const basic_lazy_string& str) {
+	[[nodiscard]] friend constexpr basic_lazy_string operator+(const CharT ch, const basic_lazy_string& str) {
 		const string_view_type sv = str.sv();
 		return concat(&ch, 1, sv.data(), sv.size());
 	}
@@ -465,7 +467,7 @@ public:
 	/// @param lhs The `basic_lazy_string` to append to.
 	/// @param rhs The null-terminated character sequence to append.
 	/// @return A newly created `basic_lazy_string` object.
-	friend basic_lazy_string operator+(const basic_lazy_string& lhs, const CharT* const rhs) {
+	[[nodiscard]] friend constexpr basic_lazy_string operator+(const basic_lazy_string& lhs, const CharT* const rhs) {
 		const string_view_type sv = lhs.sv();
 		return concat(sv.data(), sv.size(), rhs, std::char_traits<CharT>::length(rhs));
 	}
@@ -474,7 +476,7 @@ public:
 	/// @param lhs The null-terminated character sequence to append to.
 	/// @param rhs The `basic_lazy_string` to append.
 	/// @return A newly created `basic_lazy_string` object.
-	friend basic_lazy_string operator+(const CharT* const lhs, const basic_lazy_string& rhs) {
+	[[nodiscard]] friend constexpr basic_lazy_string operator+(const CharT* const lhs, const basic_lazy_string& rhs) {
 		const string_view_type sv = rhs.sv();
 		return concat(lhs, std::char_traits<CharT>::length(lhs), sv.data(), sv.size());
 	}
@@ -483,7 +485,7 @@ public:
 	/// @param lhs The `basic_lazy_string` to append to.
 	/// @param rhs The `std::basic_string` to append.
 	/// @return A newly created `basic_lazy_string` object.
-	friend basic_lazy_string operator+(const basic_lazy_string& lhs, const string_type& rhs) {
+	[[nodiscard]] friend constexpr basic_lazy_string operator+(const basic_lazy_string& lhs, const string_type& rhs) {
 		const string_view_type sv = lhs.sv();
 		return concat(sv.data(), sv.size(), rhs.c_str(), rhs.size());
 	}
@@ -492,7 +494,7 @@ public:
 	/// @param lhs The `std::basic_string` to append to.
 	/// @param rhs The `basic_lazy_string` to append.
 	/// @return A newly created `basic_lazy_string` object.
-	friend basic_lazy_string operator+(const string_type& lhs, const basic_lazy_string& rhs) {
+	[[nodiscard]] friend constexpr basic_lazy_string operator+(const string_type& lhs, const basic_lazy_string& rhs) {
 		const string_view_type sv = rhs.sv();
 		return concat(lhs.c_str(), lhs.size(), sv.data(), sv.size());
 	}
@@ -501,7 +503,7 @@ public:
 	/// @param lhs The `basic_lazy_string` to append to.
 	/// @param rhs The `std::basic_string_view` to append.
 	/// @return A newly created `basic_lazy_string` object.
-	friend basic_lazy_string operator+(const basic_lazy_string& lhs, const string_view_type& rhs) {
+	[[nodiscard]] friend constexpr basic_lazy_string operator+(const basic_lazy_string& lhs, const string_view_type& rhs) {
 		const string_view_type sv = lhs.sv();
 		return concat(sv.data(), sv.size(), rhs.data(), rhs.size());
 	}
@@ -510,7 +512,7 @@ public:
 	/// @param lhs The `std::basic_string_view` to append to.
 	/// @param rhs The `basic_lazy_string` to append.
 	/// @return A newly created `basic_lazy_string` object.
-	friend basic_lazy_string operator+(const string_view_type& lhs, const basic_lazy_string& rhs) {
+	[[nodiscard]] friend constexpr basic_lazy_string operator+(const string_view_type& lhs, const basic_lazy_string& rhs) {
 		const string_view_type sv = rhs.sv();
 		return concat(lhs.data(), lhs.size(), sv.data(), sv.size());
 	}
@@ -523,7 +525,7 @@ private:
 	/// @param rhs The character sequence to append.
 	/// @param rSize The number on non-null characters in @p rhs.
 	/// @return A newly created `basic_lazy_string` object.
-	static basic_lazy_string concat(const CharT* const lhs, const std::size_t lSize, const CharT* const rhs, const std::size_t rSize) {
+	[[nodiscard]] static constexpr basic_lazy_string concat(const CharT* const lhs, const std::size_t lSize, const CharT* const rhs, const std::size_t rSize) {
 		assert(!std::char_traits<CharT>::find(lhs, lSize, 0));
 		assert(!std::char_traits<CharT>::find(rhs, rSize, 0));
 
@@ -549,28 +551,28 @@ public:
 	/// @param oth The other `basic_lazy_string` object.
 	/// @return `true` if both objects have the same character sequence, else `false`.
 	template <size_type kOthSize>
-	[[nodiscard]] bool operator==(const basic_lazy_string<kOthSize, CharT>& oth) const noexcept {
+	[[nodiscard]] constexpr bool operator==(const basic_lazy_string<kOthSize, CharT>& oth) const noexcept {
 		return (*this <=> oth) == 0;
 	}
 
 	/// @brief Compare the instance with a null-terminated character sequence.
 	/// @param oth The null-terminated character sequence.
 	/// @return `true` if both objects have the same character sequence, else `false`.
-	[[nodiscard]] bool operator==(const CharT* const oth) const noexcept {
+	[[nodiscard]] constexpr bool operator==(const CharT* const oth) const noexcept {
 		return (*this <=> oth) == 0;
 	}
 
 	/// @brief Compare the instance with a `std::basic_string`.
 	/// @param oth The `std::basic_string` object.
 	/// @return `true` if both objects have the same character sequence, else `false`.
-	[[nodiscard]] bool operator==(const string_type& oth) const noexcept {
+	[[nodiscard]] constexpr bool operator==(const string_type& oth) const noexcept {
 		return (*this <=> oth) == 0;
 	}
 
 	/// @brief Compare the instance with a `std::basic_string_view`.
 	/// @param oth The `std::basic_string_view` object.
 	/// @return `true` if both objects have the same character sequence, else `false`.
-	[[nodiscard]] bool operator==(const string_view_type& oth) const noexcept {
+	[[nodiscard]] constexpr bool operator==(const string_view_type& oth) const noexcept {
 		return (*this <=> oth) == 0;
 	}
 
@@ -579,7 +581,7 @@ public:
 	/// @param oth The other `basic_lazy_string` object.
 	/// @return A value that specifies the relative ordering of both objects.
 	template <size_type kOthSize>
-	[[nodiscard]] std::strong_ordering operator<=>(const basic_lazy_string<kOthSize, CharT>& oth) const noexcept {
+	[[nodiscard]] constexpr std::strong_ordering operator<=>(const basic_lazy_string<kOthSize, CharT>& oth) const noexcept {
 		const std::size_t othSize = oth.size();
 		if (const int cmp = std::char_traits<CharT>::compare(c_str(), oth.c_str(), std::min(size(), othSize)); cmp) {
 			return cmp < 0 ? std::strong_ordering::less : std::strong_ordering::greater;
@@ -590,7 +592,7 @@ public:
 	/// @brief Compare the instance with a null-terminated character sequence.
 	/// @param oth The null-terminated character sequence.
 	/// @return A value that specifies the relative ordering of the instance and the character sequence.
-	[[nodiscard]] std::strong_ordering operator<=>(const CharT* const oth) const noexcept {
+	[[nodiscard]] constexpr std::strong_ordering operator<=>(const CharT* const oth) const noexcept {
 		const std::size_t othSize = std::char_traits<CharT>::length(oth);
 		if (const int cmp = std::char_traits<CharT>::compare(c_str(), oth, std::min(size(), othSize)); cmp) {
 			return cmp < 0 ? std::strong_ordering::less : std::strong_ordering::greater;
@@ -601,7 +603,7 @@ public:
 	/// @brief Compare the instance with a `std::basic_string`.
 	/// @param oth The `std::basic_string` object.
 	/// @return A value that specifies the relative ordering of the instance and the `std::basic_string`.
-	[[nodiscard]] std::strong_ordering operator<=>(const string_type& oth) const noexcept {
+	[[nodiscard]] constexpr std::strong_ordering operator<=>(const string_type& oth) const noexcept {
 		const std::size_t othSize = oth.size();
 		if (const int cmp = std::char_traits<CharT>::compare(c_str(), oth.c_str(), std::min(size(), othSize)); cmp) {
 			return cmp < 0 ? std::strong_ordering::less : std::strong_ordering::greater;
@@ -612,7 +614,7 @@ public:
 	/// @brief Compare the instance with a `std::basic_string_view`.
 	/// @param oth The `std::basic_string_view` object.
 	/// @return A value that specifies the relative ordering of the instance and the `std::basic_string_view`.
-	[[nodiscard]] std::strong_ordering operator<=>(const string_view_type& oth) const noexcept {
+	[[nodiscard]] constexpr std::strong_ordering operator<=>(const string_view_type& oth) const noexcept {
 		const std::size_t othSize = oth.size();
 		if (const int cmp = std::char_traits<CharT>::compare(c_str(), oth.data(), std::min(size(), othSize)); cmp) {
 			return cmp < 0 ? std::strong_ordering::less : std::strong_ordering::greater;
@@ -629,13 +631,13 @@ public:
 
 	/// @brief Access the data of this instance as a null-terminated character sequence.
 	/// @return A pointer to a null-terminated character sequence.
-	[[nodiscard]] constexpr const CharT* c_str() const noexcept {
+	[[nodiscard]] constexpr _Ret_z_ const CharT* c_str() const noexcept {
 		return m_inline ? m_buffer : m_string.c_str();
 	}
 
 	/// @brief Access the data of this instance as a modifiable null-terminated character sequence.
 	/// @return A pointer to a null-terminated character sequence.
-	[[nodiscard]] constexpr CharT* data() noexcept {
+	[[nodiscard]] constexpr _Ret_z_ CharT* data() noexcept {
 		return m_inline ? m_buffer : m_string.data();
 	}
 
@@ -663,7 +665,7 @@ public:
 
 	/// @brief Allocated size for string growth.
 	/// @param newSize The number of characters to allocate space for.
-	void resize(const std::size_t newSize) {
+	constexpr void resize(const std::size_t newSize) {
 		if (newSize == size()) {
 			return;
 		}
@@ -673,7 +675,7 @@ public:
 			} else {
 				// first move to temp because of union
 				string_type tmp(m_buffer, m_size);
-				new (&m_string) string_type(std::move(tmp));
+				std::construct_at(&m_string, std::move(tmp));
 				m_inline = false;
 				m_string.resize(newSize);
 			}
@@ -699,7 +701,7 @@ public:
 	/// @brief Exchanges this instance with another `basic_lazy_string` object.
 	/// @note This function is used if both strings share the same size of the internal buffer.
 	/// @param oth The other `basic_lazy_string` object.
-	void swap(basic_lazy_string& oth) noexcept {
+	constexpr void swap(basic_lazy_string& oth) noexcept {
 		if (m_inline) {
 			if (oth.m_inline) {
 				const size_type minSize = std::min(m_size, oth.m_size) + 1;
@@ -718,21 +720,21 @@ public:
 				std::swap(m_size, oth.m_size);
 			} else {
 				string_type tmp(std::move(oth.m_string));
-				oth.m_string.~basic_string();
+				std::destroy_at(&oth.m_string);
 				oth.m_inline = true;
 				std::memcpy(oth.m_buffer, m_buffer, (m_size + 1) * sizeof(CharT));
 				oth.m_size = m_size;
-				new (&m_string) string_type(std::move(tmp));
+				std::construct_at(&m_string, std::move(tmp));
 				m_inline = false;
 			}
 		} else {
 			if (oth.m_inline) {
 				string_type tmp(std::move(m_string));
-				m_string.~basic_string();
+				std::destroy_at(&m_string);
 				m_inline = true;
 				std::memcpy(m_buffer, oth.m_buffer, (oth.m_size + 1) * sizeof(CharT));
 				m_size = oth.m_size;
-				new (&oth.m_string) string_type(std::move(tmp));
+				std::construct_at(&oth.m_string, std::move(tmp));
 				oth.m_inline = false;
 			} else {
 				std::swap(m_string, oth.m_string);
@@ -744,7 +746,7 @@ public:
 	/// @note This function is used if both strings have different sizes of the internal buffer.
 	/// @param oth The other `basic_lazy_string` object.
 	template <size_type kOthSize>
-	void swap(basic_lazy_string<kOthSize, CharT>& oth) {
+	constexpr void swap(basic_lazy_string<kOthSize, CharT>& oth) {
 		if (m_inline) {
 			if (oth.m_inline) {
 				if (oth.m_size < kSize) {
@@ -767,7 +769,7 @@ public:
 						string_type tmp(m_buffer, m_size);
 						std::memcpy(m_buffer, oth.m_buffer, (oth.m_size + 1) * sizeof(CharT));
 						m_size = oth.m_size;
-						new (&oth.m_string) string_type(std::move(tmp));
+						std::construct_at(&oth.m_string, std::move(tmp));
 						oth.m_inline = false;
 					}
 				} else {
@@ -775,7 +777,7 @@ public:
 						string_type tmp(oth.m_buffer, oth.m_size);
 						std::memcpy(oth.m_buffer, m_buffer, (m_size + 1) * sizeof(CharT));
 						oth.m_size = m_size;
-						new (&m_string) string_type(std::move(tmp));
+						std::construct_at(&m_string, std::move(tmp));
 						m_inline = false;
 					} else {
 						assert(false);
@@ -784,28 +786,28 @@ public:
 			} else {
 				string_type tmp(std::move(oth.m_string));
 				if (m_size < kOthSize) {
-					oth.m_string.~basic_string();
+					std::destroy_at(&oth.m_string);
 					oth.m_inline = true;
 					std::memcpy(oth.m_buffer, m_buffer, (m_size + 1) * sizeof(CharT));
 					oth.m_size = m_size;
 				} else {
 					oth.m_string.assign(m_buffer, m_size);
 				}
-				new (&m_string) string_type(std::move(tmp));
+				std::construct_at(&m_string, std::move(tmp));
 				m_inline = false;
 			}
 		} else {
 			if (oth.m_inline) {
 				string_type tmp(std::move(m_string));
 				if (oth.m_size < kSize) {
-					m_string.~basic_string();
+					std::destroy_at(&m_string);
 					m_inline = true;
 					std::memcpy(m_buffer, oth.m_buffer, (oth.m_size + 1) * sizeof(CharT));
 					m_size = oth.m_size;
 				} else {
 					m_string.assign(oth.m_buffer, oth.m_size);
 				}
-				new (&oth.m_string) string_type(std::move(tmp));
+				std::construct_at(&oth.m_string, std::move(tmp));
 				oth.m_inline = false;
 			} else {
 				std::swap(m_string, oth.m_string);
@@ -814,17 +816,19 @@ public:
 	}
 
 private:
-	/// @brief `true` if the data is stored in the internal buffer, `false` if using a `std::basic_string`.
-	bool m_inline;  // NOLINT(readability-identifier-naming, modernize-use-default-member-init): All constructors are explicitly defined and initialize as required.
-	/// @brief The number of characters stored in the internal buffer. Undefined if data is stored in a `std::basic_string`.
-	size_type m_size;  // NOLINT(readability-identifier-naming, modernize-use-default-member-init): All constructors are explicitly defined and initialize as required.
-	union {
-		/// @brief The internal buffer for storing data.
-		CharT m_buffer[kSize];  // NOLINT(readability-identifier-naming): Member of anonymous union is part of enclosing scope.
-		/// @brief A `std::basic_string` storing the data.
-		std::basic_string<CharT> m_string;  // NOLINT(readability-identifier-naming): Member of anonymous union is part of enclosing scope.
-	};
+	// NOLINTBEGIN(modernize-use-default-member-init): All constructors are explicitly defined and initialize as required.
+	bool m_inline;     ///< @brief `true` if the data is stored in the internal buffer, `false` if using a `std::basic_string`.
+	size_type m_size;  ///< @brief The number of characters stored in the internal buffer. Undefined if data is stored in a `std::basic_string`.
+	// NOLINTEND(modernize-use-default-member-init)
 
+	// NOLINTBEGIN(readability-identifier-naming): Member of anonymous union is part of enclosing scope.
+	union {
+		CharT m_buffer[kSize];  ///< @brief The internal buffer for storing data.
+		string_type m_string;   ///< @brief A `std::basic_string` storing the data.
+	};
+	// NOLINTEND(readability-identifier-naming)
+
+	// allow access to internal structures by different specializations of basic_lazy_string
 	template <size_type, typename>
 	friend class basic_lazy_string;
 };
@@ -835,7 +839,7 @@ private:
 /// @param str A `basic_lazy_string` object.
 /// @param oth Another `basic_lazy_string` object.
 template <std::uint16_t kSize, typename CharT>
-inline void swap(basic_lazy_string<kSize, CharT>& str, basic_lazy_string<kSize, CharT>& oth) noexcept {
+constexpr void swap(basic_lazy_string<kSize, CharT>& str, basic_lazy_string<kSize, CharT>& oth) noexcept {
 	str.swap(oth);
 }
 
@@ -846,33 +850,26 @@ inline void swap(basic_lazy_string<kSize, CharT>& str, basic_lazy_string<kSize, 
 /// @param str A `basic_lazy_string` object.
 /// @param oth Another `basic_lazy_string` object.
 template <std::uint16_t kSize0, std::uint16_t kSize1, typename CharT>
-inline void swap(basic_lazy_string<kSize0, CharT>& str, basic_lazy_string<kSize1, CharT>& oth) {
+constexpr void swap(basic_lazy_string<kSize0, CharT>& str, basic_lazy_string<kSize1, CharT>& oth) {
 	str.swap(oth);
 }
 
 /// @brief A `basic_lazy_string` using regular characters.
+/// @tparam kSize The buffer size of the string.
 template <std::uint16_t kSize>
 using lazy_string = basic_lazy_string<kSize, char>;
 
 /// @brief A `basic_lazy_string` using wide characters.
+/// @tparam kSize The buffer size of the string.
 template <std::uint16_t kSize>
 using lazy_wstring = basic_lazy_string<kSize, wchar_t>;
 
-#if 0
-/// @brief Add the value of the lazy string to a `llamalog::LogLine`.
-/// @tparam kSize The buffer size of the string.
-/// @tparam CharT The character type.
-/// @param logLine The output target.
-/// @param arg A `m3c::basic_lazy_string`.
-template <std::uint16_t kSize, typename CharT>
-llamalog::LogLine& operator<<(llamalog::LogLine& logLine, const basic_lazy_string<kSize, CharT>& arg) {
-	return logLine << arg.sv();
-}
-#endif
-
 }  // namespace m3c
 
+
 /// @brief Specialization of std::hash.
+/// @tparam kSize The buffer size of the string.
+/// @tparam CharT The character type of the string.
 template <std::uint16_t kSize, typename CharT>
 struct std::hash<m3c::basic_lazy_string<kSize, CharT>> {
 	[[nodiscard]] constexpr std::size_t operator()(const m3c::basic_lazy_string<kSize, CharT>& str) const noexcept {

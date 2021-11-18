@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<instrumentationManifest xmlns="http://schemas.microsoft.com/win/2004/08/events"
+                         xmlns:win="http://manifests.microsoft.com/win/2004/08/windows/events"
+                         xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<instrumentation>
+		<events>
+			<provider name="m3c-Test"
+			          guid="{7F241D8A-F704-4399-8F1B-91D1B22EA3E2}"
+			          symbol="Test_Provider"
+			          resourceFileName="m3c_Test.exe"
+			          messageFileName="m3c_Test.exe"
+			          message="$(string.m3c_Test.Provider.Name)">
+				<channels>
+					<channel name="m3c-Test/Test" chid="test" value="17" symbol="M3C_TEST_CHANNEL_TEST" type="Debug" enabled="true" message="$(string.m3c_Test.channel.test)" />
+				</channels>
+				<templates>
+					<template tid="m3c_Test_String">
+						<data name="message" inType="win:AnsiString" outType="xs:string" />
+					</template>
+					<template tid="m3c_Test_Int">
+						<data name="int" inType="win:Int32" outType="xs:int" />
+					</template>
+					<template tid="m3c_Test_String_H">
+						<data name="message" inType="win:AnsiString" outType="xs:string" />
+						<data name="code" inType="win:Int32" outType="win:HResult" />
+					</template>
+					<template tid="m3c_Test_FormattingEvent">
+						<data name="arg1" inType="win:Int32" outType="xs:int" />
+						<data name="arg2" inType="win:Int32" outType="xs:int" />
+						<data name="arg3" inType="win:Int32" outType="xs:int" />
+						<data name="arg4" inType="win:UnicodeString" outType="xs:string" />
+					</template>
+					<template tid="m3c_Test_LogPtr">
+						<data name="ptr" inType="win:Pointer" outType="win:HexInt64" />
+						<data name="eof" inType="win:UInt8" outType="xs:string" />
+					</template>
+					<template tid="m3c_Test_LogIStream">
+						<data name="ptr" inType="win:Pointer" outType="win:HexInt64" />
+						<data name="name" inType="win:UnicodeString" outType="xs:string" />
+						<data name="eof" inType="win:UInt8" outType="xs:string" />
+					</template>
+					<template tid="m3c_Test_LogString">
+						<data name="str" inType="win:AnsiString" outType="xs:string" />
+						<data name="eof" inType="win:UInt8" outType="xs:string" />
+					</template>
+					<template tid="m3c_Test_LogWideString">
+						<data name="wstr" inType="win:UnicodeString" outType="xs:string" />
+						<data name="eof" inType="win:UInt8" outType="xs:string" />
+					</template>
+					<template tid="m3c_Test_LogPropVariant">
+						<data name="type" inType="win:AnsiString" outType="xs:string" />
+						<data name="value" inType="win:UnicodeString" outType="xs:string" />
+						<data name="eof" inType="win:UInt8" outType="xs:string" />
+					</template>
+				</templates>
+				<events>
+					<event symbol="m3c_Test_Init_H" value="500" version="0" template="m3c_H" channel="test" level="win:Critical" message="$(string.m3c_Test_Init_X)" />
+
+					<event symbol="m3c_Test_Event" value="510" version="0" template="m3c_context" channel="test" level="win:Informational" message="$(string.m3c_Test_Event)" />
+					<event symbol="m3c_Test_Event_Int" value="511" version="0" template="m3c_Test_Int" channel="test" level="win:Informational" message="$(string.m3c_Test_Event_Int)" />
+					<event symbol="m3c_Test_Event_String" value="512" version="0" template="m3c_Test_String" channel="test" level="win:Informational" message="$(string.m3c_Test_Event_String)" />
+					<event symbol="m3c_Test_Event_String_H" value="513" version="0" template="m3c_Test_String_H" channel="test" level="win:Informational" message="$(string.m3c_Test_Event_String_X)" />
+
+					<event symbol="m3c_Test_FormatReversed" value="520" version="0" template="m3c_Test_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_Test_FormatReversed)" />
+					<event symbol="m3c_Test_FormatWidth" value="521" version="0" template="m3c_Test_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_Test_FormatWidth)" />
+					<event symbol="m3c_Test_FormatWidthLeft" value="522" version="0" template="m3c_Test_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_Test_FormatWidthLeft)" />
+					<event symbol="m3c_Test_FormatWidthZeroPadded" value="523" version="0" template="m3c_Test_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_Test_FormatWidthZeroPadded)" />
+					<event symbol="m3c_Test_FormatPrecision" value="524" version="0" template="m3c_Test_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_Test_FormatPrecision)" />
+					<event symbol="m3c_Test_FormatDynamicWidth" value="525" version="0" template="m3c_Test_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_Test_FormatDynamicWidth)" />
+					<event symbol="m3c_Test_FormatDynamicWidthZeroPadded" value="526" version="0" template="m3c_Test_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_Test_FormatDynamicWidthZeroPadded)" />
+					<event symbol="m3c_Test_FormatDynamicPrecision" value="527" version="0" template="m3c_Test_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_Test_FormatDynamicPrecision)" />
+					<event symbol="m3c_Test_FormatDynamicWidthAndPrecision" value="528" version="0" template="m3c_Test_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_Test_FormatDynamicWidthAndPrecision)" />
+					<event symbol="m3c_Test_FormatDynamicWidthLeftAndPrecision" value="529" version="0" template="m3c_Test_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_Test_FormatDynamicWidthLeftAndPrecision)" />
+					<event symbol="m3c_Test_FormatSpecialCharacters" value="530" version="0" template="m3c_Test_FormattingEvent" channel="test" level="win:Informational" message="$(string.m3c_Test_FormatSpecialCharacters)" />
+
+					<event symbol="m3c_Test_LogException" value="550" version="0" template="m3c_context" channel="test" level="win:Informational" message="$(string.m3c_Test_LogException)" />
+					<event symbol="m3c_Test_LogPtr" value="551" version="0" template="m3c_Test_LogPtr" channel="test" level="win:Informational" message="$(string.m3c_Test_LogPtr)" />
+					<event symbol="m3c_Test_LogIStream" value="552" version="0" template="m3c_Test_LogIStream" channel="test" level="win:Informational" message="$(string.m3c_Test_LogIStream)" />
+					<event symbol="m3c_Test_LogString" value="553" version="0" template="m3c_Test_LogString" channel="test" level="win:Informational" message="$(string.m3c_Test_LogString)" />
+					<event symbol="m3c_Test_LogWideString" value="554" version="0" template="m3c_Test_LogWideString" channel="test" level="win:Informational" message="$(string.m3c_Test_LogWideString)" />
+					<event symbol="m3c_Test_LogPropVariant" value="555" version="0" template="m3c_Test_LogPropVariant" channel="test" level="win:Informational" message="$(string.m3c_Test_LogPropVariant)" />
+				</events>
+			</provider>
+		</events>
+	</instrumentation>
+
+	<localization>
+		<resources culture="en-US">
+			<stringTable>
+				<string id="m3c_Test.Provider.Name" value="m3c-Test" />
+				<string id="m3c_Test.channel.test" value="m3c-Test/Test" />
+
+				<string id="m3c_Test_Init_X" value="Error initializing tests:%n%1" />
+
+				<string id="m3c_Test_Event" value="Testing event without arguments" />
+				<string id="m3c_Test_Event_Int" value="Testing event with int %1" />
+				<string id="m3c_Test_Event_String" value="Testing event with string %1" />
+				<string id="m3c_Test_Event_String_X" value="Testing event with string %1 and error:%n%2" />
+
+				<string id="m3c_Test_FormatReversed" value="Reversed: %4; %3; %2; %1" />
+				<string id="m3c_Test_FormatWidth" value="Width: %1!4d!; %4!8s!" />
+				<string id="m3c_Test_FormatWidthLeft" value="Width left: %1!-4d!; %4!-8s!" />
+				<string id="m3c_Test_FormatWidthZeroPadded" value="Width zero padded: %1!04d!" />
+				<string id="m3c_Test_FormatPrecision" value="Precision: %4!.2s!" />
+				<string id="m3c_Test_FormatDynamicWidth" value="Dynamic width: %1!*d!" />
+				<string id="m3c_Test_FormatDynamicWidthZeroPadded" value="Dynamic width zero padded: %1!0*d!" />
+				<string id="m3c_Test_FormatDynamicPrecision" value="Dynamic precision: %3!.*s!" />
+				<string id="m3c_Test_FormatDynamicWidthAndPrecision" value="Dynamic width and precision: %2!*.*s!" />
+				<string id="m3c_Test_FormatDynamicWidthLeftAndPrecision" value="Dynamic width left and precision: %2!-*.*s!" />
+				<string id="m3c_Test_FormatSpecialCharacters" value="Special characters: {%b%n%r%t}; %1%!" />
+
+				<string id="m3c_Test_LogException" value="~Log~" />
+				<string id="m3c_Test_LogPtr" value="ptr=%1%2" />
+				<string id="m3c_Test_LogIStream" value="IStream=%1, name=%2%3" />
+				<string id="m3c_Test_LogString" value="char[]=%1%2" />
+				<string id="m3c_Test_LogWideString" value="wchar_t[]=%1%2" />
+				<string id="m3c_Test_LogPropVariant" value="PropVariant=%1, value=%2%3" />
+			</stringTable>
+		</resources>
+	</localization>
+
+</instrumentationManifest>

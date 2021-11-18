@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+/// @file
 #pragma once
 
 #include <windows.h>
@@ -23,13 +24,13 @@ limitations under the License.
 namespace m3c {
 
 /// @brief Same as `std::mutex` but using using the slim reader/writer (SWR) locks from the Windows API for synchronization.
-/// @warn Other than `std::mutex`, SRW locks are NOT recursive.
+/// @warning Other than `std::mutex`, SRW locks are NOT recursive.
 class mutex final {
 public:
-	mutex() noexcept = default;
+	[[nodiscard]] constexpr mutex() noexcept = default;
 	mutex(const mutex&) = delete;
 	mutex(mutex&&) = delete;
-	~mutex() noexcept = default;
+	constexpr ~mutex() noexcept = default;
 
 public:
 	mutex& operator=(const mutex&) = delete;
@@ -37,12 +38,15 @@ public:
 
 public:
 	/// @brief Acquires an exclusive lock on the `mutex` object.
-	/// @warn In contrast to `std::mutex`, this call is NOT recursive.
+	/// @warning In contrast to `std::mutex`, this call is NOT recursive.
 	_Acquires_exclusive_lock_(m_lock) _Requires_lock_not_held_(m_lock) void lock() noexcept;
+
 	/// @brief Acquires a shared lock on the `mutex` object.
 	_Acquires_shared_lock_(m_lock) _Requires_lock_not_held_(m_lock) void lock_shared() noexcept;
+
 	/// @brief Releases an exclusive lock on the `mutex` object.
 	_Requires_exclusive_lock_held_(m_lock) _Releases_exclusive_lock_(m_lock) void unlock() noexcept;
+
 	/// @brief Releases a shared lock on the `mutex` object.
 	_Requires_shared_lock_held_(m_lock) _Releases_shared_lock_(m_lock) void unlock_shared() noexcept;
 
@@ -56,11 +60,14 @@ private:
 class scoped_lock final {
 public:
 	/// @brief Acquires an exclusive lock on a `mutex` object.
-	_Acquires_exclusive_lock_(mtx) _Requires_lock_not_held_(mtx) _Post_same_lock_(mtx, m_mutex) explicit scoped_lock(mutex& mtx) noexcept;
+	_Acquires_exclusive_lock_(mtx.m_lock) _Requires_lock_not_held_(mtx.m_lock) _Post_same_lock_(mtx.m_lock, m_mutex.m_lock)
+	    [[nodiscard]] explicit scoped_lock(mutex& mtx) noexcept;
+
 	scoped_lock(const scoped_lock&) = delete;
 	scoped_lock(scoped_lock&&) = delete;
+
 	/// @brief Releases the exclusive lock on the `mutex` object.
-	_Requires_shared_lock_held_(m_mutex) _Releases_shared_lock_(m_mutex) ~scoped_lock() noexcept;
+	_Requires_shared_lock_held_(m_mutex.m_lock) _Releases_shared_lock_(m_mutex.m_lock) ~scoped_lock() noexcept;
 
 public:
 	scoped_lock& operator=(const scoped_lock&) = delete;
@@ -76,11 +83,14 @@ private:
 class shared_lock final {
 public:
 	/// @brief Acquires a shared lock on a `mutex` object.
-	_Acquires_shared_lock_(mtx) _Requires_lock_not_held_(mtx) _Post_same_lock_(mtx, m_mutex) explicit shared_lock(mutex& mtx) noexcept;
+	_Acquires_shared_lock_(mtx.m_lock) _Requires_lock_not_held_(mtx.m_lock) _Post_same_lock_(mtx.m_lock, m_mutex.m_lock)
+	    [[nodiscard]] explicit shared_lock(mutex& mtx) noexcept;
+
 	shared_lock(const shared_lock&) = delete;
 	shared_lock(shared_lock&&) = delete;
+
 	/// @brief Releases the shared lock on the `mutex` object.
-	_Requires_shared_lock_held_(m_mutex) _Releases_shared_lock_(m_mutex) ~shared_lock() noexcept;
+	_Requires_shared_lock_held_(m_mutex.m_lock) _Releases_shared_lock_(m_mutex.m_lock) ~shared_lock() noexcept;
 
 public:
 	shared_lock& operator=(const shared_lock&) = delete;
@@ -95,10 +105,10 @@ private:
 /// @brief Manages a condition variable on a `mutex` object but uses slim reader/writer (SRW) locks for synchronization.
 class condition_variable final {
 public:
-	condition_variable() noexcept = default;
+	[[nodiscard]] constexpr condition_variable() noexcept = default;
 	condition_variable(const condition_variable&) = delete;
 	condition_variable(condition_variable&&) = delete;
-	~condition_variable() noexcept = default;
+	constexpr ~condition_variable() noexcept = default;
 
 public:
 	condition_variable& operator=(const condition_variable&) = delete;

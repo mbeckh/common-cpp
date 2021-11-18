@@ -17,6 +17,11 @@ limitations under the License.
 /// @file
 #pragma once
 
+#include "m3c/LogArgs.h"
+#include "m3c/LogData.h"
+
+#include <fmt/format.h>
+
 #include <sal.h>
 
 #include <cstddef>
@@ -28,36 +33,36 @@ limitations under the License.
 namespace m3c {
 
 /// @brief Similar to `std::unique_ptr` but allows setting pointer value by out parameter.
-/// @tparam T The native type of the pointer.
-template <class T>
+/// @tparam T The native type of the pointer target.
+template <typename T>
 class unique_ptr final {
 public:
 	/// @brief Creates an empty instance.
-	constexpr unique_ptr() noexcept = default;
-
-	unique_ptr(const unique_ptr&) = delete;
-
-	/// @brief Transfers ownership.
-	/// @param ptr Another `unique_ptr`.
-	unique_ptr(unique_ptr&& ptr) noexcept
-		: m_ptr(ptr.release()) {
-		// empty
-	}
+	[[nodiscard]] constexpr unique_ptr() noexcept = default;
 
 	/// @brief Creates an empty instance.
-	constexpr explicit unique_ptr(std::nullptr_t) noexcept {
+	[[nodiscard]] constexpr explicit unique_ptr(std::nullptr_t) noexcept {
 		// empty
 	}
 
 	/// @brief Transfer ownership of an existing pointer.
 	/// @param p The native pointer.
-	constexpr explicit unique_ptr(_In_opt_ T* const p) noexcept
-		: m_ptr(p) {
+	[[nodiscard]] constexpr explicit unique_ptr(_In_opt_ T* const p) noexcept
+	    : m_ptr(p) {
+		// empty
+	}
+
+	unique_ptr(const unique_ptr&) = delete;
+
+	/// @brief Transfers ownership.
+	/// @param ptr Another `unique_ptr`.
+	[[nodiscard]] constexpr unique_ptr(unique_ptr&& ptr) noexcept
+	    : m_ptr(ptr.release()) {
 		// empty
 	}
 
 	/// @brief Deletes the owner object.
-	~unique_ptr() noexcept {
+	constexpr ~unique_ptr() noexcept {
 		delete m_ptr;
 	}
 
@@ -67,7 +72,7 @@ public:
 	/// @brief Transfers ownership.
 	/// @param p Another `unique_ptr`.
 	/// @return This instance.
-	unique_ptr& operator=(unique_ptr&& p) noexcept {
+	constexpr unique_ptr& operator=(unique_ptr&& p) noexcept {
 		delete m_ptr;
 		m_ptr = p.release();
 		return *this;
@@ -75,7 +80,7 @@ public:
 
 	/// @brief Resets the instance to hold no value.
 	/// @return This instance.
-	unique_ptr& operator=(std::nullptr_t) noexcept {
+	constexpr unique_ptr& operator=(std::nullptr_t) noexcept {
 		delete m_ptr;
 		m_ptr = nullptr;
 		return *this;
@@ -83,27 +88,27 @@ public:
 
 	/// @brief Allows the smart pointer to act as the object.
 	/// @return The native pointer to the interface.
-	[[nodiscard]] _Ret_maybenull_ T* operator->() noexcept {
+	[[nodiscard]] constexpr _Ret_maybenull_ T* operator->() noexcept {
 		return m_ptr;
 	}
 
 	/// @brief Allows the smart pointer to act as the object.
 	/// @return The native pointer to the interface.
-	[[nodiscard]] _Ret_maybenull_ const T* operator->() const noexcept {
+	[[nodiscard]] constexpr _Ret_maybenull_ const T* operator->() const noexcept {
 		return m_ptr;
 	}
 
 	/// @brief Allows the smart pointer to act as the object.
 	/// @details The behavior is undefined if no object is set.
 	/// @return The managed object.
-	[[nodiscard]] T& operator*() noexcept {
+	[[nodiscard]] constexpr T& operator*() noexcept {
 		return *m_ptr;
 	}
 
 	/// @brief Allows the smart pointer to act as the object.
 	/// @details The behavior is undefined if no object is set.
 	/// @return The managed object.
-	[[nodiscard]] const T& operator*() const noexcept {
+	[[nodiscard]] constexpr const T& operator*() const noexcept {
 		return *m_ptr;
 	}
 
@@ -119,26 +124,40 @@ public:
 
 	/// @brief Check if this instance currently manages a pointer.
 	/// @return `true` if the pointer does not equal `nullptr`, else `false`.
-	[[nodiscard]] explicit operator bool() const noexcept {
-		return m_ptr;
+	[[nodiscard]] constexpr explicit operator bool() const noexcept {
+		return !!m_ptr;
+	}
+
+	/// @brief Use the value of the `unique_ptr` as an exception argument.
+	/// @param logData The output target.
+	void operator>>(_Inout_ LogData& logData) const {
+		logData << reinterpret_cast<const void* const&>(m_ptr);
+	}
+
+	/// @brief Use value of the `unique_ptr` as an event argument.
+	/// @tparam A The type of the output target.
+	/// @param args The output target.
+	template <LogArgs A>
+	constexpr void operator>>(_Inout_ A& args) const {
+		args << reinterpret_cast<const void* const&>(m_ptr);
 	}
 
 public:
 	/// @brief Use the `unique_ptr` in place of the raw type.
 	/// @return The native pointer.
-	[[nodiscard]] _Ret_maybenull_ T* get() noexcept {
+	[[nodiscard]] constexpr _Ret_maybenull_ T* get() noexcept {
 		return m_ptr;
 	}
 
 	/// @brief Use the `unique_ptr` in place of the raw type.
 	/// @return The native pointer.
-	[[nodiscard]] _Ret_maybenull_ const T* get() const noexcept {
+	[[nodiscard]] constexpr _Ret_maybenull_ const T* get() const noexcept {
 		return m_ptr;
 	}
 
 	/// @brief Transfers ownership.
 	/// @param p A pointer.
-	void reset(_In_opt_ T* const p = nullptr) noexcept {
+	constexpr void reset(_In_opt_ T* const p = nullptr) noexcept {
 		if (m_ptr != p) {
 			delete m_ptr;
 			m_ptr = p;
@@ -148,7 +167,7 @@ public:
 	/// @brief Releases ownership of the pointer.
 	/// @warning The responsibility for deleting the object is transferred to the caller.
 	/// @return The native pointer.
-	[[nodiscard]] _Ret_maybenull_ T* release() noexcept {
+	[[nodiscard]] constexpr _Ret_maybenull_ T* release() noexcept {
 		T* const p = m_ptr;
 		m_ptr = nullptr;
 		return p;
@@ -156,13 +175,13 @@ public:
 
 	/// @brief Swap two objects.
 	/// @param ptr The other `unique_ptr`.
-	void swap(unique_ptr& ptr) noexcept {
+	constexpr void swap(unique_ptr& ptr) noexcept {
 		std::swap(m_ptr, ptr.m_ptr);
 	}
 
 	/// @brief Get a hash value for the object.
 	/// @return A hash value calculated based on the managed pointer.
-	[[nodiscard]] std::size_t hash() const noexcept {
+	[[nodiscard]] constexpr std::size_t hash() const noexcept {
 		return std::hash<T*>{}(m_ptr);
 	}
 
@@ -182,7 +201,7 @@ private:
 /// @param oth Another `unique_ptr` object.
 /// @return `true` if @p ptr points to the same address as @p oth.
 template <typename T, typename U>
-[[nodiscard]] inline bool operator==(const unique_ptr<T>& ptr, const unique_ptr<U>& oth) noexcept {
+[[nodiscard]] constexpr bool operator==(const unique_ptr<T>& ptr, const unique_ptr<U>& oth) noexcept {
 	return ptr.get() == oth.get();
 }
 
@@ -193,7 +212,7 @@ template <typename T, typename U>
 /// @param p A native pointer.
 /// @return `true` if @p ptr holds the same pointer as @p p.
 template <typename T, typename U>
-[[nodiscard]] inline bool operator==(const unique_ptr<T>& ptr, const U* const p) noexcept {
+[[nodiscard]] constexpr bool operator==(const unique_ptr<T>& ptr, const U* const p) noexcept {
 	return ptr.get() == p;
 }
 
@@ -204,7 +223,7 @@ template <typename T, typename U>
 /// @param ptr A `unique_ptr` object.
 /// @return `true` if @p ptr holds the same pointer as @p p.
 template <typename T, typename U>
-[[nodiscard]] inline bool operator==(const U* const p, const unique_ptr<T>& ptr) noexcept {
+[[nodiscard]] constexpr bool operator==(const U* const p, const unique_ptr<T>& ptr) noexcept {
 	return ptr.get() == p;
 }
 
@@ -213,7 +232,7 @@ template <typename T, typename U>
 /// @param ptr A `unique_ptr` object.
 /// @return `true` if @p ptr is not set.
 template <typename T>
-[[nodiscard]] inline bool operator==(const unique_ptr<T>& ptr, std::nullptr_t) noexcept {
+[[nodiscard]] constexpr bool operator==(const unique_ptr<T>& ptr, std::nullptr_t) noexcept {
 	return !ptr;
 }
 
@@ -222,7 +241,7 @@ template <typename T>
 /// @param ptr A `unique_ptr` object.
 /// @return `true` if @p ptr is not set.
 template <typename T>
-[[nodiscard]] inline bool operator==(std::nullptr_t, const unique_ptr<T>& ptr) noexcept {
+[[nodiscard]] constexpr bool operator==(std::nullptr_t, const unique_ptr<T>& ptr) noexcept {
 	return !ptr;
 }
 
@@ -238,7 +257,7 @@ template <typename T>
 /// @param oth Another `unique_ptr` object.
 /// @return `true` if @p ptr does not point to the same address as @p oth.
 template <typename T, typename U>
-[[nodiscard]] inline bool operator!=(const unique_ptr<T>& ptr, const unique_ptr<U>& oth) noexcept {
+[[nodiscard]] constexpr bool operator!=(const unique_ptr<T>& ptr, const unique_ptr<U>& oth) noexcept {
 	return ptr.get() != oth.get();
 }
 
@@ -249,7 +268,7 @@ template <typename T, typename U>
 /// @param p A native pointer.
 /// @return `true` if @p ptr does not hold the same pointer as @p p.
 template <typename T, typename U>
-[[nodiscard]] inline bool operator!=(const unique_ptr<T>& ptr, const U* const p) noexcept {
+[[nodiscard]] constexpr bool operator!=(const unique_ptr<T>& ptr, const U* const p) noexcept {
 	return ptr.get() != p;
 }
 
@@ -260,7 +279,7 @@ template <typename T, typename U>
 /// @param ptr A `unique_ptr` object.
 /// @return `true` if @p ptr does not hold the same pointer as @p p.
 template <typename T, typename U>
-[[nodiscard]] inline bool operator!=(const U* const p, const unique_ptr<T>& ptr) noexcept {
+[[nodiscard]] constexpr bool operator!=(const U* const p, const unique_ptr<T>& ptr) noexcept {
 	return ptr.get() != p;
 }
 
@@ -269,7 +288,7 @@ template <typename T, typename U>
 /// @param ptr A `unique_ptr` object.
 /// @return `true` if @p ptr is set.
 template <typename T>
-[[nodiscard]] inline bool operator!=(const unique_ptr<T>& ptr, std::nullptr_t) noexcept {
+[[nodiscard]] constexpr bool operator!=(const unique_ptr<T>& ptr, std::nullptr_t) noexcept {
 	return !!ptr;
 }
 
@@ -278,48 +297,48 @@ template <typename T>
 /// @param ptr A `unique_ptr` object.
 /// @return `true` if @p ptr is set.
 template <typename T>
-[[nodiscard]] inline bool operator!=(std::nullptr_t, const unique_ptr<T>& ptr) noexcept {
+[[nodiscard]] constexpr bool operator!=(std::nullptr_t, const unique_ptr<T>& ptr) noexcept {
 	return !!ptr;
 }
 
 
 /// @brief Specialization of the `unique_ptr` for arrays.
 /// @tparam T The type.
-template <class T>
+template <typename T>
 class unique_ptr<T[]> final {
 public:
-	constexpr unique_ptr() noexcept = default;
+	[[nodiscard]] constexpr unique_ptr() noexcept = default;
+
+	[[nodiscard]] constexpr explicit unique_ptr(std::nullptr_t) noexcept {
+		// empty
+	}
+
+	[[nodiscard]] constexpr explicit unique_ptr(_In_opt_ T* const p) noexcept
+	    : m_ptr(p) {
+		// empty
+	}
 
 	unique_ptr(const unique_ptr&) = delete;
 
-	unique_ptr(unique_ptr&& ptr) noexcept
-		: m_ptr(ptr.release()) {
+	[[nodiscard]] constexpr unique_ptr(unique_ptr&& ptr) noexcept
+	    : m_ptr(ptr.release()) {
 		// empty
 	}
 
-	constexpr explicit unique_ptr(std::nullptr_t) noexcept {
-		// empty
-	}
-
-	explicit unique_ptr(_In_opt_ T* const p) noexcept
-		: m_ptr(p) {
-		// empty
-	}
-
-	~unique_ptr() noexcept {
+	constexpr ~unique_ptr() noexcept {
 		delete[] m_ptr;
 	}
 
 public:
 	unique_ptr& operator=(const unique_ptr&) = delete;
 
-	unique_ptr& operator=(unique_ptr&& ptr) noexcept {
+	constexpr unique_ptr& operator=(unique_ptr&& ptr) noexcept {
 		delete[] m_ptr;
 		m_ptr = ptr.release();
 		return *this;
 	}
 
-	unique_ptr& operator=(std::nullptr_t) noexcept {
+	constexpr unique_ptr& operator=(std::nullptr_t) noexcept {
 		delete[] m_ptr;
 		m_ptr = nullptr;
 		return *this;
@@ -331,35 +350,45 @@ public:
 		return std::addressof(m_ptr);
 	}
 
-	[[nodiscard]] T& operator[](const std::size_t index) noexcept {
+	[[nodiscard]] constexpr T& operator[](const std::size_t index) noexcept {
 		return m_ptr[index];
 	}
 
-	[[nodiscard]] const T& operator[](const std::size_t index) const noexcept {
+	[[nodiscard]] constexpr const T& operator[](const std::size_t index) const noexcept {
 		return m_ptr[index];
 	}
 
-	[[nodiscard]] explicit operator bool() const noexcept {
-		return m_ptr;
+	[[nodiscard]] constexpr explicit operator bool() const noexcept {
+		return !!m_ptr;
+	}
+
+	void operator>>(_Inout_ LogData& logData) const {
+		logData << reinterpret_cast<const void* const&>(m_ptr);
+	}
+
+	template <LogArgs A>
+	constexpr void operator>>(_Inout_ A& args) const {
+		args << reinterpret_cast<const void* const&>(m_ptr);
 	}
 
 public:
-	[[nodiscard]] _Ret_maybenull_ T* get() noexcept {
+	[[nodiscard]] constexpr _Ret_maybenull_ T* get() noexcept {
 		return m_ptr;
 	}
 
-	[[nodiscard]] _Ret_maybenull_ const T* get() const noexcept {
+	[[nodiscard]] constexpr _Ret_maybenull_ const T* get() const noexcept {
 		return m_ptr;
 	}
 
-	void reset(_In_opt_ T* p = nullptr) noexcept {
-		if (m_ptr != p) [[likely]] {
+	constexpr void reset(_In_opt_ T* p = nullptr) noexcept {
+		if (m_ptr != p) {
+			[[likely]];
 			delete[] m_ptr;
 			m_ptr = p;
 		}
 	}
 
-	[[nodiscard]] _Ret_maybenull_ T* release() noexcept {
+	[[nodiscard]] constexpr _Ret_maybenull_ T* release() noexcept {
 		T* const p = m_ptr;
 		m_ptr = nullptr;
 		return p;
@@ -367,13 +396,13 @@ public:
 
 	/// @brief Swap two objects.
 	/// @param ptr The other `unique_ptr`.
-	void swap(unique_ptr& ptr) noexcept {
+	constexpr void swap(unique_ptr& ptr) noexcept {
 		std::swap(m_ptr, ptr.m_ptr);
 	}
 
 	/// @brief Get a hash value for the object.
 	/// @return A hash value calculated based on the managed pointer.
-	[[nodiscard]] std::size_t hash() const noexcept {
+	[[nodiscard]] constexpr std::size_t hash() const noexcept {
 		return std::hash<void*>{}(m_ptr);
 	}
 
@@ -388,16 +417,19 @@ private:
 /// @tparam Args The types of the arguments for the constructor of @p T.
 /// @param args The arguments for the constructor of @p T.
 template <typename T, typename... Args>
-[[nodiscard]] inline typename std::enable_if_t<!std::is_array_v<T>, unique_ptr<T>> make_unique(Args&&... args) {
+requires(!std::is_array_v<T>)
+    [[nodiscard]] inline unique_ptr<T> make_unique(Args&&... args) {
 	return unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
 /// @brief Creates a new `unique_ptr` for an array.
+/// @details The contents are NOT initialized.
 /// @remarks The sole purpose of the function is to allow template argument deduction.
 /// @tparam T The type of the pointer.
 /// @param size The size of the array in number of elements of @p T.
 template <typename T>
-[[nodiscard]] inline typename std::enable_if_t<std::is_array_v<T>, unique_ptr<T>> make_unique(const size_t size) {
+requires std::is_array_v<T>
+[[nodiscard]] inline unique_ptr<T> make_unique_for_overwrite(const size_t size) {
 	return unique_ptr<T>(new std::remove_extent_t<T>[size]);
 }
 
@@ -407,16 +439,34 @@ template <typename T>
 /// @param ptr A `unique_ptr` object.
 /// @param oth Another `unique_ptr` object.
 template <typename T>
-inline void swap(m3c::unique_ptr<T>& ptr, m3c::unique_ptr<T>& oth) noexcept {
+constexpr void swap(unique_ptr<T>& ptr, unique_ptr<T>& oth) noexcept {
 	ptr.swap(oth);
 }
 
 }  // namespace m3c
 
+
 /// @brief Specialization of std::hash.
 template <typename T>
 struct std::hash<m3c::unique_ptr<T>> {
-	[[nodiscard]] std::size_t operator()(const m3c::unique_ptr<T>& ptr) const noexcept {
+	[[nodiscard]] constexpr std::size_t operator()(const m3c::unique_ptr<T>& ptr) const noexcept {
 		return ptr.hash();
+	}
+};
+
+
+/// @brief Specialization of `fmt::formatter` for a `m3c::unique_ptr`.
+/// @tparam T The type managed by the `m3c::unique_ptr`.
+/// @tparam CharT The character type of the string.
+template <typename T, typename CharT>
+struct fmt::formatter<m3c::unique_ptr<T>, CharT> : public fmt::formatter<const void*, CharT> {
+	/// @brief Format the handle.
+	/// @tparam FormatContext see `fmt::formatter::format`.
+	/// @param arg A handle.
+	/// @param ctx see `fmt::formatter::format`.
+	/// @return see `fmt::formatter::format`.
+	template <typename FormatContext>
+	[[nodiscard]] auto format(const m3c::unique_ptr<T>& arg, FormatContext& ctx) const -> decltype(ctx.out()) {
+		return __super::format(static_cast<const void*>(arg.get()), ctx);
 	}
 };

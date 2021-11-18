@@ -14,28 +14,40 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+/// @file
+
 #include "m3c/com_ptr.h"
 
-#include "m3c_events.h"
+#include "m3c/LogArgs.h"
+#include "m3c/exception.h"
 
-#include "m3c/format.h"  // IWYU pragma: keep
-#include <m3c/exception.h>
-#if 0
-#include <llamalog/LogLine.h>
-#include <llamalog/custom_types.h>
+#include "m3c.events.h"
 
-llamalog::LogLine& operator<<(llamalog::LogLine& logLine, m3c::com_ptr<IUnknown>& arg) {
-	return logLine.AddCustomArgument(arg);
+#include <fmt/xchar.h>
+
+#include <sal.h>
+
+#include <string>
+
+namespace m3c {
+
+namespace internal {
+
+void com_ptr_base::QueryInterface(_In_ IUnknown* const pUnknown, const IID& iid, _Outptr_ void** p) {
+	M3C_COM_HR(pUnknown->QueryInterface(iid, p), evt::IUnknown_QueryInterface_H, iid);
 }
 
-llamalog::LogLine& operator<<(llamalog::LogLine& logLine, m3c::com_ptr<IStream>& arg) {
-	return logLine.AddCustomArgument(arg);
-}
-#endif
-namespace m3c::internal {
+}  // namespace internal
 
-void com_ptr_base::QueryInterface(IUnknown* const pUnknown, const IID& iid, void** p) {
-	M3C_COM_HR(pUnknown->QueryInterface(iid, p), evt::IUnknown_QueryInterface, iid);
+
+template <>
+void operator>>(const com_ptr<IStream>& ptr, _Inout_ LogFormatArgs& formatArgs) {
+	formatArgs << fmt_ptr(reinterpret_cast<IUnknown* const&>(ptr.m_ptr)) << FMT_FORMAT("{:n}", ptr);
 }
 
-}  // namespace m3c::internal
+template <>
+void operator>>(const com_ptr<IStream>& ptr, _Inout_ LogEventArgs& eventArgs) {
+	(eventArgs << reinterpret_cast<const void* const&>(ptr.m_ptr)) + FMT_FORMAT(L"{:n}", ptr);
+}
+
+}  // namespace m3c

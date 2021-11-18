@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Michael Beckh
+Copyright 2020-2021 Michael Beckh
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,20 +15,42 @@ limitations under the License.
 */
 
 /// @file
-/// @brief Include the header file to allow compilation and analyzer checks.
 
 #include "m3c/Handle.h"
 
-#include "m3c_events.h"
+#include "m3c/Log.h"
+#include "m3c/exception.h"
+
+#include "m3c.events.h"
 
 namespace m3c::internal {
 
-const EVENT_DESCRIPTOR& HandleCloser::GetEvent() const noexcept {
-	return evt::CloseHandle;
+void HandleCloser::Close(HANDLE hNative) {
+	if (!CloseHandle(hNative)) {
+		[[unlikely]];
+		throw windows_error() + evt::HandleLeak_E;
+	}
 }
 
-const EVENT_DESCRIPTOR& FindCloser::GetEvent() const noexcept {
-	return evt::FindClose;
+void HandleCloser::CloseSilently(HANDLE hNative) noexcept {
+	if (!CloseHandle(hNative)) {
+		[[unlikely]];
+		Log::Error(evt::HandleLeak_E, last_error());
+	}
+}
+
+void FindCloser::Close(HANDLE hNative) {
+	if (!FindClose(hNative)) {
+		[[unlikely]];
+		throw windows_error() + evt::HandleLeak_E;
+	}
+}
+
+void FindCloser::CloseSilently(HANDLE hNative) noexcept {
+	if (!FindClose(hNative)) {
+		[[unlikely]];
+		Log::Error(evt::HandleLeak_E, last_error());
+	}
 }
 
 template class BaseHandle<HandleCloser>;

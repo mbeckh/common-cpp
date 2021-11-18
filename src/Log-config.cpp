@@ -1,4 +1,23 @@
+/*
+Copyright 2021 Michael Beckh
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+/// @file
+
 #include "m3c/Log.h"
+#include "m3c/LogArgs.h"
 #include "m3c/LogData.h"
 #include "m3c/finally.h"
 
@@ -11,16 +30,20 @@
 #include <vector>
 
 #ifndef M3C_LOG_LEVEL
+#ifdef _DEBUG
+#pragma message("M3C_LOG_LEVEL not defined - using Priority::kDebug for debug build")
+#define M3C_LOG_LEVEL Debug
+#else
+#pragma message("M3C_LOG_LEVEL not defined - using Priority::kInfo for release build")
 #define M3C_LOG_LEVEL Info
 #endif
+#endif
+
 #define M3C_LOG_LEVEL_ENUM_(name_) k##name_
 #define M3C_LOG_LEVEL_ENUM(name_) M3C_LOG_LEVEL_ENUM_(name_)
 
-#ifndef M3C_LOG_OUTPUT_DEBUG
-#define M3C_LOG_OUTPUT_DEBUG 0
-#endif
-#ifndef M3C_LOG_OUTPUT_STDERR
-#define M3C_LOG_OUTPUT_STDERR 0
+#ifndef M3C_LOG_OUTPUT_PRINT
+#define M3C_LOG_OUTPUT_PRINT 0
 #endif
 #ifndef M3C_LOG_OUTPUT_EVENT
 #define M3C_LOG_OUTPUT_EVENT 0
@@ -29,25 +52,26 @@
 namespace m3c {
 
 namespace {
+
+/// @brief The log level defined at compile-time.
 constexpr Priority kMinimumLevel = Priority::M3C_LOG_LEVEL_ENUM(M3C_LOG_LEVEL);
 
-constexpr bool kOutputDebug = M3C_LOG_OUTPUT_DEBUG;
-constexpr bool kOutputStderr = M3C_LOG_OUTPUT_STDERR;
-constexpr bool kOutputEvent = M3C_LOG_OUTPUT_EVENT;
+
+constexpr bool kOutputPrint = M3C_LOG_OUTPUT_PRINT;  ///< @brief kEvent `true` if the logger writes to the print output.
+constexpr bool kOutputEvent = M3C_LOG_OUTPUT_EVENT;  ///< @brief kEvent `true` if the logger writes to the Windows event log.
 
 }  // namespace
 
-namespace internal {
-std::string GetEventMessagePattern(const USHORT eventId);
-}
+constinit const Priority Log::kLevel = kMinimumLevel;
 
 //
 // Logger
 //
 
-Log::Log(const GUID& guid) noexcept {
+Log::Log() noexcept {
 	if constexpr (kOutputEvent) {
-		RegisterEvents(guid);
+		assert(!IsEqualGUID(kGuid, {0}));  // log events but no provider defined
+		RegisterEvents();
 	}
 }
 
@@ -57,57 +81,67 @@ Log::~Log() noexcept {
 	}
 }
 
-template <internal::EventInfo E>
-void Log::DoLogEvent(const Priority priority, const internal::EventContext<E>& context, _In_z_ const char* const cause, internal::Thunk<internal::LogData&>&& print, internal::Thunk<EVENT_DATA_DESCRIPTOR*>&& evt, const ULONG count) {
-	if (priority > kMinimumLevel) {
-		return;
-	}
-	if constexpr (kOutputDebug || kOutputStderr) {
-		internal::LogData logData;
-		print.thunk(print.function, logData);
-		if constexpr (internal::EventContext<E>::kIsEventDescriptor) {
-			Print<kOutputDebug, kOutputStderr>(priority, internal::GetEventMessagePattern(context.GetEvent().Id).c_str(), logData, cause, context.GetSourceLocation());
+template <internal::LogMessage M>
+void Log::DoLogMessage(const Priority priority, const internal::LogContext<M>& context, _In_z_ const char* const cause, const internal::ClosureExcept<void, LogFormatArgs&>&& print, const internal::ClosureExcept<void, LogEventArgs&>&& event) {
+#ifdef _DEBUG
+	std::size_t assertArgCount;
+#endif
+	const std::source_location& sourceLocation = context.GetSourceLocation();
+	if constexpr (kOutputPrint) {
+		LogFormatArgs formatArgs;
+		print(formatArgs);
+#ifdef _DEBUG
+		assertArgCount = formatArgs.size();
+#endif
+		if constexpr (internal::LogContext<M>::kIsEventDescriptor) {
+			Print(priority, internal::GetEventMessagePattern(context.GetLogMessage().Id).c_str(), formatArgs, cause, sourceLocation);
 		} else {
-			Print<kOutputDebug, kOutputStderr>(priority, context.GetEvent(), logData, cause, context.GetSourceLocation());
+			Print(priority, context.GetLogMessage(), formatArgs, cause, sourceLocation);
 		}
 	}
-	if constexpr (kOutputEvent && internal::EventContext<E>::kIsEventDescriptor) {
-		EVENT_DESCRIPTOR event(context.GetEvent());
-		EventDescSetLevel(&event, static_cast<std::underlying_type_t<Priority>>(priority));
-		std::vector<EVENT_DATA_DESCRIPTOR> data(count);
-		evt.thunk(evt.function, data.data());
-		WriteEvent(event, count, data.data());
+	if constexpr (kOutputEvent && internal::LogContext<M>::kIsEventDescriptor) {
+		EVENT_DESCRIPTOR eventDesc(context.GetLogMessage());
+		EventDescSetLevel(&eventDesc, static_cast<std::underlying_type_t<Priority>>(priority));
+		LogEventArgs eventArgs;
+		event(eventArgs);
+#ifdef _DEBUG
+		if constexpr (kOutputPrint) {
+			assert(assertArgCount == eventArgs.size());
+		}
+#endif
+
+		const char* const fileName = sourceLocation.file_name();
+		const std::uint_least32_t line = sourceLocation.line();
+		eventArgs << fileName << line;
+		WriteEvent(eventDesc, eventArgs);
 	}
 }
 
-template void Log::DoLogEvent(Priority, const internal::EventContext<const EVENT_DESCRIPTOR&>&, const char*, internal::Thunk<internal::LogData&>&&, internal::Thunk<EVENT_DATA_DESCRIPTOR*>&&, ULONG);
-template void Log::DoLogEvent(Priority, const internal::EventContext<const char*>&, const char*, internal::Thunk<internal::LogData&>&&, internal::Thunk<EVENT_DATA_DESCRIPTOR*>&&, ULONG);
+template void Log::DoLogMessage(Priority, const internal::LogContext<const EVENT_DESCRIPTOR&>&, const char*, const internal::ClosureExcept<void, LogFormatArgs&>&&, const internal::ClosureExcept<void, LogEventArgs&>&&);
+template void Log::DoLogMessage(Priority, const internal::LogContext<const char*>&, const char*, const internal::ClosureExcept<void, LogFormatArgs&>&&, const internal::ClosureExcept<void, LogEventArgs&>&&);
 
-template <internal::EventInfo E>
-void Log::DoLogExceptionEvent(const Priority priority, const internal::EventContext<E>& context, internal::Thunk<internal::LogData&>&& print, internal::Thunk<EVENT_DATA_DESCRIPTOR*>&& event, const ULONG count) {
-	if (priority > kMinimumLevel) {
-		return;
-	}
-	if constexpr (kOutputDebug || kOutputStderr || (kOutputEvent && internal::EventContext<E>::kIsEventDescriptor)) {
+template <internal::LogMessage M>
+void Log::DoLogException(const Priority priority, const internal::LogContext<M>& context, const internal::ClosureExcept<void, LogFormatArgs&>&& print, const internal::ClosureExcept<void, LogEventArgs&>&& event) {
+	if constexpr (kOutputPrint || (kOutputEvent && internal::LogContext<M>::kIsEventDescriptor)) {
 		std::string cause;
 		GUID activityId;
 		bool mustResetActivityId;
-		if constexpr (kOutputEvent && internal::EventContext<E>::kIsEventDescriptor) {
+		if constexpr (kOutputEvent && internal::LogContext<M>::kIsEventDescriptor) {
 			mustResetActivityId = SetActivityId(activityId);
 		}
 		auto guard = finally([&activityId, mustResetActivityId]() noexcept {
-			if constexpr (kOutputEvent && internal::EventContext<E>::kIsEventDescriptor) {
+			if constexpr (kOutputEvent && internal::LogContext<M>::kIsEventDescriptor) {
 				if (mustResetActivityId) {
 					ResetActivityId(activityId);
 				}
 			}
 		});
-		DoLogException<kOutputDebug || kOutputStderr, kOutputEvent && internal::EventContext<E>::kIsEventDescriptor>(priority, activityId, cause);
-		DoLogEvent(priority, context, cause.c_str(), std::move(print), std::move(event), count);
+		WriteException<kOutputPrint, kOutputEvent && internal::LogContext<M>::kIsEventDescriptor>(priority, activityId, cause);
+		DoLogMessage(priority, context, cause.c_str(), std::move(print), std::move(event));
 	}
 }
 
-template void Log::DoLogExceptionEvent(Priority, const internal::EventContext<const EVENT_DESCRIPTOR&>&, internal::Thunk<internal::LogData&>&&, internal::Thunk<EVENT_DATA_DESCRIPTOR*>&&, ULONG);
-template void Log::DoLogExceptionEvent(Priority, const internal::EventContext<const char*>&, internal::Thunk<internal::LogData&>&&, internal::Thunk<EVENT_DATA_DESCRIPTOR*>&&, ULONG);
+template void Log::DoLogException(Priority, const internal::LogContext<const EVENT_DESCRIPTOR&>&, const internal::ClosureExcept<void, LogFormatArgs&>&&, const internal::ClosureExcept<void, LogEventArgs&>&&);
+template void Log::DoLogException(Priority, const internal::LogContext<const char*>&, const internal::ClosureExcept<void, LogFormatArgs&>&&, const internal::ClosureExcept<void, LogEventArgs&>&&);
 
 }  // namespace m3c

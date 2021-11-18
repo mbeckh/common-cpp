@@ -1,5 +1,5 @@
 /*
-Copyright 2019 Michael Beckh
+Copyright 2019-2021 Michael Beckh
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,18 +21,51 @@ limitations under the License.
 
 #include <cstddef>
 #include <string>
+#include <string_view>
 
 namespace m3c {
 
 /// @brief Convert a wide character string to a UTF-8 encoded string.
-/// @param wstr The source string.
+/// @param str The source string.
 /// @return The source string in UTF-8 encoding.
-std::string EncodeUtf8(_In_z_ const wchar_t* __restrict wstr);  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
+[[nodiscard]] std::string EncodeUtf8(_In_z_ const wchar_t* __restrict str);
+
+/// @brief Convert a wide character string to a UTF-8 encoded string.
+/// @param str The source string.
+/// @return The source string in UTF-8 encoding.
+[[nodiscard]] std::string EncodeUtf8(const std::wstring& str);
+
+/// @brief Convert a wide character string view to a UTF-8 encoded string.
+/// @param str The source string view.
+/// @return The source string in UTF-8 encoding.
+[[nodiscard]] std::string EncodeUtf8(const std::wstring_view& str);
 
 /// @brief Convert part of a wide character string to a UTF-8 encoded string.
-/// @param wstr The source string.
-/// @param length The number of characters to convert starting at @p wstr.
+/// @param str The source string.
+/// @param length The number of characters to convert starting at @p str.
 /// @return The first cchLen characters of the source string in UTF-8 encoding.
-std::string EncodeUtf8(_In_reads_(length) const wchar_t* __restrict wstr, std::size_t length);  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
+[[nodiscard]] std::string EncodeUtf8(_In_reads_(length) const wchar_t* __restrict str, std::size_t length);
+
+
+/// @brief Convert a UTF-8 encoded string to a UTF-16 encoded character string.
+/// @param str The source string.
+/// @return The source string in UITF-16 encoding.
+[[nodiscard]] std::wstring EncodeUtf16(_In_z_ const char* __restrict str);
+
+/// @brief Convert a UTF-8 encoded string to a UTF-16 encoded character string.
+/// @param str The source string.
+/// @return The source string in UITF-16 encoding.
+[[nodiscard]] std::wstring EncodeUtf16(const std::string& str);
+
+/// @brief Convert a UTF-8 encoded string view to a UTF-16 encoded character string.
+/// @param str The source string view.
+/// @return The source string in UITF-16 encoding.
+[[nodiscard]] std::wstring EncodeUtf16(const std::string_view& str);
+
+/// @brief Convert part of a UTF-8 encoded character string to a UTF-16 encoded string.
+/// @param str The source string.
+/// @param length The number of characters to convert starting at @p wstr.
+/// @return The first cchLen characters of the source string in UTF-16 encoding.
+[[nodiscard]] std::wstring EncodeUtf16(_In_reads_(length) const char* __restrict str, std::size_t length);
 
 }  // namespace m3c

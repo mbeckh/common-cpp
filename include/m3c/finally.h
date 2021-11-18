@@ -1,5 +1,5 @@
 /*
-Copyright 2019 Michael Beckh
+Copyright 2019-2021 Michael Beckh
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@ limitations under the License.
 */
 
 /// @file
-
 #pragma once
 
+#include <type_traits>
 #include <utility>
 
 namespace m3c {
@@ -27,35 +27,37 @@ namespace internal {
 /// @brief Helper class for running code during stack unwinding (similar to finally from the GSL).
 /// @tparam F The type of the lambda called during stack unwinding.
 template <class F>
-class FinalAction final {
+requires std::is_nothrow_invocable_v<F>
+class final_action final {
 public:
 	/// @brief Create a final action.
 	/// @param f The lambda to be called during stack unwinding.
-	explicit FinalAction(F f) noexcept
-		: m_f(std::move(f)) {
+	[[nodiscard]] constexpr explicit final_action(F&& f) noexcept
+	    : m_f(std::forward<F>(f)) {
 		static_assert(noexcept(m_f()), "lambda must be noexcept");
 	}
 
-	FinalAction(const FinalAction&) = delete;  ///< @nocopyconstructor
+	final_action(const final_action&) = delete;  ///< @nocopyconstructor
 
 	/// @brief Transfers control of the lambda to this instance.
 	/// @param oth The previous owner.
-	FinalAction(FinalAction<F>&& oth) noexcept
-		: m_f(std::move(oth.m_f))
-		, m_active(oth.m_active) {
+	[[nodiscard]] constexpr final_action(final_action&& oth) noexcept
+	    : m_f(std::move(oth.m_f))
+	    , m_active(oth.m_active) {
 		oth.m_active = false;
 	}
 
 	/// @brief Calls the lambda if still owned by this instance.
-	~FinalAction() noexcept {
-		if (m_active) [[likely]] {
+	constexpr ~final_action() noexcept {
+		if (m_active) {
+			[[likely]];
 			m_f();
 		}
 	}
 
 public:
-	FinalAction& operator=(const FinalAction&) = delete;  ///< @noassignmentoperator
-	FinalAction& operator=(FinalAction&&) = delete;       ///< @nomoveoperator
+	final_action& operator=(const final_action&) = delete;  ///< @noassignmentoperator
+	final_action& operator=(final_action&&) = delete;       ///< @nomoveoperator
 
 private:
 	F m_f;                 ///< @brief Our lambda.
@@ -69,8 +71,9 @@ private:
 /// @tparam F The (auto-deducted) type of the lambda expression.
 /// @param f The lambda expression. The expression MUST NOT throw any exceptions.
 template <class F>
-[[nodiscard]] inline internal::FinalAction<F> finally(F&& f) noexcept {  // NOLINT(readability-identifier-naming): Infrastructure code is less prominent in lower case.
-	return internal::FinalAction<F>(std::forward<F>(f));
+requires std::is_nothrow_invocable_v<F>
+[[nodiscard]] constexpr internal::final_action<F> finally(F&& f) noexcept {
+	return internal::final_action<F>(std::forward<F>(f));
 }
 
 }  // namespace m3c

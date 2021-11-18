@@ -15,43 +15,45 @@ limitations under the License.
 */
 
 /// @file
-
 #pragma once
 
-//#include "format.h"
-
-//#include <m3c/exception.h>
-
-//#include <llamalog/llamalog.h>
+#include <m3c/type_traits.h>
 
 #include <rpc.h>
+#include <sal.h>
 
 #include <cstddef>
 #include <functional>
+#include <string>
 #include <type_traits>
 #include <utility>
 
 namespace m3c {
-namespace internal {
 
 /// @brief A generic template for a RAII type for memory managed using `RpcStringFree`.
-/// @tparam T The type of the managed object, either `RPC_CSTR` or `RPC_WSTR`.
-template <typename T>
+/// @tparam T The character type of the string.
+template <AnyOf<char, wchar_t> T>
 class basic_rpc_string final {
 public:
-	/// @brief Creates a new empty instance.
-	constexpr basic_rpc_string() noexcept = default;
+	/// @brief The character type of the string.
+	using char_type = T;
+	/// @brief The RPC character type of the string.
+	using rpc_str_type = std::conditional_t<std::is_same_v<char_type, char>, RPC_CSTR, RPC_WSTR>;
 
-	basic_rpc_string(const basic_rpc_string&) = delete;
+public:
+	/// @brief Creates a new empty instance.
+	[[nodiscard]] constexpr basic_rpc_string() noexcept = default;
+
+	/// @brief Creates an empty instance.
+	[[nodiscard]] constexpr explicit basic_rpc_string(std::nullptr_t) noexcept {
+		// empty
+	}
+
+	[[nodiscard]] basic_rpc_string(const basic_rpc_string&) = delete;
 
 	/// @brief Transfers ownership.
 	/// @param str Another `basic_rpc_string`.
-	basic_rpc_string(basic_rpc_string&& str) noexcept;
-
-	/// @brief Creates an empty instance.
-	constexpr explicit basic_rpc_string(std::nullptr_t) noexcept {
-		// empty
-	}
+	[[nodiscard]] basic_rpc_string(basic_rpc_string&& str) noexcept;
 
 	/// @brief Releases any memory using `RpcStringFree`.
 	~basic_rpc_string() noexcept;
@@ -72,32 +74,47 @@ public:
 	/// @details The function frees the currently held memory before returning the address.
 	/// When a value is assigned to the return value of this function, ownership is transferred to this instance.
 	/// @return The address of the pointer which is managed internally.
-	[[nodiscard]] _Ret_notnull_ T* operator&();
+	[[nodiscard]] _Ret_notnull_ rpc_str_type* operator&();
 
 	/// @brief Check if this instance currently manages a pointer.
 	/// @return `true` if the pointer does not equal `nullptr`, else `false`.
-	[[nodiscard]] explicit constexpr operator bool() const noexcept {
+	[[nodiscard]] constexpr explicit operator bool() const noexcept {
 		return !!m_ptr;
 	}
 
 public:
 	/// @brief Use the RPC string in place of the raw type.
 	/// @return The native pointer.
-	[[nodiscard]] constexpr _Ret_maybenull_ T get() const noexcept {
+	[[nodiscard]] constexpr _Ret_maybenull_ rpc_str_type get() const noexcept {
 		return m_ptr;
 	}
 
 	/// @brief Access the internal string as a native pointer.
+	/// @details If no RPC string is stored, an empty string is returned.
 	/// @return The native `char` or `wchar_t` pointer.
-	[[nodiscard]] constexpr _Ret_maybenull_ const std::conditional_t<std::is_same_v<T, RPC_CSTR>, char, wchar_t>* as_native() const noexcept {
-		return reinterpret_cast<const std::conditional_t<std::is_same_v<T, RPC_CSTR>, char, wchar_t>*>(m_ptr);
+	[[nodiscard]] constexpr _Ret_z_ const char_type* c_str() const noexcept {
+		if (m_ptr) {
+			[[likely]];
+			return reinterpret_cast<const char_type*>(m_ptr);
+		}
+		return SelectString<char_type>("", L"");
+	}
+
+	/// @brief Get the number of characters in this string.
+	/// @return The number of characters (not including the terminating null character).
+	[[nodiscard]] constexpr std::size_t size() const noexcept {
+		if (m_ptr) {
+			[[likely]];
+			return std::char_traits<char_type>::length(c_str());
+		}
+		return 0;
 	}
 
 	/// @brief Releases ownership of the pointer.
 	/// @note The responsibility for deleting the object is transferred to the caller.
 	/// @return The native pointer.
-	[[nodiscard]] constexpr _Ret_maybenull_ T release() noexcept {
-		T const p = m_ptr;
+	[[nodiscard]] constexpr _Ret_maybenull_ rpc_str_type release() noexcept {
+		rpc_str_type const p = m_ptr;
 		m_ptr = nullptr;
 		return p;
 	}
@@ -120,7 +137,7 @@ private:
 	[[nodiscard]] RPC_STATUS destroy() noexcept;
 
 private:
-	T m_ptr = nullptr;  ///< @brief The native pointer.
+	rpc_str_type m_ptr = nullptr;  ///< @brief The native pointer.
 };
 
 
@@ -134,7 +151,7 @@ private:
 /// @param oth Another `basic_rpc_string` object.
 /// @return `true` if @p str points to the same address as @p oth.
 template <typename T>
-[[nodiscard]] inline constexpr bool operator==(const basic_rpc_string<T>& str, const basic_rpc_string<T>& oth) {
+[[nodiscard]] constexpr bool operator==(const basic_rpc_string<T>& str, const basic_rpc_string<T>& oth) noexcept {
 	return str.get() == oth.get();
 }
 
@@ -144,7 +161,7 @@ template <typename T>
 /// @param p A native pointer.
 /// @return `true` if @p str holds the same pointer as @p p.
 template <typename T>
-[[nodiscard]] inline constexpr bool operator==(const basic_rpc_string<T>& str, T p) {
+[[nodiscard]] constexpr bool operator==(const basic_rpc_string<T>& str, typename basic_rpc_string<T>::rpc_str_type p) noexcept {
 	return str.get() == p;
 }
 
@@ -154,7 +171,7 @@ template <typename T>
 /// @param str A `basic_rpc_string` object.
 /// @return `true` if @p str holds the same pointer as @p p.
 template <typename T>
-[[nodiscard]] inline constexpr bool operator==(T p, const basic_rpc_string<T>& str) {
+[[nodiscard]] constexpr bool operator==(typename basic_rpc_string<T>::rpc_str_type p, const basic_rpc_string<T>& str) noexcept {
 	return str.get() == p;
 }
 
@@ -163,7 +180,7 @@ template <typename T>
 /// @param str A `basic_rpc_string` object.
 /// @return `true` if @p str is not set.
 template <typename T>
-[[nodiscard]] inline constexpr bool operator==(const basic_rpc_string<T>& str, std::nullptr_t) {
+[[nodiscard]] constexpr bool operator==(const basic_rpc_string<T>& str, std::nullptr_t) noexcept {
 	return !str;
 }
 
@@ -172,7 +189,7 @@ template <typename T>
 /// @param str A `basic_rpc_string` object.
 /// @return `true` if @p str is not set.
 template <typename T>
-[[nodiscard]] inline constexpr bool operator==(std::nullptr_t, const basic_rpc_string<T>& str) {
+[[nodiscard]] constexpr bool operator==(std::nullptr_t, const basic_rpc_string<T>& str) noexcept {
 	return !str;
 }
 
@@ -187,7 +204,7 @@ template <typename T>
 /// @param oth Another `basic_rpc_string` object.
 /// @return `true` if @p str does not point to the same address as @p oth.
 template <typename T>
-[[nodiscard]] inline bool operator!=(const basic_rpc_string<T>& str, const basic_rpc_string<T>& oth) {
+[[nodiscard]] constexpr bool operator!=(const basic_rpc_string<T>& str, const basic_rpc_string<T>& oth) noexcept {
 	return str.get() != oth.get();
 }
 
@@ -197,7 +214,7 @@ template <typename T>
 /// @param p A native pointer.
 /// @return `true` if @p str does not hold the same pointer as @p p.
 template <typename T>
-[[nodiscard]] inline bool operator!=(const basic_rpc_string<T>& str, T p) {
+[[nodiscard]] constexpr bool operator!=(const basic_rpc_string<T>& str, typename basic_rpc_string<T>::rpc_str_type p) noexcept {
 	return str.get() != p;
 }
 
@@ -207,7 +224,7 @@ template <typename T>
 /// @param str A `basic_rpc_string` object.
 /// @return `true` if @p str does not hold the same pointer as @p p.
 template <typename T>
-[[nodiscard]] inline bool operator!=(T p, const basic_rpc_string<T>& str) {
+[[nodiscard]] constexpr bool operator!=(typename basic_rpc_string<T>::rpc_str_type p, const basic_rpc_string<T>& str) noexcept {
 	return str.get() != p;
 }
 
@@ -216,7 +233,7 @@ template <typename T>
 /// @param str A `basic_rpc_string` object.
 /// @return `true` if @p str is set.
 template <typename T>
-[[nodiscard]] inline bool operator!=(const basic_rpc_string<T>& str, std::nullptr_t) {
+[[nodiscard]] constexpr bool operator!=(const basic_rpc_string<T>& str, std::nullptr_t) noexcept {
 	return !!str;
 }
 
@@ -225,7 +242,7 @@ template <typename T>
 /// @param str A `basic_rpc_string` object.
 /// @return `true` if @p str is set.
 template <typename T>
-[[nodiscard]] inline bool operator!=(std::nullptr_t, const basic_rpc_string<T>& str) {
+[[nodiscard]] constexpr bool operator!=(std::nullptr_t, const basic_rpc_string<T>& str) noexcept {
 	return !!str;
 }
 
@@ -235,27 +252,31 @@ template <typename T>
 /// @param str A `basic_rpc_string` object.
 /// @param oth Another `basic_rpc_string` object.
 template <typename T>
-inline void swap(m3c::internal::basic_rpc_string<T>& str, m3c::internal::basic_rpc_string<T>& oth) noexcept {
+constexpr void swap(basic_rpc_string<T>& str, basic_rpc_string<T>& oth) noexcept {
 	str.swap(oth);
 }
 
-extern template class basic_rpc_string<RPC_CSTR>;
-extern template class basic_rpc_string<RPC_WSTR>;
+template <>
+RPC_STATUS basic_rpc_string<char>::destroy() noexcept;
+template <>
+RPC_STATUS basic_rpc_string<wchar_t>::destroy() noexcept;
 
-}  // namespace internal
+extern template class basic_rpc_string<char>;
+extern template class basic_rpc_string<wchar_t>;
 
 /// @brief A typedef for `char`-based RPC strings.
-using rpc_string = internal::basic_rpc_string<RPC_CSTR>;
+using rpc_string = basic_rpc_string<char>;
 
 /// @brief A typedef for wide character RPC strings.
-using rpc_wstring = internal::basic_rpc_string<RPC_WSTR>;
+using rpc_wstring = basic_rpc_string<wchar_t>;
 
 }  // namespace m3c
 
+
 /// @brief Specialization of std::hash.
 template <typename T>
-struct std::hash<m3c::internal::basic_rpc_string<T>> {
-	[[nodiscard]] constexpr std::size_t operator()(const m3c::internal::basic_rpc_string<T>& str) const noexcept {
+struct std::hash<m3c::basic_rpc_string<T>> {
+	[[nodiscard]] constexpr std::size_t operator()(const m3c::basic_rpc_string<T>& str) const noexcept {
 		return str.hash();
 	}
 };

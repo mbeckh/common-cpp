@@ -18,26 +18,31 @@ limitations under the License.
 
 #include "m3c/com_heap_ptr.h"
 
-#include "m3c_events.h"
-
 #include "m3c/exception.h"
 
+#include "m3c.events.h"
+
 #include <objbase.h>
+
+#include <cstdint>
+#include <new>
 
 namespace m3c::internal {
 
 _Ret_notnull_ void* com_heap_ptr_base::allocate(const std::size_t count, const std::size_t size) {
 	void* const ptr = CoTaskMemAlloc(count * size);
-	if (!ptr) [[unlikely]] {
-		throw std::bad_alloc() + evt::CoTaskMemAlloc << static_cast<std::uint64_t>(count) << static_cast<std::uint64_t>(size);
+	if (!ptr) {
+		[[unlikely]];
+		throw std::bad_alloc() + evt::ComAlloc << static_cast<std::uint64_t>(count) << static_cast<std::uint64_t>(size);
 	}
 	return ptr;
 }
 
 _Ret_notnull_ void* com_heap_ptr_base::reallocate(_In_opt_ void* const ptr, const std::size_t count, const std::size_t size) {
 	void* const pResult = CoTaskMemRealloc(ptr, count * size);
-	if (!pResult) [[unlikely]] {
-		throw std::bad_alloc() + evt::CoTaskMemRealloc << static_cast<std::uint64_t>(count) << static_cast<std::uint64_t>(size);
+	if (!pResult) {
+		[[unlikely]];
+		throw std::bad_alloc() + evt::ComAlloc << static_cast<std::uint64_t>(count) << static_cast<std::uint64_t>(size);
 	}
 	return pResult;
 }

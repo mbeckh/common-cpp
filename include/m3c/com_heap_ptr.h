@@ -1,5 +1,5 @@
 /*
-Copyright 2019 Michael Beckh
+Copyright 2019-2021 Michael Beckh
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,30 +17,52 @@ limitations under the License.
 /// @file
 #pragma once
 
-//#include <llamalog/llamalog.h>
+#include <m3c/LogArgs.h>
+#include <m3c/LogData.h>
+
+#include <fmt/format.h>
 
 #include <sal.h>
 
 #include <cstddef>
 #include <functional>
 #include <memory>
-#include <new>
 
 namespace m3c {
 
 namespace internal {
 
-class __declspec(novtable) com_heap_ptr_base {
+/// @brief Base class with common static helper methods.
+class com_heap_ptr_base {
 protected:
 	constexpr com_heap_ptr_base() noexcept = default;
+	constexpr com_heap_ptr_base(const com_heap_ptr_base&) noexcept = default;
+	constexpr com_heap_ptr_base(com_heap_ptr_base&&) noexcept = default;
+	constexpr ~com_heap_ptr_base() noexcept = default;
 
 protected:
-	static _Ret_notnull_ void* allocate(std::size_t count, std::size_t size);
-	static _Ret_notnull_ void* reallocate(_In_opt_ void* ptr, std::size_t count, std::size_t size);
+	constexpr com_heap_ptr_base& operator=(const com_heap_ptr_base&) noexcept = default;
+	constexpr com_heap_ptr_base& operator=(com_heap_ptr_base&&) noexcept = default;
+
+protected:
+	/// @brief Wraps call to `CoTaskMemAlloc`
+	/// @param count The number of object to allocate.
+	/// @param size The size of each object.
+	[[nodiscard]] static _Ret_notnull_ void* allocate(std::size_t count, std::size_t size);
+
+	/// @brief Wraps call to `CoTaskMemRealloc`
+	/// @param ptr A pointer to a memory block.
+	/// @param count The number of object to allocate.
+	/// @param size The size of each object.
+	[[nodiscard]] static _Ret_notnull_ void* reallocate(_In_opt_ void* ptr, std::size_t count, std::size_t size);
+
+	/// @brief Wraps call to `CoTaskMemFree`
+	/// @param ptr A pointer to a memory block.
 	static void deallocate(_In_opt_ void* ptr) noexcept;
 };
 
 }  // namespace internal
+
 
 /// @brief A RAII type for memory managed using `CoTaskMemAlloc` and `CoTaskMemFree`.
 /// @tparam T The native type of the pointer.
@@ -48,33 +70,33 @@ template <typename T>
 class com_heap_ptr final : private internal::com_heap_ptr_base {
 public:
 	/// @brief Creates an empty instance.
-	constexpr com_heap_ptr() noexcept = default;
-
-	com_heap_ptr(const com_heap_ptr&) = delete;
-
-	/// @brief Transfers ownership.
-	/// @param ptr Another `com_heap_ptr`.
-	com_heap_ptr(com_heap_ptr&& ptr) noexcept
-		: m_ptr(ptr.release()) {
-		// empty
-	}
+	[[nodiscard]] constexpr com_heap_ptr() noexcept = default;
 
 	/// @brief Creates an empty instance.
-	constexpr explicit com_heap_ptr(std::nullptr_t) noexcept {
+	[[nodiscard]] constexpr explicit com_heap_ptr(std::nullptr_t) noexcept {
 		// empty
 	}
 
 	/// @brief Transfer ownership of an existing pointer.
 	/// @param p The native pointer.
-	constexpr explicit com_heap_ptr(_In_opt_ T* const p) noexcept
-		: m_ptr(p) {
+	[[nodiscard]] constexpr explicit com_heap_ptr(_In_opt_ T* const p) noexcept
+	    : m_ptr(p) {
 		// empty
 	}
 
 	/// @brief Allocate and own a new memory block.
 	/// @param count The size of the memory block in number of @p T elements.
-	explicit com_heap_ptr(const std::size_t count)
-		: m_ptr(reinterpret_cast<T*>(allocate(count, sizeof(T)))) {
+	[[nodiscard]] explicit com_heap_ptr(const std::size_t count)
+	    : m_ptr(static_cast<T*>(allocate(count, sizeof(T)))) {
+		// empty
+	}
+
+	[[nodiscard]] com_heap_ptr(const com_heap_ptr&) = delete;
+
+	/// @brief Transfers ownership.
+	/// @param ptr Another `com_heap_ptr`.
+	[[nodiscard]] constexpr com_heap_ptr(com_heap_ptr&& ptr) noexcept
+	    : m_ptr(ptr.release()) {
 		// empty
 	}
 
@@ -115,8 +137,23 @@ public:
 
 	/// @brief Check if this instance currently manages a pointer.
 	/// @return `true` if the pointer does not equal `nullptr`, else `false`.
-	[[nodiscard]] explicit operator bool() const noexcept {
-		return m_ptr;
+	[[nodiscard]] constexpr explicit operator bool() const noexcept {
+		return !!m_ptr;
+	}
+
+	/// @brief Use the address of the managed pointer as an exception argument.
+	/// @param logData The output target.
+	void operator>>(_Inout_ LogData& logData) const {
+		// ensure cast to void* for logging of pointer value
+		logData << reinterpret_cast<const void* const&>(m_ptr);
+	}
+
+	/// @brief Use the address of the managed pointer as an event argument.
+	/// @tparam A The type of the log arguments.
+	/// @param args The output target.
+	template <LogArgs A>
+	constexpr void operator>>(_Inout_ A& args) const {
+		args << reinterpret_cast<const void* const&>(m_ptr);
 	}
 
 public:
@@ -128,14 +165,14 @@ public:
 
 	/// @brief Use the `com_heap_ptr` in place of the raw type.
 	/// @return The native pointer.
-	[[nodiscard]] _Ret_maybenull_ const T* get() const noexcept {
+	[[nodiscard]] constexpr _Ret_maybenull_ const T* get() const noexcept {
 		return m_ptr;
 	}
 
 	/// @brief Release ownership of a pointer.
 	/// @note The responsibility for releasing the memory is transferred to the caller.
 	/// @return The native pointer.
-	[[nodiscard]] _Ret_maybenull_ T* release() noexcept {
+	[[nodiscard]] constexpr _Ret_maybenull_ T* release() noexcept {
 		T* const p = m_ptr;
 		m_ptr = nullptr;
 		return p;
@@ -144,18 +181,18 @@ public:
 	/// @brief Change the size of the allocated memory block.
 	/// @param count The new size of the memory block in number of @a T elements.
 	void realloc(const std::size_t count) {
-		m_ptr = reinterpret_cast<T*>(reallocate(m_ptr, count, sizeof(T)));
+		m_ptr = static_cast<T*>(reallocate(m_ptr, count, sizeof(T)));
 	}
 
 	/// @brief Swap two objects.
 	/// @param ptr The other `com_heap_ptr`.
-	void swap(com_heap_ptr& ptr) noexcept {
+	constexpr void swap(com_heap_ptr& ptr) noexcept {
 		std::swap(m_ptr, ptr.m_ptr);
 	}
 
 	/// @brief Get a hash value for the object.
 	/// @return A hash value calculated based on the managed pointer.
-	[[nodiscard]] std::size_t hash() const noexcept {
+	[[nodiscard]] constexpr std::size_t hash() const noexcept {
 		return std::hash<T*>{}(m_ptr);
 	}
 
@@ -174,7 +211,7 @@ private:
 /// @param oth Another `com_heap_ptr` object.
 /// @return `true` if @p ptr points to the same address as @p oth.
 template <typename T>
-[[nodiscard]] inline bool operator==(const com_heap_ptr<T>& ptr, const com_heap_ptr<T>& oth) noexcept {
+[[nodiscard]] constexpr bool operator==(const com_heap_ptr<T>& ptr, const com_heap_ptr<T>& oth) noexcept {
 	return ptr.get() == oth.get();
 }
 
@@ -184,7 +221,7 @@ template <typename T>
 /// @param p A native pointer.
 /// @return `true` if @p ptr holds the same pointer as @p p.
 template <typename T>
-[[nodiscard]] inline bool operator==(const com_heap_ptr<T>& ptr, const T* const p) noexcept {
+[[nodiscard]] constexpr bool operator==(const com_heap_ptr<T>& ptr, const T* const p) noexcept {
 	return ptr.get() == p;
 }
 
@@ -194,7 +231,7 @@ template <typename T>
 /// @param ptr A `com_heap_ptr` object.
 /// @return `true` if @p ptr holds the same pointer as @p p.
 template <typename T>
-[[nodiscard]] inline bool operator==(const T* const p, const com_heap_ptr<T>& ptr) noexcept {
+[[nodiscard]] constexpr bool operator==(const T* const p, const com_heap_ptr<T>& ptr) noexcept {
 	return ptr.get() == p;
 }
 
@@ -203,7 +240,7 @@ template <typename T>
 /// @param ptr A `com_heap_ptr` object.
 /// @return `true` if @p ptr is not set.
 template <typename T>
-[[nodiscard]] inline bool operator==(const com_heap_ptr<T>& ptr, std::nullptr_t) noexcept {
+[[nodiscard]] constexpr bool operator==(const com_heap_ptr<T>& ptr, std::nullptr_t) noexcept {
 	return !ptr;
 }
 
@@ -212,7 +249,7 @@ template <typename T>
 /// @param ptr A `com_heap_ptr` object.
 /// @return `true` if @p ptr is not set.
 template <typename T>
-[[nodiscard]] inline bool operator==(std::nullptr_t, const com_heap_ptr<T>& ptr) noexcept {
+[[nodiscard]] constexpr bool operator==(std::nullptr_t, const com_heap_ptr<T>& ptr) noexcept {
 	return !ptr;
 }
 
@@ -227,7 +264,7 @@ template <typename T>
 /// @param oth Another `com_heap_ptr` object.
 /// @return `true` if @p ptr does not point to the same address as @p oth.
 template <typename T>
-[[nodiscard]] inline bool operator!=(const com_heap_ptr<T>& ptr, const com_heap_ptr<T>& oth) noexcept {
+[[nodiscard]] constexpr bool operator!=(const com_heap_ptr<T>& ptr, const com_heap_ptr<T>& oth) noexcept {
 	return ptr.get() != oth.get();
 }
 
@@ -237,7 +274,7 @@ template <typename T>
 /// @param p A native pointer.
 /// @return `true` if @p ptr does not hold the same pointer as @p p.
 template <typename T>
-[[nodiscard]] inline bool operator!=(const com_heap_ptr<T>& ptr, const T* const p) noexcept {
+[[nodiscard]] constexpr bool operator!=(const com_heap_ptr<T>& ptr, const T* const p) noexcept {
 	return ptr.get() != p;
 }
 
@@ -247,7 +284,7 @@ template <typename T>
 /// @param ptr A `com_heap_ptr` object.
 /// @return `true` if @p ptr does not hold the same pointer as @p p.
 template <typename T>
-[[nodiscard]] inline bool operator!=(const T* const p, const com_heap_ptr<T>& ptr) noexcept {
+[[nodiscard]] constexpr bool operator!=(const T* const p, const com_heap_ptr<T>& ptr) noexcept {
 	return ptr.get() != p;
 }
 
@@ -256,7 +293,7 @@ template <typename T>
 /// @param ptr A `com_heap_ptr` object.
 /// @return `true` if @p ptr is set.
 template <typename T>
-[[nodiscard]] inline bool operator!=(const com_heap_ptr<T>& ptr, std::nullptr_t) noexcept {
+[[nodiscard]] constexpr bool operator!=(const com_heap_ptr<T>& ptr, std::nullptr_t) noexcept {
 	return !!ptr;
 }
 
@@ -265,7 +302,7 @@ template <typename T>
 /// @param ptr A `com_heap_ptr` object.
 /// @return `true` if @p ptr is set.
 template <typename T>
-[[nodiscard]] inline bool operator!=(std::nullptr_t, const com_heap_ptr<T>& ptr) noexcept {
+[[nodiscard]] constexpr bool operator!=(std::nullptr_t, const com_heap_ptr<T>& ptr) noexcept {
 	return !!ptr;
 }
 
@@ -275,7 +312,7 @@ template <typename T>
 /// @param ptr A `com_heap_ptr` object.
 /// @param oth Another `com_heap_ptr` object.
 template <typename T>
-inline void swap(m3c::com_heap_ptr<T>& ptr, m3c::com_heap_ptr<T>& oth) noexcept {
+constexpr void swap(m3c::com_heap_ptr<T>& ptr, m3c::com_heap_ptr<T>& oth) noexcept {
 	ptr.swap(oth);
 }
 
@@ -285,7 +322,22 @@ inline void swap(m3c::com_heap_ptr<T>& ptr, m3c::com_heap_ptr<T>& oth) noexcept 
 /// @tparam T The type of the managed native pointer.
 template <typename T>
 struct std::hash<m3c::com_heap_ptr<T>> {
-	[[nodiscard]] size_t operator()(const m3c::com_heap_ptr<T>& ptr) const noexcept {
+	[[nodiscard]] constexpr std::size_t operator()(const m3c::com_heap_ptr<T>& ptr) const noexcept {
 		return ptr.hash();
+	}
+};
+
+/// @brief Specialization of `fmt::formatter` for a `m3c::com_heap_ptr`.
+/// @tparam T The type managed by the `m3c::com_heap_ptr`.
+/// @tparam CharT The character type of the formatter.
+template <typename T, typename CharT>
+struct fmt::formatter<m3c::com_heap_ptr<T>, CharT> : fmt::formatter<const void*, CharT> {
+	/// @brief Format the `m3c::com_heap_ptr`.
+	/// @param arg A `m3c::com_heap_ptr`.
+	/// @param ctx see `fmt::formatter::format`.
+	/// @return see `fmt::formatter::format`.
+	template <typename FormatContext>
+	[[nodiscard]] auto format(const m3c::com_heap_ptr<T>& arg, FormatContext& ctx) const -> decltype(ctx.out()) {
+		return __super::format(arg.get(), ctx);
 	}
 };

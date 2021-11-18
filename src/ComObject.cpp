@@ -18,71 +18,106 @@ limitations under the License.
 
 #include "m3c/ComObject.h"
 
-#include "m3c_events.h"
-
 #include "m3c/COM.h"
 #include "m3c/Log.h"
 #include "m3c/exception.h"
-//#include "m3c/types_log.h"  // IWYU pragma: keep
+
+#include "m3c.events.h"
 
 #include <windows.h>
 #include <unknwn.h>
 
-#include <new>
-
-
 namespace m3c::internal {
 
+HRESULT Unknown::UnknownImpl::QueryInterface(REFIID riid, _COM_Outptr_ void** const ppObject) noexcept {
+	return GetAbstractComObject()->QueryInterfaceNonDelegated(riid, ppObject);
+}
+ULONG Unknown::UnknownImpl::AddRef() noexcept {
+	return GetAbstractComObject()->AddRefNonDelegated();
+}
+ULONG Unknown::UnknownImpl::Release() noexcept {
+	return GetAbstractComObject()->ReleaseNonDelegated();
+}
+
+AbstractComObject* Unknown::UnknownImpl::GetAbstractComObject() noexcept {
+	static_assert(offsetof(Unknown, m_unknown) == 0);
+#pragma warning(suppress : 26491)  // valid as checked by static_assert
+	return static_cast<AbstractComObject*>(reinterpret_cast<Unknown*>(this));
+}
+
+
 AbstractComObject::AbstractComObject() noexcept {
-	InterlockedIncrement(&COM::m_objectCount);
+	InterlockedIncrement(&COM::s_objectCount);
+}
+
+AbstractComObject::AbstractComObject(_In_opt_ IUnknown* const pOuter) noexcept
+    : m_pUnknown(pOuter ? pOuter : &m_unknown) {
+	InterlockedIncrement(&COM::s_objectCount);
 }
 
 AbstractComObject::~AbstractComObject() noexcept {
-	InterlockedDecrement(&COM::m_objectCount);
+	InterlockedDecrement(&COM::s_objectCount);
 }
 
 //
-// IUnknown
+// Non-Delegated methods of IUnknown
 //
 
-HRESULT AbstractComObject::QueryInterface(REFIID riid, _COM_Outptr_ void** const ppObject) noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
-	if (!ppObject) [[unlikely]] {
-		return LOG_TRACE_RESULT(E_INVALIDARG, "hr={}, riid={}", riid);
+HRESULT AbstractComObject::QueryInterfaceNonDelegated(REFIID riid, _COM_Outptr_ void** const ppObject) noexcept {
+	if (!ppObject) {
+		[[unlikely]];
+		return Log::TraceHResult(E_INVALIDARG, "hr={}, riid={}", riid);
 	}
 
-	*ppObject = FindInterface(riid);
-	if (*ppObject) [[likely]] {
+	if (IsEqualIID(riid, IID_IUnknown)) {
+		*ppObject = &m_unknown;
+		AddRefNonDelegated();
+		return Log::TraceHResult(S_OK, "hr={}, riid={}", riid);
+	}
+
+	*ppObject = FindInterfaceInternal(riid);
+	if (*ppObject) {
+		[[likely]];
 		static_cast<IUnknown*>(*ppObject)->AddRef();
-		return LOG_TRACE_RESULT(S_OK, "hr={}, riid={}", riid);
+		return Log::TraceHResult(S_OK, "hr={}, riid={}", riid);
 	}
-	return LOG_TRACE_RESULT(E_NOINTERFACE, "hr={}, riid={}", riid);
+	return Log::TraceHResult(E_NOINTERFACE, "hr={}, riid={}", riid);
 }
 
-ULONG AbstractComObject::AddRef() noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
-	return LOG_TRACE_RESULT(InterlockedIncrement(&m_refCount), "ref={}, this={}", static_cast<const void*>(this));
+ULONG AbstractComObject::AddRefNonDelegated() noexcept {
+	return Log::TraceResult(InterlockedIncrement(&m_refCount), "ref={}, this={}", static_cast<const void*>(this));
 }
 
-ULONG AbstractComObject::Release() noexcept {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
-	const void* const ths = this;              // do not touch this after possible deletion
+ULONG AbstractComObject::ReleaseNonDelegated() noexcept {
+	const void* const ths = this;  // do not touch this after possible deletion
 
 	const ULONG refCount = InterlockedDecrement(&m_refCount);
 	if (!refCount) {
+		// Required as of https://docs.microsoft.com/en-us/windows/win32/com/aggregation
+		// Inner object might trigger calls to AddRef and Release on itself
+		InterlockedIncrement(&m_refCount);
 		delete this;
 	}
-	return LOG_TRACE_RESULT(refCount, "ref={}, this={}, objects={}", ths, COM::m_objectCount);
+	return Log::TraceResult(refCount, "ref={}, this={}, objects={}", ths, COM::s_objectCount);
 }
 
 //
 // Custom methods
 //
 
-_Ret_notnull_ void* AbstractComObject::QueryInterface(REFIID riid) {  // NOLINT(readability-identifier-naming): Windows/COM naming convention.
-	void* const pInterface = FindInterface(riid);
-	if (pInterface) [[likely]] {
+_Ret_notnull_ void* AbstractComObject::QueryInterface(REFIID riid) {
+	if (IsEqualIID(riid, IID_IUnknown)) {
+		AddRefNonDelegated();
+		return &m_unknown;
+	}
+
+	void* const pInterface = FindInterfaceInternal(riid);
+	if (pInterface) {
+		[[likely]];
 		static_cast<IUnknown*>(pInterface)->AddRef();
 		return pInterface;
 	}
-	throw com_error(E_NOINTERFACE) + evt::IUnknown_QueryInterface << riid;
+	throw com_error(E_NOINTERFACE) + evt::IUnknown_QueryInterface_H << riid;
 }
 
 }  // namespace m3c::internal
