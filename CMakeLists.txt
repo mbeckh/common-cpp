@@ -48,7 +48,7 @@ add_library(m3c
     "include/m3c/type_traits.h"
     "include/m3c/unique_ptr.h"
     )
-add_library(m3c::m3c ALIAS m3c)
+add_library(common-cpp::m3c ALIAS m3c)
 
 target_sources(m3c INTERFACE "$<$<NOT:$<IN_LIST:$<TARGET_PROPERTY:TYPE>,STATIC_LIBRARY;OBJECT_LIBRARY;INTERFACE_LIBRARY>>:$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src/Log-config.cpp>>"
                              "$<$<NOT:$<IN_LIST:$<TARGET_PROPERTY:TYPE>,STATIC_LIBRARY;OBJECT_LIBRARY;INTERFACE_LIBRARY>>:$<INSTALL_INTERFACE:include/m3c/Log-config.cpp>>")
@@ -70,14 +70,14 @@ target_link_libraries(m3c PUBLIC fmt::fmt PRIVATE rpcrt4 propsys)
 target_events(m3c "src/m3c.events.man")
 
 include(CMakePackageConfigHelpers)
-configure_package_config_file("cmake/m3c-config.cmake.in" "m3c-config.cmake" INSTALL_DESTINATION "share/common-cpp")
-write_basic_package_version_file("${PROJECT_BINARY_DIR}/m3c-config-version.cmake" VERSION ${m3c_VERSION} COMPATIBILITY SameMajorVersion)
+configure_package_config_file("cmake/common-cpp-config.cmake.in" "common-cpp-config.cmake" INSTALL_DESTINATION "share/common-cpp")
+write_basic_package_version_file("${PROJECT_BINARY_DIR}/common-cpp-config-version.cmake" VERSION ${common-cpp_VERSION} COMPATIBILITY SameMajorVersion)
 
 install(TARGETS m3c EXPORT m3c-targets)
 install(DIRECTORY "include/m3c" TYPE INCLUDE)
 install(FILES "src/Logger-config.cpp" DESTINATION "include/m3c")
-install(EXPORT m3c-targets DESTINATION "share/common-cpp" NAMESPACE "m3c::")
-install(FILES "${PROJECT_BINARY_DIR}/m3c-config.cmake" "${PROJECT_BINARY_DIR}/m3c-config-version.cmake"
+install(EXPORT m3c-targets DESTINATION "share/common-cpp" NAMESPACE "common-cpp::")
+install(FILES "${PROJECT_BINARY_DIR}/common-cpp-config.cmake" "${PROJECT_BINARY_DIR}/common-cpp-config-version.cmake"
               "cmake/EventLog.cmake" "cmake/merge-events.vbs" "cmake/process-events.cmake" "src/m3c.events.man"
         DESTINATION "share/common-cpp")
 
@@ -86,7 +86,7 @@ if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
 
     find_package(GTest REQUIRED)
     find_package(detours-gmock REQUIRED)
-    find_package(m4t REQUIRED)
+    find_package(common-cpp-testing REQUIRED)
 
     add_executable(m3c_Test
         "test/ClassFactory.test.cpp"
@@ -140,9 +140,9 @@ if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
         CXX_EXTENSIONS OFF
     )
 
-    target_link_libraries(m3c_Test PRIVATE m3c::m3c m4t::m4t GTest::gmock detours-gmock::detours-gmock)
-    target_link_libraries(m3c_Test_Log_Print PRIVATE m3c::m3c m4t::m4t GTest::gmock detours-gmock::detours-gmock)
-    target_link_libraries(m3c_Test_Log_Event PRIVATE m3c::m3c m4t::m4t GTest::gmock detours-gmock::detours-gmock)
+    target_link_libraries(m3c_Test PRIVATE common-cpp::m3c common-cpp-testing::m4t GTest::gmock detours-gmock::detours-gmock)
+    target_link_libraries(m3c_Test_Log_Print PRIVATE common-cpp::m3c common-cpp-testing::m4t GTest::gmock detours-gmock::detours-gmock)
+    target_link_libraries(m3c_Test_Log_Event PRIVATE common-cpp::m3c common-cpp-testing::m4t GTest::gmock detours-gmock::detours-gmock)
 
     target_events(m3c_Test "test/test.events.man" LEVEL Trace PRINT EVENT)
     target_events(m3c_Test_Log_Print "test/test.events.man" LEVEL Debug PRINT)

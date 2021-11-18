@@ -4,6 +4,6 @@ include(CMakeFindDependencyMacro)
 find_dependency(fmt)
 
 include(${CMAKE_CURRENT_LIST_DIR}/m3c-targets.cmake)
-check_required_components(m3c)
+check_required_components(common-cpp)
 
 include("${CMAKE_CURRENT_LIST_DIR}/EventLog.cmake")
