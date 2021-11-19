@@ -287,7 +287,9 @@ public:
 	template <typename... Args>                                                                                                                                  \
 	[[nodiscard]] static _Ret_range_(<, 0) HRESULT ExceptionToHResult(const Priority priority, internal::LogContext<type_>&& context, Args&&... args) noexcept { \
 		return ExceptionToHResult(priority, [&context, &args...](const Priority priority, const HRESULT hr) noexcept {                                           \
-			GetInstance().LogException(priority, context, args..., hresult(hr));                                                                                 \
+			if (priority <= kLevel) {                                                                                                                            \
+				GetInstance().LogException(priority, context, args..., hresult(hr));                                                                             \
+			}                                                                                                                                                    \
 		});                                                                                                                                                      \
 	}
 

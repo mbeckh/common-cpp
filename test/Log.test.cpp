@@ -18,7 +18,7 @@ limitations under the License.
 
 #include "m3c/PropVariant.h"
 #include "m3c/exception.h"
-#include <m3c/source_location.h>
+#include "m3c/source_location.h"
 
 #include <m4t/m4t.h>
 
@@ -385,6 +385,7 @@ protected:
 		default:
 			throw std::out_of_range(FMT_FORMAT("eventType {}", eventType));
 		}
+
 		if constexpr (kException) {
 			logOutput += GetExceptionOutput(exceptionMessage, exceptionLocation, exceptionLine);
 			if constexpr (kNested) {
