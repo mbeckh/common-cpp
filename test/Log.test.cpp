@@ -627,7 +627,7 @@ TEST_F(LogString_Test, TraceResult_int_Print) {
 			EXPECT_THAT(m_debug, m4t::MatchesRegex("\\[Trace\\] \\[\\d+\\] Result: 7 - mymessage\n\tat.*\n"));
 			EXPECT_THAT(m_stderr, m4t::MatchesRegex("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3} \\[Trace\\] \\[\\d+\\] Result: 7 - mymessage\n\tat.*\n"));
 		}
-	} else if constexpr (kMinimumLevel < Priority::kTrace) {
+	} else {
 		EXPECT_EQ("", m_debug);
 		EXPECT_EQ("", m_stderr);
 	}
@@ -642,7 +642,7 @@ TEST_F(LogString_Test, TraceHResult_HRESULT_Print) {
 			EXPECT_THAT(m_debug, m4t::MatchesRegex("\\[Trace\\] \\[\\d+\\] HRESULT: 0x8000000A - mymessage\n\tat.*\n"));
 			EXPECT_THAT(m_stderr, m4t::MatchesRegex("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3} \\[Trace\\] \\[\\d+\\] HRESULT: 0x8000000A - mymessage\n\tat.*\n"));
 		}
-	} else if constexpr (kMinimumLevel < Priority::kTrace) {
+	} else {
 		EXPECT_EQ("", m_debug);
 		EXPECT_EQ("", m_stderr);
 	}

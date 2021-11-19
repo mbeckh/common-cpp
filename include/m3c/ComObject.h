@@ -63,7 +63,7 @@ protected:
 		UnknownImpl& operator=(UnknownImpl&&) = delete;
 
 	public:  // IUnknown
-		[[nodiscard]] HRESULT QueryInterface(REFIID riid, _COM_Outptr_ void** const ppObject) noexcept final;
+		[[nodiscard]] HRESULT QueryInterface(REFIID riid, _COM_Outptr_ void** ppObject) noexcept final;
 		ULONG AddRef() noexcept final;
 		ULONG Release() noexcept final;
 
