@@ -237,7 +237,7 @@ public:
 	/// @brief Add a native pointer argument for logging an event message.
 	/// @param arg The log argument.
 	void AddArgument(_In_opt_ const void* __restrict const& arg) {
-		EventDataDescCreate(&m_args.emplace_back(), std::addressof(reinterpret_cast<const void* const&>(arg)), sizeof(arg));  // NOLINT(cppcoreguidelines-pro-type-const-cast): else strange error in clang
+		EventDataDescCreate(&m_args.emplace_back(), std::addressof(const_cast<const void* const&>(arg)), sizeof(arg));  // NOLINT(cppcoreguidelines-pro-type-const-cast): Only way to cast away qualifier.
 	}
 
 	/// @brief Add a `SID` argument for logging an event message.

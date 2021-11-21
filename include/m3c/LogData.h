@@ -221,7 +221,7 @@ public:
 	/// @param arg The argument.
 	/// @copyright Based on `NanoLogLine::operator<<(T)` from NanoLog.
 	template <internal::TriviallyLoggable T>
-	void AddArgument(const T& arg) {
+	void AddArgument(const T arg) {
 		Write<std::remove_cv_t<T>>(arg);
 	}
 
@@ -229,14 +229,14 @@ public:
 	/// object because at the time of logging, the object might no longer exist.
 	/// @param arg The argument.
 	/// @copyright Based on `NanoLogLine::operator<<(uint64_t)` from NanoLog.
-	void AddArgument(_In_opt_ const void* __restrict const arg) {
-		Write<const void* __restrict>(arg);
+	void AddArgument(_In_opt_ const void* const arg) {
+		Write<const void*>(arg);
 	}
 
 	/// @brief Add a nullptr s a log argument. Same as providing a void* pointer but required for overload resolution.
 	/// @copyright Based on `NanoLogLine::operator<<(uint64_t)` from NanoLog.
 	void AddArgument(std::nullptr_t /* arg */) {
-		Write<const void* __restrict>(nullptr);
+		Write<const void*>(nullptr);
 	}
 
 	/// @brief Add a log argument. @details The value is copied into the buffer. A maximum of 2^16 characters is printed.
@@ -346,7 +346,7 @@ private:
 	/// @param arg The value to add.
 	/// @copyright Derived from both methods `NanoLogLine::encode` from NanoLog.
 	template <typename T>
-	void Write(std::conditional_t<std::is_fundamental_v<T>, const T, const T&> arg);
+	void Write(T arg);
 
 	/// @brief Copy a string to the argument buffer.
 	/// @details @internal The internal layout is the `TypeId` followed by the size of the string in characters (NOT

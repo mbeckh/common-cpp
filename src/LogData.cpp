@@ -776,13 +776,13 @@ LogDataBase::~LogDataBase() noexcept {
 	// ensure proper memory layout
 	static_assert(sizeof(LogDataBase) == M3C_LOGDATA_SIZE, "size of LogLine");
 
-	static_assert(offsetof(LogDataBase, m_stackBuffer) == 0, "offset of m_stackBuffer");
+	static_assert_no_clang(offsetof(LogDataBase, m_stackBuffer) == 0, "offset of m_stackBuffer");
 #if UINTPTR_MAX == UINT64_MAX
-	static_assert(offsetof(LogDataBase, m_used) == M3C_LOGDATA_SIZE - 4, "offset of m_used");
+	static_assert_no_clang(offsetof(LogDataBase, m_used) == M3C_LOGDATA_SIZE - 4, "offset of m_used");
 #elif UINTPTR_MAX == UINT32_MAX
-	static_assert(offsetof(LogDataBase, m_used) == M3C_LOGDATA_SIZE - 4, "offset of m_used");
+	static_assert_no_clang(offsetof(LogDataBase, m_used) == M3C_LOGDATA_SIZE - 4, "offset of m_used");
 #else
-	static_assert(false, "layout assertions not defined");
+	static_assert_no_clang(false, "layout assertions not defined");
 #endif
 	if ((!m_hasHeapBuffer || GetHeapBuffer().use_count() == 1) && m_hasNonTriviallyCopyable) {
 		[[unlikely]];
@@ -1026,20 +1026,20 @@ _Ret_notnull_ __declspec(restrict) std::byte* LogDataBase::GetWritePosition(cons
 
 // Derived from both methods `NanoLogLine::encode` from NanoLog.
 template <typename T>
-void LogDataBase::Write(std::conditional_t<std::is_fundamental_v<T>, const T, const T&> arg) {
-	using Type = std::conditional_t<std::is_same_v<T, const void* __restrict>, const void*, std::remove_reference_t<T>>;
-	constexpr TypeId kId = kTypeId<Type>;
-	constexpr auto kArgSize = kTypeSize<Type>;
+void LogDataBase::Write(const T arg) {
+	static_assert(!std::is_reference_v<T>);
+	constexpr TypeId kId = kTypeId<T>;
+	constexpr auto kArgSize = kTypeSize<T>;
 
 	std::byte* __restrict buffer = GetWritePosition(kArgSize);
-	const Align padding = GetPadding<Type>(&buffer[sizeof(kId)]);
+	const Align padding = GetPadding<T>(&buffer[sizeof(kId)]);
 	if (padding) {
 		// check if the buffer has enough space for the type AND the padding
 		buffer = GetWritePosition(kArgSize + padding);
 	}
 
 	std::memcpy(buffer, &kId, sizeof(kId));
-	std::memcpy(&buffer[sizeof(kId) + padding], std::addressof(reinterpret_cast<const Type&>(arg)), sizeof(arg));
+	std::memcpy(&buffer[sizeof(kId) + padding], std::addressof(arg), sizeof(arg));
 
 	m_used += kArgSize + padding;
 }
@@ -1060,14 +1060,14 @@ template void LogDataBase::Write<unsigned long long>(unsigned long long);
 template void LogDataBase::Write<float>(float);
 template void LogDataBase::Write<double>(double);
 template void LogDataBase::Write<long double>(long double);
-template void LogDataBase::Write<const void* __restrict>(const void* __restrict const&);
-template void LogDataBase::Write<GUID>(const GUID&);
-template void LogDataBase::Write<FILETIME>(const FILETIME&);
-template void LogDataBase::Write<SYSTEMTIME>(const SYSTEMTIME&);
+template void LogDataBase::Write<const void*>(const void*);
+template void LogDataBase::Write<GUID>(const GUID);
+template void LogDataBase::Write<FILETIME>(const FILETIME);
+template void LogDataBase::Write<SYSTEMTIME>(const SYSTEMTIME);
 // no SID
-template void LogDataBase::Write<win32_error>(const win32_error&);
-template void LogDataBase::Write<rpc_status>(const rpc_status&);
-template void LogDataBase::Write<hresult>(const hresult&);
+template void LogDataBase::Write<win32_error>(const win32_error);
+template void LogDataBase::Write<rpc_status>(const rpc_status);
+template void LogDataBase::Write<hresult>(const hresult);
 
 /// Derived from `NanoLogLine::encode_c_string` from NanoLog.
 template <typename T>
@@ -1136,7 +1136,7 @@ void* LogDataBase::WriteCustomType(_In_ const FunctionTable* __restrict const pF
 	assert((!m_hasHeapBuffer ? sizeof(m_stackBuffer) : GetHeapBufferSize()) - m_used >= size + padding);
 
 	std::memcpy(buffer, &kId, sizeof(kId));
-	std::memcpy(&buffer[sizeof(kId)], &reinterpret_cast<const FunctionTable* const&>(pFunctionTable), sizeof(pFunctionTable));  // NOLINT(bugprone-sizeof-expression): Get size of pointer.
+	std::memcpy(&buffer[sizeof(kId)], &const_cast<const FunctionTable* const&>(pFunctionTable), sizeof(pFunctionTable));  // NOLINT(bugprone-sizeof-expression): Get size of pointer.
 
 	m_used += size + padding;
 	if constexpr (!kTriviallyCopyable) {
