@@ -1,0 +1,10 @@
+InheritParentConfig: true
+Checks: '
+  -cert-err58-cpp,
+  -clang-diagnostic-documentation,
+  -cppcoreguidelines-avoid-non-const-global-variables,
+  -cppcoreguidelines-special-member-functions,
+  -hicpp-signed-bitwise,
+  -misc-non-private-member-variables-in-classes,
+  -readability-magic-numbers,
+  -readability-redundant-string-init'

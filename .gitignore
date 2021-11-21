@@ -1,6 +1,3 @@
 /.vs/
-/bin/
-/doc/html_developer/
-/doc/html_public/
-/obj/
-*.vcxproj.user
+CMakeSettings.json
+UserSettings.cmake

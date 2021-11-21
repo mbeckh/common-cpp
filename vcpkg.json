@@ -1,0 +1,17 @@
+{
+  "name": "common-cpp",
+  "version": "0.0.1",
+  "port-version": 0,
+  "dependencies": [
+    "fmt"
+  ],
+  "features": {
+    "tests": {
+      "description": "Build tests",
+      "dependencies": [
+        "common-cpp-testing",
+        "detours-gmock"
+      ]
+    }
+  }
+}

@@ -5,37 +5,59 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.txt'
   schedule:
-    - cron: '0 15 * * 5'
+    - cron: '21 8 * * 1'
 
 jobs:
   analyse:
-    name: Analyse
+    name: Analyze
     runs-on: windows-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-      with:
-        submodules: true
 
-    - name: Build dependencies
-      uses: mbeckh/msvc-common/actions/build@v2
+    - name: Cache vcpkg
+      uses: actions/cache@v2
       with:
-        projects: ext-lib\fmt, lib\llamalog
+        path: build/Release/vcpkg_installed
+        key: vcpkg_installed-Release-${{hashFiles('**/vcpkg.json', '**/vcpkg-configuration.json', '!build/**')}}
+
+    - name: Setup MSVC Environment
+      uses: mbeckh/msvc-dev-cmd@master
+
+    - name: Configure
+      uses: mbeckh/cmake-utils/configure@master
+      with:
+        build-root: build
+        binary-dir: build/Release
         configuration: Release
+        extra-args: -D CMAKE_UNITY_BUILD:BOOL=ON
 
     - name: Initialize CodeQL
+      if: github.event_name != 'pull_request'
       uses: github/codeql-action/init@v1
       with:
         languages: cpp
-        config-file: ./.github/codeql/codeql-config.yml
+        queries: security-and-quality
+
+    - name: Initialize CodeQL for Pull Request
+      if: github.event_name == 'pull_request'
+      uses: github/codeql-action/init@v1
+      with:
+        languages: cpp
 
     - name: Build
-      uses: mbeckh/msvc-common/actions/build@v2
-      with:
-        projects: m3c
-        configuration: Release
+      shell: cmd
+      working-directory: build/Release
+      run: cmake --build .
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
