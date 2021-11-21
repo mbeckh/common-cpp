@@ -33,6 +33,7 @@ jobs:
         build-root: build
         binary-dir: build/${{matrix.configuration}}
         configuration: ${{matrix.configuration}}
+        extra-args: -D CMAKE_UNITY_BUILD:BOOL=ON
 
     - name: Build
       shell: cmd

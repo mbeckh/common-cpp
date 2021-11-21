@@ -39,6 +39,7 @@ jobs:
         build-root: build
         binary-dir: build/Release
         configuration: Release
+        extra-args: -D CMAKE_UNITY_BUILD:BOOL=ON
 
     - name: Initialize CodeQL
       if: github.event_name != 'pull_request'
