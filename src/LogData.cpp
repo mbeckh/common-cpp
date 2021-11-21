@@ -1136,7 +1136,7 @@ void* LogDataBase::WriteCustomType(_In_ const FunctionTable* __restrict const pF
 	assert((!m_hasHeapBuffer ? sizeof(m_stackBuffer) : GetHeapBufferSize()) - m_used >= size + padding);
 
 	std::memcpy(buffer, &kId, sizeof(kId));
-	std::memcpy(&buffer[sizeof(kId)], &const_cast<const FunctionTable* const&>(pFunctionTable), sizeof(pFunctionTable));  // NOLINT(bugprone-sizeof-expression): Get size of pointer.
+	std::memcpy(&buffer[sizeof(kId)], &const_cast<const FunctionTable* const&>(pFunctionTable), sizeof(pFunctionTable));  // NOLINT(bugprone-sizeof-expression, cppcoreguidelines-pro-type-const-cast): Get size of pointer, cast away qualifier.
 
 	m_used += size + padding;
 	if constexpr (!kTriviallyCopyable) {
