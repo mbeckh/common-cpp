@@ -79,7 +79,7 @@ target_events(m3c "m3c.events.man")
 
 install(TARGETS m3c EXPORT m3c-targets)
 install(DIRECTORY "../include/m3c" TYPE INCLUDE)
-install(FILES "Logger-config.cpp" DESTINATION "include/m3c")
+install(FILES "Log-config.cpp" DESTINATION "include/m3c")
 install(FILES "${PROJECT_SOURCE_DIR}/cmake/EventLog.cmake" "${PROJECT_SOURCE_DIR}/cmake/merge-events.vbs" "${PROJECT_SOURCE_DIR}/cmake/process-events.cmake"
               "m3c.events.man"
         DESTINATION "share/common-cpp")
