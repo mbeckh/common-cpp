@@ -75,11 +75,10 @@ set_target_properties(m3c PROPERTIES
 )
 
 target_link_libraries(m3c PUBLIC fmt::fmt PRIVATE rpcrt4 propsys)
-target_events(m3c "m3c.events.man")
+target_events(m3c "m3c.events.man" INCLUDE "include/m3c")
 
 install(TARGETS m3c EXPORT m3c-targets)
 install(DIRECTORY "../include/m3c" TYPE INCLUDE)
 install(FILES "Log-config.cpp" DESTINATION "include/m3c")
 install(FILES "${PROJECT_SOURCE_DIR}/cmake/EventLog.cmake" "${PROJECT_SOURCE_DIR}/cmake/merge-events.vbs" "${PROJECT_SOURCE_DIR}/cmake/process-events.cmake"
-              "m3c.events.man"
         DESTINATION "share/common-cpp")

@@ -14,8 +14,8 @@
 
 include_guard(GLOBAL)
 
-function(target_events target events #[[ LEVEL <level> PRINT EVENT ]])
-    cmake_parse_arguments(PARSE_ARGV 2 arg "PRINT;EVENT" "LEVEL" "")
+function(target_events target events #[[ [ LEVEL <level> ] [ PRINT ] [ EVENT ] [ INCLUDE <path> ] ]])
+    cmake_parse_arguments(PARSE_ARGV 2 arg "PRINT;EVENT" "LEVEL;INCLUDE" "")
 
     get_target_property(library "${target}" TYPE)
     string(REGEX MATCH [[^(STATIC_LIBRARY|OBJECT_LIBRARY|INTERFACE_LIBRARY)$]] library "${library}")
@@ -79,7 +79,10 @@ function(target_events target events #[[ LEVEL <level> PRINT EVENT ]])
     target_sources("${target}" PRIVATE "${h_file}" "${man_file}" "${events}")
     if(library)
         cmake_path(GET file FILENAME filename)
-        list(PREPEND includes "$<BUILD_INTERFACE:${src_dir}/${file}>" "$<INSTALL_INTERFACE:${filename}>")
+        list(PREPEND includes "$<BUILD_INTERFACE:${src_dir}/${file}>" "$<INSTALL_INTERFACE:${arg_INCLUDE}/${filename}>")
+        if(arg_INCLUDE)
+            install(FILES ${src_dir}/${file} DESTINATION ${arg_INCLUDE})
+        endif()
         target_sources("${target}" INTERFACE "${includes}")
     else()
         target_sources("${target}" PRIVATE "${rc_file}" "${cpp_file}")
