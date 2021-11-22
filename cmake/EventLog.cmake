@@ -118,6 +118,14 @@ function(common_cpp_target_events target events #[[ [ DESTINATION <path> ] [ LEV
         install(FILES "${man_file}" TYPE DATA)
     endif()
 
+    if(NOT TARGET "generated-sources")
+        add_custom_target("generated-sources")
+    endif()
+    if(NOT TARGET "${target}-generated-sources")
+        add_custom_target("${target}-generated-sources" DEPENDS "${man_file}" "${cpp_file}" "${rc_file}" "${h_file}")
+        add_dependencies("generated-sources" "${target}-generated-sources")
+    endif()
+
     target_include_directories("${target}" SYSTEM PRIVATE "${bin_dir}")
     string(TOUPPER "${arg_LEVEL}" arg_LEVEL)
     if(arg_LEVEL STREQUAL "CRITICAL")

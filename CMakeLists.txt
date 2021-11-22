@@ -13,16 +13,16 @@
 # limitations under the License.
 cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
 
-include(CMakePackageConfigHelpers)
-include(GNUInstallDirs)
-
 project("common-cpp" VERSION 0.1.2
     DESCRIPTION "Common C++ library"
     HOMEPAGE_URL "https://github.com/mbeckh/common-cpp"
     LANGUAGES CXX)
 
+include(GNUInstallDirs)
+
 add_subdirectory(src)
 
+include(CMakePackageConfigHelpers)
 configure_package_config_file("cmake/common-cpp-config.cmake.in" "common-cpp-config.cmake" INSTALL_DESTINATION "share/common-cpp")
 write_basic_package_version_file("common-cpp-config-version.cmake" VERSION ${common-cpp_VERSION} COMPATIBILITY SameMajorVersion)
 
