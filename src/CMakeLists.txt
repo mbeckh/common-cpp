@@ -58,14 +58,14 @@ add_library(m3c
 add_library(common-cpp::m3c ALIAS m3c)
 
 target_sources(m3c INTERFACE "$<$<NOT:$<IN_LIST:$<TARGET_PROPERTY:TYPE>,STATIC_LIBRARY;OBJECT_LIBRARY;INTERFACE_LIBRARY>>:$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/Log-config.cpp>>"
-                             "$<$<NOT:$<IN_LIST:$<TARGET_PROPERTY:TYPE>,STATIC_LIBRARY;OBJECT_LIBRARY;INTERFACE_LIBRARY>>:$<INSTALL_INTERFACE:include/m3c/Log-config.cpp>>")
+                             "$<$<NOT:$<IN_LIST:$<TARGET_PROPERTY:TYPE>,STATIC_LIBRARY;OBJECT_LIBRARY;INTERFACE_LIBRARY>>:$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/m3c/Log-config.cpp>>")
 
 target_compile_definitions(m3c PRIVATE WIN32_LEAN_AND_MEAN=1 NOMINMAX=1)
 target_compile_features(m3c PUBLIC cxx_std_20)
 target_precompile_headers(m3c PRIVATE "pch.h")
 set_property(SOURCE "${CMAKE_CURRENT_BINARY_DIR}/m3c.dir/cmake_pch.cxx" APPEND PROPERTY COMPILE_OPTIONS $<$<CONFIG:Release>:/Yl>)
 
-target_include_directories(m3c PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>" "$<INSTALL_INTERFACE:include>")
+target_include_directories(m3c PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>" "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 
 set_target_properties(m3c PROPERTIES
     DEBUG_POSTFIX d
@@ -75,10 +75,12 @@ set_target_properties(m3c PROPERTIES
 )
 
 target_link_libraries(m3c PUBLIC fmt::fmt PRIVATE rpcrt4 propsys)
-target_events(m3c "m3c.events.man" INCLUDE "include/m3c")
+common_cpp_target_events(m3c "m3c.events.man" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/m3c")
 
 install(TARGETS m3c EXPORT m3c-targets)
 install(DIRECTORY "../include/m3c" TYPE INCLUDE)
-install(FILES "Log-config.cpp" DESTINATION "include/m3c")
-install(FILES "${PROJECT_SOURCE_DIR}/cmake/EventLog.cmake" "${PROJECT_SOURCE_DIR}/cmake/merge-events.vbs" "${PROJECT_SOURCE_DIR}/cmake/process-events.cmake"
+install(FILES "Log-config.cpp" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/m3c")
+install(FILES "${PROJECT_SOURCE_DIR}/cmake/EventLog.cmake"
+              "${PROJECT_SOURCE_DIR}/cmake/merge-events.vbs"
+              "${PROJECT_SOURCE_DIR}/cmake/process-events.cmake"
         DESTINATION "share/common-cpp")

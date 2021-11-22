@@ -73,9 +73,9 @@ target_link_libraries(m3c_Test PRIVATE common-cpp::m3c common-cpp-testing::m4t G
 target_link_libraries(m3c_Test_Log_Print PRIVATE common-cpp::m3c common-cpp-testing::m4t GTest::gmock detours-gmock::detours-gmock)
 target_link_libraries(m3c_Test_Log_Event PRIVATE common-cpp::m3c common-cpp-testing::m4t GTest::gmock detours-gmock::detours-gmock)
 
-target_events(m3c_Test "test.events.man" LEVEL Trace PRINT EVENT)
-target_events(m3c_Test_Log_Print "test.events.man" LEVEL Debug PRINT)
-target_events(m3c_Test_Log_Event "test.events.man" LEVEL Debug EVENT)
+common_cpp_target_events(m3c_Test "test.events.man" LEVEL Trace PRINT EVENT)
+common_cpp_target_events(m3c_Test_Log_Print "test.events.man" LEVEL Debug PRINT)
+common_cpp_target_events(m3c_Test_Log_Event "test.events.man" LEVEL Debug EVENT)
 
 add_test(NAME m3c_Test_PASS COMMAND m3c_Test)
 add_test(NAME m3c_Test_Log_Print_PASS COMMAND m3c_Test_Log_Print)

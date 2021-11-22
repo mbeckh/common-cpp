@@ -14,25 +14,55 @@
 
 include_guard(GLOBAL)
 
-function(target_events target events #[[ [ LEVEL <level> ] [ PRINT ] [ EVENT ] [ INCLUDE <path> ] ]])
-    cmake_parse_arguments(PARSE_ARGV 2 arg "PRINT;EVENT" "LEVEL;INCLUDE" "")
+function(z_common_cpp_target_events var target)
+    get_target_property(library "${target}" TYPE)
+    string(REGEX MATCH [[^(STATIC_LIBRARY|OBJECT_LIBRARY|INTERFACE_LIBRARY)$]] library "${library}")
+    get_target_property(dependencies "${target}" LINK_LIBRARIES)
+    get_target_property(interface_dependencies "${target}" INTERFACE_LINK_LIBRARIES)
+    set(result "${${var}}")
+    foreach(dependency IN LISTS dependencies)
+        if (TARGET "${dependency}")
+            get_target_property(interface_sources "${dependency}" INTERFACE_SOURCES)
+            list(FILTER interface_sources INCLUDE REGEX [[\.man([>;]|$)]])
+            if(interface_sources)
+                if(library)
+                    # libraries with event manifests MUST be PUBLIC INTERFACE_LINK_LIBRARIES to make use of transitive INTERFACE_SOURCES
+                    list(FIND interface_dependencies "${dependency}" interface)
+                    if(interface EQUAL -1)
+                        message(FATAL_ERROR "Dependency ${dependency} of target ${target} MUST be PUBLIC to provide event manifests ${interface_sources}")
+                    endif()
+                endif()
+
+                list(APPEND result "${interface_sources}")
+            endif()
+            z_common_cpp_target_events(result "${dependency}")
+        endif()
+    endforeach()
+    set("${var}" "${result}" PARENT_SCOPE)
+endfunction()
+
+function(common_cpp_target_events target events #[[ [ DESTINATION <path> ] [ LEVEL <level> ] [ PRINT ] [ EVENT ] ]])
+    cmake_parse_arguments(PARSE_ARGV 2 arg "PRINT;EVENT" "DESTINATION;LEVEL" "")
 
     get_target_property(library "${target}" TYPE)
     string(REGEX MATCH [[^(STATIC_LIBRARY|OBJECT_LIBRARY|INTERFACE_LIBRARY)$]] library "${library}")
     get_target_property(src_dir "${target}" SOURCE_DIR)
     get_target_property(bin_dir "${target}" BINARY_DIR)
 
-    get_target_property(dependencies "${target}" LINK_LIBRARIES)
-    unset(includes)
-    foreach(dependency IN LISTS dependencies)
-        if (TARGET "${dependency}")
-            get_target_property(dependency_includes "${dependency}" INTERFACE_SOURCES)
-            list(FILTER dependency_includes INCLUDE REGEX [[\.man([>;]|$)]])
-            if(dependency_includes)
-                list(APPEND includes "${dependency_includes}")
-            endif()
+    if(library)
+        if(NOT arg_DESTINATION)
+            message(FATAL_ERROR "common_cpp_target_events requires DESTINATION for link-time dependency ${target}")
         endif()
-    endforeach()
+        if(arg_LEVEL OR arg_PRINT OR arg_EVENT)
+            message(FATAL_ERROR "common_cpp_target_events does not support LEVEL, PRINT or EVENT for link-time dependency ${target}")
+        endif()
+    else()
+        if(arg_DESTINATION)
+            message(FATAL_ERROR "common_cpp_target_events does not support DESTINATION for binary or shared library ${target}")
+        endif()
+    endif()
+
+    z_common_cpp_target_events(includes "${target}")
     list(REMOVE_DUPLICATES includes)
 
     if(IS_ABSOLUTE "${events}")
@@ -60,8 +90,8 @@ function(target_events target events #[[ [ LEVEL <level> ] [ PRINT ] [ EVENT ] [
     endif()
 
     add_custom_command(OUTPUT "${man_file}"
-        COMMAND "cscript" "//Nologo" "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/merge-events.vbs" "${src_dir}/${file}" "${man_file}" "${includes}"
-        DEPENDS "${src_dir}/${file}" "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/merge-events.vbs" "${includes}"
+        COMMAND "cscript" "//Nologo" "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/merge-events.vbs" "${src_dir}/${file}" "${man_file}" ${includes}
+        DEPENDS "${src_dir}/${file}" "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/merge-events.vbs" ${includes}
         COMMAND_EXPAND_LISTS)
 
     add_custom_command(OUTPUT "${cpp_file}"
@@ -79,15 +109,13 @@ function(target_events target events #[[ [ LEVEL <level> ] [ PRINT ] [ EVENT ] [
     target_sources("${target}" PRIVATE "${h_file}" "${man_file}" "${events}")
     if(library)
         cmake_path(GET file FILENAME filename)
-        list(PREPEND includes "$<BUILD_INTERFACE:${src_dir}/${file}>" "$<INSTALL_INTERFACE:${arg_INCLUDE}/${filename}>")
-        if(arg_INCLUDE)
-            install(FILES ${src_dir}/${file} DESTINATION ${arg_INCLUDE})
-        endif()
-        target_sources("${target}" INTERFACE "${includes}")
+        target_sources("${target}" INTERFACE "$<BUILD_INTERFACE:${src_dir}/${file}>" "$<INSTALL_INTERFACE:${arg_DESTINATION}/${filename}>")
+        install(FILES "${src_dir}/${file}" DESTINATION "${arg_DESTINATION}")
     else()
         target_sources("${target}" PRIVATE "${rc_file}" "${cpp_file}")
         # Setting OBJECT_DEPENDS _should not_ be required, but actually is as of CMake 3.20
         set_source_files_properties("${rc_file}" PROPERTIES OBJECT_DEPENDS "${man_file}")
+        install(FILES "${man_file}" TYPE DATA)
     endif()
 
     target_include_directories("${target}" SYSTEM PRIVATE "${bin_dir}")
