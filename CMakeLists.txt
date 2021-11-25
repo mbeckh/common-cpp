@@ -23,12 +23,11 @@ include(GNUInstallDirs)
 add_subdirectory(src)
 
 include(CMakePackageConfigHelpers)
-configure_package_config_file("cmake/common-cpp-config.cmake.in" "common-cpp-config.cmake" INSTALL_DESTINATION "share/common-cpp")
-write_basic_package_version_file("common-cpp-config-version.cmake" VERSION ${common-cpp_VERSION} COMPATIBILITY SameMajorVersion)
+configure_package_config_file("cmake/${PROJECT_NAME}-config.cmake.in" "${PROJECT_NAME}-config.cmake" INSTALL_DESTINATION "share/${PROJECT_NAME}")
+write_basic_package_version_file("${PROJECT_NAME}-config-version.cmake" VERSION ${${PROJECT_NAME}_VERSION} COMPATIBILITY SameMajorVersion)
 
-install(FILES "${CMAKE_BINARY_DIR}/common-cpp-config.cmake" "${CMAKE_BINARY_DIR}/common-cpp-config-version.cmake"
-        DESTINATION "share/common-cpp")
-install(EXPORT m3c-targets DESTINATION "share/common-cpp" NAMESPACE "common-cpp::")
+install(FILES "${CMAKE_BINARY_DIR}/${PROJECT_NAME}-config.cmake" "${CMAKE_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
+        DESTINATION "share/${PROJECT_NAME}")
 
 if(PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
     enable_testing()
