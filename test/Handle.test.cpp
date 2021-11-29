@@ -356,6 +356,31 @@ TEST_F(Handle_Test, opAssign_ValueToValueAndErrorClosing_LogAndIsClosed) {
 	CloseHandle(GetFoo());
 }
 
+
+//
+// operator&()
+//
+
+TEST_F(Handle_Test, opAddressOf_Default_ReturnAddress) {
+	Handle hnd;
+
+	HANDLE* const ptr = &hnd;
+	*ptr = UseFoo();
+
+	EXPECT_EQ(GetFoo(), hnd);
+}
+
+TEST_F(Handle_Test, opAddressOf_Value_ReleaseAndReturnAddress) {
+	Handle hnd(UseFoo());
+
+	HANDLE* const ptr = &hnd;
+	*ptr = UseOther();
+
+	EXPECT_TRUE(IsFooClosed());
+	EXPECT_EQ(GetOther(), hnd);
+}
+
+
 //
 // (bool)
 //
