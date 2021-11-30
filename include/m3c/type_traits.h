@@ -66,7 +66,7 @@ struct is_any_of : std::disjunction<std::is_same<T, A>...> {
 /// @tparam T The type to check.
 /// @tparam A The possible alternatives.
 template <typename T, typename... A>
-inline constexpr bool is_any_of_v = is_any_of<T, A...>::value;  // NOLINT(readability-identifier-naming): Follows naming of std.
+inline constexpr bool is_any_of_v = is_any_of<T, A...>::value;
 
 /// @brief A type out of a number of alternatives.
 /// @tparam T The type.
@@ -87,7 +87,7 @@ struct is_pointer_to : std::bool_constant<std::is_pointer_v<T> && std::is_same_v
 /// @tparam T The type to check.
 /// @tparam Type The type the pointer points to.
 template <typename T, typename Type>
-inline constexpr bool is_pointer_to_v = is_pointer_to<T, Type>::value;  // NOLINT(readability-identifier-naming): Follows naming of std.
+inline constexpr bool is_pointer_to_v = is_pointer_to<T, Type>::value;
 
 /// @brief A pointer to a particular type.
 /// @details `true` if @p T is @p Type*.
@@ -111,7 +111,7 @@ struct is_specialization_of<Template<T...>, Template> : public std::true_type {}
 /// @tparam T The type to check.
 /// @tparam Template The template to check.
 template <typename T, template <typename, typename...> typename Template>
-inline constexpr bool is_specialization_of_v = is_specialization_of<T, Template>::value;  // NOLINT(readability-identifier-naming): Follows naming of std.
+inline constexpr bool is_specialization_of_v = is_specialization_of<T, Template>::value;
 
 /// @brief A specialization of a particular template. @details Templates having non-type argments are currently not supported.
 /// @tparam T The type.
@@ -127,7 +127,7 @@ template <typename E, std::size_t kExtent>
 struct is_span<std::span<E, kExtent>> : std::true_type {};
 
 template <typename T>
-inline constexpr bool is_span_v = is_span<T>::value;  // NOLINT(readability-identifier-naming): Follows naming of std.
+inline constexpr bool is_span_v = is_span<T>::value;
 
 template <typename T>
 concept Span = is_span_v<T>;
@@ -156,7 +156,7 @@ struct is_unique_ptr_to<std::unique_ptr<T, D>> : std::true_type {};
 /// @brief Constant to shorten expressions using `is_unique_ptr_to`.
 /// @tparam T The required type of the `std::unique_ptr`.
 template <typename T>
-inline constexpr bool is_unique_ptr_to_v = is_unique_ptr_to<T>::value;  // NOLINT(readability-identifier-naming): Follows naming of std.
+inline constexpr bool is_unique_ptr_to_v = is_unique_ptr_to<T>::value;
 
 /// @brief Either a `std::unique_ptr` or a `m3c::unique_ptr` to @p T.
 /// @tparam T The required type of the `std::unique_ptr` and `m3c::unique_ptr` respectively.

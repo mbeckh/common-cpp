@@ -46,10 +46,10 @@ namespace m3c {
 
 namespace internal {
 
-/// @brief Helper concept to detect types supported by the logging API natively.
+/// @brief Helper concept to detect types supported by the Windows event log API natively.
 /// @tparam T The type.
 template <typename T>
-inline constexpr bool is_trivial_loggable_v = std::is_fundamental_v<T> || std::is_enum_v<T> || AnyOf<T, GUID, FILETIME, SYSTEMTIME, win32_error, hresult, rpc_status>;  // NOLINT(readability-identifier-naming): Follows naming of std lib
+inline constexpr bool is_trivial_loggable_v = std::is_fundamental_v<T> || std::is_enum_v<T> || AnyOf<T, GUID, FILETIME, SYSTEMTIME, win32_error, hresult, rpc_status>;
 
 /// @brief A type natively supported by Windows event logging, except strings.
 /// @tparam T The type.
@@ -119,7 +119,7 @@ public:
 	/// @brief Add a native wide-character C-string argument for logging.
 	/// @param arg The log argument.
 	void AddArgument(_In_z_ const wchar_t* __restrict const arg) {
-		m_args.push_back(EncodeUtf8(arg));
+		m_args.push_back(fmt_encode(arg));
 		++m_size;
 	}
 
@@ -128,7 +128,7 @@ public:
 	/// @param arg The log argument.
 	template <internal::ConvertibleToCStrOf<wchar_t> T>
 	void AddArgument(const T& arg) {
-		m_args.push_back(EncodeUtf8(arg.c_str(), internal::ConvertibleToCStrTraits<T>::length(arg)));
+		m_args.push_back(fmt_encode(std::wstring_view(arg.c_str(), internal::ConvertibleToCStrTraits<T>::length(arg))));
 		++m_size;
 	}
 
@@ -137,7 +137,7 @@ public:
 	/// @param arg The log argument.
 	template <typename... Args>
 	void AddArgument(const std::basic_string_view<wchar_t, Args...>& arg) {
-		m_args.push_back(EncodeUtf8(arg.data(), arg.size()));
+		m_args.push_back(fmt_encode(arg));
 		++m_size;
 	}
 
@@ -146,6 +146,13 @@ public:
 	void AddArgument(_In_opt_ const void* __restrict const arg) {
 		m_args.push_back(arg);
 		++m_size;
+	}
+
+	/// @brief Add a native pointer argument for logging.
+	/// @param arg The log argument.
+	template <typename T>
+	void AddArgument(_In_opt_ T* __restrict const arg) {
+		AddArgument(fmt_ptr(arg));
 	}
 
 	/// @brief Add a wrapped pointer argument for logging.

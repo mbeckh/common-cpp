@@ -17,8 +17,6 @@ limitations under the License.
 /// @file
 #pragma once
 
-#include <m3c/format.h>
-
 #include <oaidl.h>
 #include <propidl.h>
 #include <wtypes.h>
@@ -109,18 +107,3 @@ public:
 };
 
 }  // namespace m3c
-
-
-/// @brief A formatter for `m3c::Variant` objects.
-/// @tparam CharT The character type of the formatter.
-template <typename CharT>
-struct fmt::formatter<m3c::Variant, CharT> : fmt::formatter<VARIANT, CharT> {
-	// empty
-};
-
-/// @brief A formatter for `m3c::PropVariant` objects.
-/// @tparam CharT The character type of the formatter.
-template <typename CharT>
-struct fmt::formatter<m3c::PropVariant, CharT> : fmt::formatter<PROPVARIANT, CharT> {
-	// empty
-};

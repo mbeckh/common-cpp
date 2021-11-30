@@ -47,8 +47,19 @@ limitations under the License.
 #include <string>
 #include <utility>
 
+#pragma push_macro("UuidToString")
+#pragma push_macro("ConvertSidToStringSid")
+#pragma push_macro("FormatMessage")
+#undef UuidToString
+#undef ConvertSidToStringSid
+#undef FormatMessage
+
 namespace m3c {
 namespace {
+
+template <typename CharT>
+inline constexpr const CharT* kError = SelectString<CharT>("<Error>", L"<Error>");
+
 
 /// @brief Helper to select functions and types dependent on character type.
 /// @tparam T The type used as a selector.
@@ -57,17 +68,17 @@ struct FormatterTraits;
 
 template <>
 struct FormatterTraits<char> {
-	using RpcStringType = m3c::rpc_string;
+	using RpcStringType = rpc_string;
 
-	static _Must_inspect_result_ RPC_STATUS ConvertToString(_In_ const UUID* uuid, _Outptr_ RPC_CSTR* result) noexcept {
+	static _Must_inspect_result_ RPC_STATUS UuidToString(_In_ const UUID* uuid, _Outptr_ RPC_CSTR* result) noexcept {
 		return UuidToStringA(uuid, result);
 	}
 
-	static _Success_(return != FALSE) BOOL ConvertToString(_In_ PSID sid, _Outptr_ LPSTR* result) noexcept {
+	static _Success_(return != FALSE) BOOL ConvertSidToStringSid(_In_ PSID sid, _Outptr_ LPSTR* result) noexcept {
 		return ConvertSidToStringSidA(sid, result);
 	}
 
-	static _Success_(return != 0) DWORD FormatToString(_In_ DWORD flags, _In_ DWORD messageId, _When_((flags & FORMAT_MESSAGE_ALLOCATE_BUFFER) != 0, _At_((LPSTR*) buffer, _Outptr_result_z_)) _When_((flags & FORMAT_MESSAGE_ALLOCATE_BUFFER) == 0, _Out_writes_z_(size)) LPSTR buffer, _In_ DWORD size) noexcept {
+	static _Success_(return != 0) DWORD FormatMessage(_In_ DWORD flags, _In_ DWORD messageId, _When_((flags & FORMAT_MESSAGE_ALLOCATE_BUFFER) != 0, _At_((LPSTR*) buffer, _Outptr_result_z_)) _When_((flags & FORMAT_MESSAGE_ALLOCATE_BUFFER) == 0, _Out_writes_z_(size)) LPSTR buffer, _In_ DWORD size) noexcept {
 		return FormatMessageA(flags, nullptr, messageId, 0, buffer, size, nullptr);
 	}
 
@@ -79,17 +90,17 @@ struct FormatterTraits<char> {
 
 template <>
 struct FormatterTraits<wchar_t> {
-	using RpcStringType = m3c::rpc_wstring;
+	using RpcStringType = rpc_wstring;
 
-	static _Must_inspect_result_ RPC_STATUS ConvertToString(_In_ const UUID* uuid, _Outptr_ RPC_WSTR* result) noexcept {
+	static _Must_inspect_result_ RPC_STATUS UuidToString(_In_ const UUID* uuid, _Outptr_ RPC_WSTR* result) noexcept {
 		return UuidToStringW(uuid, result);
 	}
 
-	static _Success_(return != FALSE) BOOL ConvertToString(_In_ PSID sid, _Outptr_ LPWSTR* result) noexcept {
+	static _Success_(return != FALSE) BOOL ConvertSidToStringSid(_In_ PSID sid, _Outptr_ LPWSTR* result) noexcept {
 		return ConvertSidToStringSidW(sid, result);
 	}
 
-	static _Success_(return != 0) DWORD FormatToString(_In_ DWORD flags, _In_ DWORD messageId, _When_((flags & FORMAT_MESSAGE_ALLOCATE_BUFFER) != 0, _At_((LPWSTR*) buffer, _Outptr_result_z_)) _When_((flags & FORMAT_MESSAGE_ALLOCATE_BUFFER) == 0, _Out_writes_z_(size)) LPWSTR buffer, _In_ DWORD size) noexcept {
+	static _Success_(return != 0) DWORD FormatMessage(_In_ DWORD flags, _In_ DWORD messageId, _When_((flags & FORMAT_MESSAGE_ALLOCATE_BUFFER) != 0, _At_((LPWSTR*) buffer, _Outptr_result_z_)) _When_((flags & FORMAT_MESSAGE_ALLOCATE_BUFFER) == 0, _Out_writes_z_(size)) LPWSTR buffer, _In_ DWORD size) noexcept {
 		return FormatMessageW(flags, nullptr, messageId, 0, buffer, size, nullptr);
 	}
 
@@ -101,14 +112,14 @@ struct FormatterTraits<wchar_t> {
 
 template <>
 struct FormatterTraits<VARIANT> {
-	static _Check_return_ HRESULT ConvertToString(_In_ const VARIANT& arg, _Outptr_result_nullonfailure_ PWSTR* result) noexcept {
-		return VariantToStringAlloc(arg, result);
+	static _Check_return_ HRESULT VariantToStringAlloc(_In_ const VARIANT& arg, _Outptr_result_nullonfailure_ PWSTR* result) noexcept {
+		return ::VariantToStringAlloc(arg, result);
 	}
 };
 
 template <>
 struct FormatterTraits<PROPVARIANT> {
-	static _Check_return_ HRESULT ConvertToString(_In_ const PROPVARIANT& arg, _Outptr_result_nullonfailure_ PWSTR* result) noexcept {
+	static _Check_return_ HRESULT VariantToStringAlloc(_In_ const PROPVARIANT& arg, _Outptr_result_nullonfailure_ PWSTR* result) noexcept {
 		return PropVariantToStringAlloc(arg, result);
 	}
 };
@@ -119,7 +130,7 @@ struct FormatterTraits<PROPVARIANT> {
 template <typename From, typename To>
 struct EncodingTraits {
 	template <typename T>
-	constexpr static T&& Convert(T&& arg) noexcept {
+	constexpr static T&& Encode(T&& arg) noexcept {
 		return std::forward<T>(arg);
 	}
 };
@@ -127,16 +138,26 @@ struct EncodingTraits {
 template <>
 struct EncodingTraits<char, wchar_t> {
 	template <typename T>
-	static auto Convert(T&& arg) {
-		return EncodeUtf16(std::forward<T>(arg));
+	static std::wstring Encode(T&& arg) {
+		try {
+			return EncodeUtf16(std::forward<T>(arg));
+		} catch (const std::exception&) {
+			Log::ErrorExceptionOnce(evt::Format);
+			return kError<wchar_t>;
+		}
 	}
 };
 
 template <>
 struct EncodingTraits<wchar_t, char> {
 	template <typename T>
-	static auto Convert(T&& arg) {
-		return EncodeUtf8(std::forward<T>(arg));
+	static std::string Encode(T&& arg) {
+		try {
+			return EncodeUtf8(std::forward<T>(arg));
+		} catch (const std::exception&) {
+			Log::ErrorExceptionOnce(evt::Format);
+			return kError<char>;
+		};
 	}
 };
 
@@ -153,13 +174,11 @@ requires requires {
 	requires !std::same_as<CharT, T>;
 }
 std::basic_string<CharT> fmt::formatter<m3c::fmt_encode<T>, CharT>::encode(const std::basic_string_view<T>& arg) {
-	try {
-		return m3c::EncodingTraits<T, CharT>::Convert(arg);
-	} catch (const std::exception&) {
-		m3c::Log::ErrorExceptionOnce(m3c::evt::FormatEncode, arg.size());
-		return m3c::SelectString<CharT>("<Error>", L"<Error>");
-	}
+	return m3c::EncodingTraits<T, CharT>::Encode(arg);
 }
+
+template std::basic_string<char> fmt::formatter<m3c::fmt_encode<wchar_t>, char>::encode(const std::basic_string_view<wchar_t>&);
+template std::basic_string<wchar_t> fmt::formatter<m3c::fmt_encode<char>, wchar_t>::encode(const std::basic_string_view<char>&);
 
 
 //
@@ -169,7 +188,7 @@ std::basic_string<CharT> fmt::formatter<m3c::fmt_encode<T>, CharT>::encode(const
 template <typename CharT>
 std::basic_string<CharT> fmt::formatter<GUID, CharT>::to_string(const GUID& arg) {
 	typename m3c::FormatterTraits<CharT>::RpcStringType rpc;
-	const RPC_STATUS status = m3c::FormatterTraits<CharT>::ConvertToString(&arg, &rpc);
+	const RPC_STATUS status = m3c::FormatterTraits<CharT>::UuidToString(&arg, &rpc);
 
 	if (status != RPC_S_OK) {
 		[[unlikely]];
@@ -227,7 +246,7 @@ std::basic_string<CharT> fmt::formatter<SID, CharT>::to_string(const SID& arg) {
 	_SE_SID sid;  // NOLINT(cppcoreguidelines-pro-type-member-init): Initialized by std::memcpy.
 	std::memcpy(&sid, &arg, SECURITY_SID_SIZE(arg.SubAuthorityCount));
 	CharT* str;  // NOLINT(cppcoreguidelines-init-variables): Initialized by call to ConvertSidToStringSidA.
-	const BOOL result = m3c::FormatterTraits<CharT>::ConvertToString(&sid, &str);
+	const BOOL result = m3c::FormatterTraits<CharT>::ConvertSidToStringSid(&sid, &str);
 	if (!result) {
 		[[unlikely]];
 		m3c::Log::ErrorOnce(m3c::evt::FormatSid_E, arg, m3c::last_error());
@@ -285,7 +304,7 @@ template <typename CharT>
 std::basic_string<CharT> FormatSystemErrorCode(const std::uint32_t errorCode) {
 	constexpr std::size_t kDefaultBufferSize = 256;
 	CharT buffer[kDefaultBufferSize];
-	DWORD length = m3c::FormatterTraits<CharT>::FormatToString(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK, errorCode, buffer, sizeof(buffer) / sizeof(*buffer));
+	DWORD length = FormatterTraits<CharT>::FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK, errorCode, buffer, sizeof(buffer) / sizeof(*buffer));
 	if (length) {
 		[[likely]];
 		return PostProcessErrorMessage(buffer, length);
@@ -295,21 +314,21 @@ std::basic_string<CharT> FormatSystemErrorCode(const std::uint32_t errorCode) {
 	if (lastError == ERROR_INSUFFICIENT_BUFFER) {
 		CharT* pBuffer = nullptr;
 
-		auto freeBuffer = m3c::finally([&pBuffer]() noexcept {
+		auto freeBuffer = finally([&pBuffer]() noexcept {
 			if (LocalFree(pBuffer)) {
 				[[unlikely]];
-				m3c::Log::ErrorOnce(m3c::evt::MemoryLeak_E, m3c::last_error());
+				Log::ErrorOnce(evt::MemoryLeak_E, last_error());
 			}
 		});
-		length = m3c::FormatterTraits<CharT>::FormatToString(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK, errorCode, reinterpret_cast<CharT*>(&pBuffer), 0);
+		length = FormatterTraits<CharT>::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK, errorCode, reinterpret_cast<CharT*>(&pBuffer), 0);
 		if (length) {
 			[[likely]];
 			return PostProcessErrorMessage(pBuffer, length);
 		}
 		lastError = GetLastError();
 	}
-	m3c::Log::ErrorOnce(m3c::evt::FormatMessageId_E, errorCode, m3c::win32_error(lastError));
-	return SelectString<CharT>("<Error>", L"<Error>");
+	Log::ErrorOnce(evt::FormatMessageId_E, errorCode, win32_error(lastError));
+	return kError<CharT>;
 }
 
 }  // namespace
@@ -402,28 +421,28 @@ template <AnyOf<VARIANT, PROPVARIANT> T, typename CharT>
 std::basic_string<CharT> BaseVariantFormatter<T, CharT>::to_string(const T& arg) const {
 	std::string vt;
 	if (m_presentation != 'v') {
-		vt = m3c::VariantTypeToString(arg.vt);
+		vt = VariantTypeToString(arg.vt);
 		if (arg.vt == (VARENUM::VT_VARIANT | VARENUM::VT_BYREF)) {
 			vt += "->";
-			vt += m3c::VariantTypeToString(arg.pvarVal->vt);
+			vt += VariantTypeToString(arg.pvarVal->vt);
 		}
 	}
 	if (m_presentation == 't') {
-		return m3c::EncodingTraits<char, CharT>::Convert(std::move(vt));
+		return EncodingTraits<char, CharT>::Encode(std::move(vt));
 	}
-	if (m3c::internal::IsConvertibleToString(arg)) {
-		m3c::com_heap_ptr<wchar_t> pwsz;
-		const HRESULT hr = m3c::FormatterTraits<T>::ConvertToString(arg, &pwsz);
+	if (IsConvertibleToString(arg)) {
+		com_heap_ptr<wchar_t> pwsz;
+		const HRESULT hr = FormatterTraits<T>::VariantToStringAlloc(arg, &pwsz);
 		if (FAILED(hr)) {
 			[[unlikely]];
-			m3c::Log::ErrorOnce(m3c::evt::FormatVariant_H, vt, m3c::hresult(hr));
+			Log::ErrorOnce(evt::FormatVariant_H, vt, hresult(hr));
 		} else {
 			if (m_presentation == 'v') {
-				return m3c::EncodingTraits<wchar_t, CharT>::Convert(pwsz.get());
+				return EncodingTraits<wchar_t, CharT>::Encode(pwsz.get());
 			}
 			return FMT_FORMAT(
-			    m3c::SelectString<CharT>("({}: {})", L"({}: {})"),
-			    m3c::fmt_encode(vt), m3c::fmt_encode(pwsz.get()));
+			    SelectString<CharT>("({}: {})", L"({}: {})"),
+			    fmt_encode(vt), fmt_encode(pwsz.get()));
 		}
 	}
 	// not convertible to string
@@ -433,7 +452,7 @@ std::basic_string<CharT> BaseVariantFormatter<T, CharT>::to_string(const T& arg)
 		}
 		return SelectString<CharT>("<?>", L"<?>");
 	}
-	return FMT_FORMAT(m3c::SelectString<CharT>("({})", L"({})"), m3c::fmt_encode(vt));
+	return FMT_FORMAT(SelectString<CharT>("({})", L"({})"), fmt_encode(vt));
 }
 
 template std::basic_string<char> BaseVariantFormatter<VARIANT, char>::to_string(const VARIANT& arg) const;
@@ -441,14 +460,10 @@ template std::basic_string<wchar_t> BaseVariantFormatter<VARIANT, wchar_t>::to_s
 template std::basic_string<char> BaseVariantFormatter<PROPVARIANT, char>::to_string(const PROPVARIANT& arg) const;
 template std::basic_string<wchar_t> BaseVariantFormatter<PROPVARIANT, wchar_t>::to_string(const PROPVARIANT& arg) const;
 
-}  // namespace m3c::internal
-
 
 //
 // IUnknown, IStream
 //
-
-namespace m3c::internal {
 
 std::wstring BaseIStreamFormatter::GetName(IStream* const ptr) {
 	if (!ptr) {
@@ -457,36 +472,36 @@ std::wstring BaseIStreamFormatter::GetName(IStream* const ptr) {
 	}
 
 	STATSTG statstg{};
-	auto f = m3c::finally([&statstg]() noexcept {
+	auto f = finally([&statstg]() noexcept {
 		CoTaskMemFree(statstg.pwcsName);
 	});
 	const HRESULT hr = ptr->Stat(&statstg, STATFLAG_DEFAULT);
 	if (FAILED(hr)) {
 		[[unlikely]];
-		m3c::Log::ErrorOnce(m3c::evt::FormatIStream_H, m3c::hresult(hr));
-		return L"<Error>";
+		Log::ErrorOnce(evt::FormatIStream_H, hresult(hr));
+		return kError<wchar_t>;
 	}
 	return statstg.pwcsName ? statstg.pwcsName : L"<IStream>";
 }
-
-}  // namespace m3c::internal
 
 
 //
 // PROPERTYKEY
 //
 
-namespace m3c::internal {
-
 std::wstring BasePropertyKeyFormatter::GetName(const PROPERTYKEY& arg) {
-	m3c::com_heap_ptr<wchar_t> key;
+	com_heap_ptr<wchar_t> key;
 	const HRESULT hr = PSGetNameFromPropertyKey(arg, &key);
 	if (FAILED(hr)) {
 		[[unlikely]];
-		m3c::Log::ErrorOnce(m3c::evt::FormatPropertyKey_H, arg.fmtid, m3c::hresult(hr));
+		Log::ErrorOnce(m3c::evt::FormatPropertyKey_H, arg.fmtid, hresult(hr));
 		return fmt::to_wstring(arg.fmtid);
 	}
 	return key.get();
 }
 
 }  // namespace m3c::internal
+
+#pragma pop_macro("UuidToString")
+#pragma pop_macro("ConvertSidToStringSid")
+#pragma pop_macro("FormatMessage")

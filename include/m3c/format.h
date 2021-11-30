@@ -84,6 +84,7 @@ public:
 	/// @param sz The native string.
 	[[nodiscard]] constexpr explicit fmt_encode(_In_z_ const CharT* const sz) noexcept
 	    : m_view(sz) {
+		// empty
 	}
 
 	/// @brief Create a new string wrapper for a STL string.
@@ -91,6 +92,7 @@ public:
 	template <typename... Args>
 	[[nodiscard]] constexpr explicit fmt_encode(const std::basic_string<CharT, Args...>& str) noexcept
 	    : m_view(str.c_str(), str.size()) {
+		// empty
 	}
 
 	/// @brief Create a new string wrapper for a STL string view.
@@ -98,16 +100,17 @@ public:
 	template <typename... Args>
 	[[nodiscard]] constexpr explicit fmt_encode(const std::basic_string_view<CharT, Args...>& str) noexcept
 	    : m_view(str.data(), str.size()) {
+		// empty
 	}
 
-	fmt_encode(const fmt_encode&) = delete;
-	fmt_encode(fmt_encode&&) = delete;
+	constexpr fmt_encode(const fmt_encode&) noexcept = default;
+	constexpr fmt_encode(fmt_encode&&) noexcept = default;
 
 	constexpr ~fmt_encode() noexcept = default;
 
 public:
-	fmt_encode& operator=(const fmt_encode&) = delete;
-	fmt_encode& operator=(fmt_encode&&) = delete;
+	constexpr fmt_encode& operator=(const fmt_encode&) noexcept = default;
+	constexpr fmt_encode& operator=(fmt_encode&&) noexcept = default;
 
 public:
 	/// @brief Get the string's contents.
@@ -117,7 +120,7 @@ public:
 	}
 
 private:
-	const std::basic_string_view<CharT> m_view;  ///< @brief The source string data.
+	std::basic_string_view<CharT> m_view;  ///< @brief The source string data.
 };
 
 }  // namespace m3c
@@ -399,8 +402,8 @@ private:
 
 /// @brief Specialization of `fmt::formatter` for a `VARIANT`.
 /// @tparam CharT The character type of the formatter.
-template <typename CharT>
-struct fmt::formatter<VARIANT, CharT> : m3c::internal::BaseVariantFormatter<VARIANT, CharT> {
+template <std::derived_from<VARIANT> T, typename CharT>
+struct fmt::formatter<T, CharT> : m3c::internal::BaseVariantFormatter<VARIANT, CharT> {
 	/// @brief Format the `VARIANT`.
 	/// @tparam FormatContext see `fmt::formatter::format`.
 	/// @param arg An `VARIANT`.
@@ -415,8 +418,8 @@ struct fmt::formatter<VARIANT, CharT> : m3c::internal::BaseVariantFormatter<VARI
 
 /// @brief Specialization of `fmt::formatter` for a `PROPVARIANT`.
 /// @tparam CharT The character type of the formatter.
-template <typename CharT>
-struct fmt::formatter<PROPVARIANT, CharT> : m3c::internal::BaseVariantFormatter<PROPVARIANT, CharT> {
+template <std::derived_from<PROPVARIANT> T, typename CharT>
+struct fmt::formatter<T, CharT> : m3c::internal::BaseVariantFormatter<PROPVARIANT, CharT> {
 	/// @brief Format the `PROPVARIANT`.
 	/// @tparam FormatContext see `fmt::formatter::format`.
 	/// @param arg An `PROPVARIANT`.
@@ -461,7 +464,7 @@ public:
 	}
 
 private:
-	T* const m_p;  ///< @brief The wrapped pointer.
+	T* m_p;  ///< @brief The wrapped pointer.
 };
 
 }  // namespace m3c
@@ -471,7 +474,7 @@ private:
 // IUnknown, IStream
 //
 
-/// @brief Specialization of `fmt::formatter` for a `IUnknown*`.
+/// @brief Specialization of `fmt::formatter` for an `IUnknown*`.
 /// @details The formatter supports default formatting and selecting either the pointer or the ref count of the object.
 /// The are selected by prefixing the format pattern with `p;` and `r;` respectively.
 /// If no custom pattern is used, a trailing semicolon can be omitted.
