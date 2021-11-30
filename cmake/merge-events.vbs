@@ -100,7 +100,7 @@ Next
 Set templates = mainDoc.selectNodes("/instrumentationManifest/instrumentation/events/provider/templates/template")
 For Each template In templates
 	Set node = mainDoc.createNode(1, "data", template.namespaceURI)
-	node.setAttribute "name", "source"
+	node.setAttribute "name", "sourceFile"
 	node.setAttribute "inType", "win:AnsiString"
 	node.setAttribute "outType", "xs:string"
 	template.appendChild node
@@ -109,7 +109,7 @@ For Each template In templates
 	template.appendChild node
 
 	Set node = mainDoc.createNode(1, "data", template.namespaceURI)
-	node.setAttribute "name", "line"
+	node.setAttribute "name", "sourceLine"
 	node.setAttribute "inType", "win:UInt32"
 	node.setAttribute "outType", "xs:unsignedInt"
 	template.appendChild node
