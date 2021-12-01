@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
 		m3c::Log::Critical(m3c::evt::Test_Init_H, hr);
 		return 1;
 	}
-	auto f = m3c::finally([]() noexcept {
+	const auto f = m3c::finally([]() noexcept {
 		CoUninitialize();
 	});
 

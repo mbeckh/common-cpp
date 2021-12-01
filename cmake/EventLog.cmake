@@ -51,7 +51,7 @@ function(common_cpp_target_events target events #[[ [ DESTINATION <path> ] [ LEV
 
     if(library)
         if(NOT arg_DESTINATION)
-            message(FATAL_ERROR "common_cpp_target_events requires DESTINATION for link-time dependency ${target}")
+            message(STATUS "common_cpp_target_events does not use DESTINATION for link-time dependency ${target} -> library is local to project")
         endif()
         if(arg_LEVEL OR arg_PRINT OR arg_EVENT)
             message(FATAL_ERROR "common_cpp_target_events does not support LEVEL, PRINT or EVENT for link-time dependency ${target}")
@@ -109,8 +109,13 @@ function(common_cpp_target_events target events #[[ [ DESTINATION <path> ] [ LEV
     target_sources("${target}" PRIVATE "${h_file}" "${man_file}" "${events}")
     if(library)
         cmake_path(GET file FILENAME filename)
-        target_sources("${target}" INTERFACE "$<BUILD_INTERFACE:${src_dir}/${file}>" "$<INSTALL_INTERFACE:${arg_DESTINATION}/${filename}>")
-        install(FILES "${src_dir}/${file}" DESTINATION "${arg_DESTINATION}")
+        if(arg_DESTINATION)
+          target_sources("${target}" INTERFACE "$<BUILD_INTERFACE:${src_dir}/${file}>" "$<INSTALL_INTERFACE:${arg_DESTINATION}/${filename}>")
+          install(FILES "${src_dir}/${file}" DESTINATION "${arg_DESTINATION}")
+        else()
+          # for libs which are used in current project only
+          target_sources("${target}" INTERFACE "$<BUILD_INTERFACE:${src_dir}/${file}>")
+        endif()
     else()
         target_sources("${target}" PRIVATE "${rc_file}" "${cpp_file}")
         # Setting OBJECT_DEPENDS _should not_ be required, but actually is as of CMake 3.20
