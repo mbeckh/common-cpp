@@ -456,10 +456,10 @@ TEST_F(Handle_Test, close_ValueAndErrorClosing_Throw) {
 	EXPECT_THAT(([&hnd]() {
 		            hnd.close();
 	            }),
-	            t::Throws<internal::ExceptionDetail<windows_error>>(
+	            (t::Throws<internal::ExceptionDetail<windows_error, const EVENT_DESCRIPTOR&>>(
 	                t::AllOf(
 	                    t::Property(&system_error::code, t::Property(&std::error_code::value, ERROR_INTERNAL_ERROR)),
-	                    t::Property(&internal::BaseException::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::HandleLeak_E.Id)))));
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::HandleLeak_E.Id))))));
 
 	EXPECT_EQ(GetFoo(), hnd);
 	EXPECT_FALSE(IsFooClosed());

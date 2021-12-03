@@ -412,6 +412,8 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 	EVENT_DESCRIPTOR event;
 	EventDescSetId(&event, 0);
 
+	std::string message;
+
 	LogFormatArgs formatArgs;
 	LogEventArgs eventArgs;
 	const std::source_location* pSourceLocation = nullptr;
@@ -420,7 +422,7 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 	try {
 		try {
 			throw;
-		} catch (const internal::BaseException& e) {
+		} catch (const internal::BaseException<const EVENT_DESCRIPTOR&>& e) {
 			[[likely]];
 			event = e.GetEvent();
 
@@ -433,21 +435,42 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 				logData.CopyArgumentsTo(eventArgs);
 			}
 			throw;
+		} catch (const internal::BaseException<const char*>& e) {
+			[[likely]];
+			const char* pattern = e.GetLogMessage();
+
+			const LogData& logData = e.GetLogData();
+			pSourceLocation = &e.GetSourceLocation();
+
+			if (pattern) {
+				// Format with a "private" set of arguments (except for Default message)
+				LogFormatArgs args;
+				logData.CopyArgumentsTo(args);
+				message = fmt::vformat(pattern, *args);
+			}
+
+			throw;
 		}
 	} catch (const windows_error& e) {
 		code = static_cast<DWORD>(e.code().value());
 		if (!event.Id) {
-			// logged with evt::Default
+			// logged with evt::Default or string message
 			event = evt::windows_error_E;
-			const char* message = e.message();
-			if (*message == '\0') {
-				message = "Error";
+			const char* msg;
+			if (message.empty()) {
+				msg = e.message();
+				if (*msg == '\0') {
+					[[unlikely]];
+					msg = "Error";
+				}
+			} else {
+				msg = message.c_str();
 			}
 			if constexpr (kPrint) {
-				formatArgs << message;
+				formatArgs << msg;
 			}
 			if constexpr (kEvent) {
-				eventArgs << message;
+				eventArgs << msg;
 			}
 		}
 		if constexpr (kPrint) {
@@ -460,17 +483,23 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 		code = static_cast<DWORD>(e.code().value());
 		static_assert(sizeof(DWORD) == sizeof(HRESULT));
 		if (!event.Id) {
-			// logged with evt::Default
+			// logged with evt::Default or string message
 			event = evt::com_error_H;
-			const char* message = e.message();
-			if (*message == '\0') {
-				message = "Error";
+			const char* msg;
+			if (message.empty()) {
+				msg = e.message();
+				if (*msg == '\0') {
+					[[unlikely]];
+					msg = "Error";
+				}
+			} else {
+				msg = message.c_str();
 			}
 			if constexpr (kPrint) {
-				formatArgs << message;
+				formatArgs << msg;
 			}
 			if constexpr (kEvent) {
-				eventArgs << message;
+				eventArgs << msg;
 			}
 		}
 		if constexpr (kPrint) {
@@ -483,17 +512,23 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 		code = static_cast<DWORD>(e.code().value());
 		static_assert(sizeof(DWORD) == sizeof(RPC_STATUS));
 		if (!event.Id) {
-			// logged with evt::Default
+			// logged with evt::Default or string message
 			event = evt::rpc_error_R;
-			const char* message = e.message();
-			if (*message == '\0') {
-				message = "Error";
+			const char* msg;
+			if (message.empty()) {
+				msg = e.message();
+				if (*msg == '\0') {
+					[[unlikely]];
+					msg = "Error";
+				}
+			} else {
+				msg = message.c_str();
 			}
 			if constexpr (kPrint) {
-				formatArgs << message;
+				formatArgs << msg;
 			}
 			if constexpr (kEvent) {
-				eventArgs << message;
+				eventArgs << msg;
 			}
 		}
 		if constexpr (kPrint) {
@@ -505,18 +540,30 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 	} catch (const system_error& e) {
 		code = static_cast<DWORD>(e.code().value());
 		if (!event.Id) {
-			// logged with evt::Default
+			// logged with evt::Default or string message
 			event = evt::system_error;
-			const char* what = e.what();
-			if (*what == '\0') {
-				what = "Error";
+			const char* msg;
+			if (message.empty()) {
+				msg = e.what();
+				if (*msg == '\0') {
+					[[unlikely]];
+					msg = "Error";
+				}
+			} else {
+				msg = message.c_str();
 			}
 			if constexpr (kPrint) {
-				// Add code to error message for printing outputs
-				formatArgs << FMT_FORMAT("{} ({})", what, code);
+				if (message.empty()) {
+					// Add code to error message for printing outputs
+					message = FMT_FORMAT("{} ({})", msg, code);
+				} else {
+					// Add message with code to error message for printing string messages
+					message = FMT_FORMAT("{}: {}", message, win32_error(code));
+				}
+				formatArgs << message;
 			}
 			if constexpr (kEvent) {
-				eventArgs << what;
+				eventArgs << msg;
 			}
 		}
 		if constexpr (kPrint) {
@@ -532,32 +579,39 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 
 		if (category == std::system_category()) {
 			if (!event.Id) {
-				// logged with evt::Default
-				const char* what = e.what();
+				// logged with evt::Default or string message
 				event = evt::system_error;
 
-				if (*what == '\0') {
-					[[unlikely]];
-					what = "Error";
+				const char* msg;
+				if (message.empty()) {
+					msg = e.what();
+					if (*msg == '\0') {
+						[[unlikely]];
+						msg = "Error";
+					}
+				} else {
+					msg = message.c_str();
 				}
-
 				if constexpr (kPrint) {
-					std::string systemErrorMessage = what;
-					// Add code to error message for printing outputs
 					const std::string errorMessage = errorCode.message();
 					const std::string formattedCode = FMT_FORMAT(" ({})", code);
-					if (const auto pos = systemErrorMessage.find(errorMessage); pos != std::string::npos) {
-						systemErrorMessage.insert(pos + errorMessage.size(), formattedCode);
+					if (message.empty()) {
+						message = msg;
+						// Add code to error message for printing outputs
+						if (const auto pos = message.find(errorMessage); pos != std::string::npos) {
+							message.insert(pos + errorMessage.size(), formattedCode);
+						} else {
+							message.append(formattedCode);
+						}
 					} else {
-						systemErrorMessage.append(formattedCode);
+						message.append(": ").append(errorMessage).append(formattedCode);
 					}
-					formatArgs << systemErrorMessage;
+					formatArgs << message;
 				}
 				if constexpr (kEvent) {
-					eventArgs << what;
+					eventArgs << msg;
 				}
 			}
-
 			if constexpr (kPrint) {
 				formatArgs << code;
 			}
@@ -570,28 +624,29 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 			event = evt::std_system_error;
 
 			const char* const categoryName = category.name();
-			const char* const what = e.what();
+			const char* const msg = message.empty() ? e.what() : message.c_str();
 			if constexpr (kPrint) {
-				formatArgs << categoryName << what << code;
+				formatArgs << categoryName << msg << code;
 			}
 			if constexpr (kEvent) {
-				eventArgs << categoryName << what << code;
+				eventArgs << categoryName << msg << code;
 			}
 		}
 	} catch (const std::exception& e) {
 		if (!event.Id) {
-			const char* const what = e.what();
-			// logged with evt::Default
+			// logged with evt::Default or string message
 			event = evt::std_exception;
+			const char* const msg = message.empty() ? e.what() : message.c_str();
 			if constexpr (kPrint) {
-				formatArgs << what;
+				formatArgs << msg;
 			}
 			if constexpr (kEvent) {
-				eventArgs << what;
+				eventArgs << msg;
 			}
 		}
 	} catch (...) {
 		assert(!event.Id);
+		assert(message.empty());
 		event = evt::exception;
 	}
 

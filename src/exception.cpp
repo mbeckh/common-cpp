@@ -71,7 +71,9 @@ _Ret_z_ const char* system_error::what() const noexcept {
 
 namespace internal {
 
-BaseException::~BaseException() noexcept = default;
+// in source file to allow pure virtual destructor in header
+template <LogMessage M>
+BaseException<M>::~BaseException() noexcept = default;
 
 }  // namespace internal
 

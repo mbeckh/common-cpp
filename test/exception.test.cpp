@@ -155,50 +155,88 @@ TEST(throw_Test, Default) {
 	EXPECT_THAT(([]() {
 		            throw std::exception("myexception") + evt::Default;
 	            }),
-	            t::Throws<internal::ExceptionDetail<std::exception>>(
+	            (t::Throws<internal::ExceptionDetail<std::exception, const char*>>(
 	                t::AllOf(
 	                    t::Property(&std::exception::what, t::StrEq("myexception")),
-	                    t::Property(&internal::BaseException::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, 0)),
-	                    t::Property(&internal::BaseException::GetSourceLocation, t::Property(&std::source_location::line, kLine)))));
+	                    t::Property(&internal::BaseException<const char*>::GetLogMessage, nullptr),
+	                    t::Property(&internal::BaseException<const char*>::GetSourceLocation, t::Property(&std::source_location::line, kLine))))));
 }
 
-TEST(throw_Test, ArgCountIs0) {
+TEST(throw_Test, Event_ArgCountIs0) {
 	constexpr std::uint_least32_t kLine = std::source_location::current().line() + 1;  // macro in next line
 	EXPECT_THAT(([]() {
 		            throw std::exception("myexception") + evt::Test_Event;
 	            }),
-	            t::Throws<internal::ExceptionDetail<std::exception>>(
+	            (t::Throws<internal::ExceptionDetail<std::exception, const EVENT_DESCRIPTOR&>>(
 	                t::AllOf(
 	                    t::Property(&std::exception::what, t::StrEq("myexception")),
-	                    t::Property(&internal::BaseException::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::Test_Event.Id)),
-	                    t::Property(&internal::BaseException::GetSourceLocation, t::Property(&std::source_location::line, kLine)))));
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::Test_Event.Id)),
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetSourceLocation, t::Property(&std::source_location::line, kLine))))));
 }
 
-TEST(throw_Test, ArgCountIs1) {
+TEST(throw_Test, Event_ArgCountIs1) {
 	constexpr std::uint_least32_t kLine = std::source_location::current().line() + 1;  // macro in next line
 	EXPECT_THAT(([]() {
 		            throw std::exception("myexception") + evt::Test_Event_String << "mymessage";
 	            }),
-	            t::Throws<internal::ExceptionDetail<std::exception>>(
+	            (t::Throws<internal::ExceptionDetail<std::exception, const EVENT_DESCRIPTOR&>>(
 	                t::AllOf(
 	                    t::Property(&std::exception::what, t::StrEq("myexception")),
-	                    t::Property(&internal::BaseException::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::Test_Event_String.Id)),
-	                    t::Property(&internal::BaseException::GetSourceLocation, t::Property(&std::source_location::line, kLine)))));
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::Test_Event_String.Id)),
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetSourceLocation, t::Property(&std::source_location::line, kLine))))));
 }
 
-TEST(throw_Test, ArgCountIs2) {
+TEST(throw_Test, Event_ArgCountIs2) {
 	constexpr std::uint_least32_t kLine = std::source_location::current().line() + 1;  // macro in next line
 	EXPECT_THAT(([]() {
 		            throw std::exception("myexception") + evt::Test_Event_String_H << "mymessage" << E_NOTIMPL;
 	            }),
-	            t::Throws<internal::ExceptionDetail<std::exception>>(
+	            (t::Throws<internal::ExceptionDetail<std::exception, const EVENT_DESCRIPTOR&>>(
 	                t::AllOf(
 	                    t::Property(&std::exception::what, t::StrEq("myexception")),
-	                    t::Property(&internal::BaseException::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::Test_Event_String_H.Id)),
-	                    t::Property(&internal::BaseException::GetSourceLocation, t::Property(&std::source_location::line, kLine)))));
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::Test_Event_String_H.Id)),
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetSourceLocation, t::Property(&std::source_location::line, kLine))))));
 }
 
-TEST(throw_Test, ArgCountIs2WithCustom) {
+TEST(throw_Test, String_ArgCountIs0) {
+	constexpr std::uint_least32_t kLine = std::source_location::current().line() + 1;  // macro in next line
+	EXPECT_THAT(([]() {
+		            throw std::exception("myexception") + "TestEvent";
+	            }),
+	            (t::Throws<internal::ExceptionDetail<std::exception, const char*>>(
+	                t::AllOf(
+	                    t::Property(&std::exception::what, t::StrEq("myexception")),
+	                    t::Property(&internal::BaseException<const char*>::GetLogMessage, t::StrEq("TestEvent")),
+	                    t::Property(&internal::BaseException<const char*>::GetSourceLocation, t::Property(&std::source_location::line, kLine))))));
+}
+
+TEST(throw_Test, String_ArgCountIs1) {
+	constexpr std::uint_least32_t kLine = std::source_location::current().line() + 1;  // macro in next line
+	EXPECT_THAT(([]() {
+		            throw std::exception("myexception") + "TestEvent {}"
+		                << "mymessage";
+	            }),
+	            (t::Throws<internal::ExceptionDetail<std::exception, const char*>>(
+	                t::AllOf(
+	                    t::Property(&std::exception::what, t::StrEq("myexception")),
+	                    t::Property(&internal::BaseException<const char*>::GetLogMessage, t::StrEq("TestEvent {}")),
+	                    t::Property(&internal::BaseException<const char*>::GetSourceLocation, t::Property(&std::source_location::line, kLine))))));
+}
+
+TEST(throw_Test, String_ArgCountIs2) {
+	constexpr std::uint_least32_t kLine = std::source_location::current().line() + 1;  // macro in next line
+	EXPECT_THAT(([]() {
+		            throw std::exception("myexception") + "TestEvent {} 0x{:X}"
+		                << "mymessage" << E_NOTIMPL;
+	            }),
+	            (t::Throws<internal::ExceptionDetail<std::exception, const char*>>(
+	                t::AllOf(
+	                    t::Property(&std::exception::what, t::StrEq("myexception")),
+	                    t::Property(&internal::BaseException<const char*>::GetLogMessage, t::StrEq("TestEvent {} 0x{:X}")),
+	                    t::Property(&internal::BaseException<const char*>::GetSourceLocation, t::Property(&std::source_location::line, kLine))))));
+}
+
+TEST(throw_Test, Event_ArgCountIs2WithCustom) {
 	class LogArg {
 	public:
 		void operator>>(_Inout_ LogData& logData) const {
@@ -207,13 +245,14 @@ TEST(throw_Test, ArgCountIs2WithCustom) {
 	};
 	constexpr std::uint_least32_t kLine = std::source_location::current().line() + 1;  // macro in next line
 	EXPECT_THAT(([]() {
-		            throw std::exception("myexception") + evt::Test_Event_String_H << "mymessage" << LogArg();
+		            throw std::exception("myexception") + "TestEvent {} 0x{:X}"
+		                << "mymessage" << LogArg();
 	            }),
-	            t::Throws<internal::ExceptionDetail<std::exception>>(
+	            (t::Throws<internal::ExceptionDetail<std::exception, const char*>>(
 	                t::AllOf(
 	                    t::Property(&std::exception::what, t::StrEq("myexception")),
-	                    t::Property(&internal::BaseException::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::Test_Event_String_H.Id)),
-	                    t::Property(&internal::BaseException::GetSourceLocation, t::Property(&std::source_location::line, kLine)))));
+	                    t::Property(&internal::BaseException<const char*>::GetLogMessage, t::StrEq("TestEvent {} 0x{:X}")),
+	                    t::Property(&internal::BaseException<const char*>::GetSourceLocation, t::Property(&std::source_location::line, kLine))))));
 }
 
 
@@ -221,22 +260,40 @@ TEST(throw_Test, ArgCountIs2WithCustom) {
 // M3C_COM_HR
 //
 
-TEST(M3C_COM_HR_Test, call_Ok_NoThrow) {
+TEST(M3C_COM_HR_Test, Event_Ok_NoThrow) {
 	HRESULT hr = S_OK;
 	EXPECT_NO_THROW(M3C_COM_HR(hr, evt::Test_Event_String_H, "mymessage"));  // NOLINT(cppcoreguidelines-avoid-goto): Used internally by EXPECT_NO_THROW.
 }
 
-TEST(M3C_COM_HR_Test, call_Error_ThrowWithCode) {
+TEST(M3C_COM_HR_Test, Event_Error_ThrowWithCode) {
 	HRESULT hr = E_ABORT;
 	constexpr std::uint_least32_t kLine = std::source_location::current().line() + 1;  // macro in next line
 	EXPECT_THAT(([hr]() {
 		            M3C_COM_HR(hr, evt::Test_Event_String_H, "mymessage");
 	            }),
-	            t::Throws<internal::ExceptionDetail<com_error>>(
+	            (t::Throws<internal::ExceptionDetail<com_error, const EVENT_DESCRIPTOR&>>(
 	                t::AllOf(
 	                    t::Property(&system_error::code, t::Property(&std::error_code::value, E_ABORT)),
-	                    t::Property(&internal::BaseException::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::Test_Event_String_H.Id)),
-	                    t::Property(&internal::BaseException::GetSourceLocation, t::Property(&std::source_location::line, kLine)))));
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::Test_Event_String_H.Id)),
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetSourceLocation, t::Property(&std::source_location::line, kLine))))));
+}
+
+TEST(M3C_COM_HR_Test, String_Ok_NoThrow) {
+	HRESULT hr = S_OK;
+	EXPECT_NO_THROW(M3C_COM_HR(hr, "TestEvent {}", "mymessage"));  // NOLINT(cppcoreguidelines-avoid-goto): Used internally by EXPECT_NO_THROW.
+}
+
+TEST(M3C_COM_HR_Test, String_Error_ThrowWithCode) {
+	HRESULT hr = E_ABORT;
+	constexpr std::uint_least32_t kLine = std::source_location::current().line() + 1;  // macro in next line
+	EXPECT_THAT(([hr]() {
+		            M3C_COM_HR(hr, "TestEvent {}", "mymessage");
+	            }),
+	            (t::Throws<internal::ExceptionDetail<com_error, const char*>>(
+	                t::AllOf(
+	                    t::Property(&system_error::code, t::Property(&std::error_code::value, E_ABORT)),
+	                    t::Property(&internal::BaseException<const char*>::GetLogMessage, t::StrEq("TestEvent {}")),
+	                    t::Property(&internal::BaseException<const char*>::GetSourceLocation, t::Property(&std::source_location::line, kLine))))));
 }
 
 }  // namespace

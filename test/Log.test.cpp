@@ -679,6 +679,10 @@ TEST_P(LogAll_Test, Exception_StdExceptionWithDetailAndPriorityIsEnabled_LogWith
 	TestMethod<evt::Test_Event_Int>("", std::exception("myexception"), "Testing event with int 3", evt::Test_Event_Int, 3);
 }
 
+TEST_P(LogAll_Test, Exception_StdExceptionWithStringDetailAndPriorityIsEnabled_LogWithLocation) {
+	TestMethod<evt::std_exception>("", std::exception("myexception"), "Test message with int 3", "Test message with int {}", 3);
+}
+
 
 //
 // std::system_error
@@ -706,6 +710,10 @@ TEST_P(LogAll_Test, Exception_StdSystemErrorWithDetailAndPriorityIsEnabled_LogWi
 
 TEST_P(LogOutputs_Test, Exception_StdSystemErrorWithMessageAndDetailAndPriorityIsEnabled_LogWithLocation) {
 	TestMethod<evt::Test_Event_Int>("", m4t::WithLocale("en-US", [] { return std::system_error(ERROR_ACCESS_DENIED, std::system_category(), "myexception"); }), "Testing event with int 3", evt::Test_Event_Int, 3);
+}
+
+TEST_P(LogOutputs_Test, Exception_StdSystemErrorWithMessageAndStringDetailAndPriorityIsEnabled_LogWithLocation) {
+	TestMethod<evt::system_error>("", m4t::WithLocale("en-US", [] { return std::system_error(ERROR_ACCESS_DENIED, std::system_category(), "myexception"); }), "[System] Test message with int 3: Access is denied. (5)", "Test message with int {}", 3);
 }
 
 TEST_P(LogOutputs_Test, Exception_StdSystemErrorWithInfixMessageAndDetailAndPriorityIsEnabled_LogWithLocation) {
@@ -757,6 +765,10 @@ TEST_P(LogOutputs_Test, Exception_SystemErrorWithMessageAndDetailAndPriorityIsEn
 	TestMethod<evt::Test_Event_Int>("", system_error(ERROR_ACCESS_DENIED, std::system_category(), "myexception"), "Testing event with int 3", evt::Test_Event_Int, 3);
 }
 
+TEST_P(LogOutputs_Test, Exception_SystemErrorWithMessageAndStringDetailAndPriorityIsEnabled_LogWithLocation) {
+	TestMethod<evt::system_error>("", system_error(ERROR_ACCESS_DENIED, std::system_category(), "myexception"), "[System] Test message with int 3: Access is denied. (5)", "Test message with int {}", 3);
+}
+
 
 //
 // windows_error
@@ -784,6 +796,10 @@ TEST_P(LogAll_Test, Exception_WindowsErrorWithDetailAndPriorityIsEnabled_LogWith
 
 TEST_P(LogOutputs_Test, Exception_WindowsErrorWithMessageAndDetailAndPriorityIsEnabled_LogWithLocation) {
 	TestMethod<evt::Test_Event_Int>("", windows_error(ERROR_ACCESS_DENIED, "myexception"), "Testing event with int 3", evt::Test_Event_Int, 3);
+}
+
+TEST_P(LogOutputs_Test, Exception_WindowsErrorWithMessageAndStringDetailAndPriorityIsEnabled_LogWithLocation) {
+	TestMethod<evt::windows_error_E>("", windows_error(ERROR_ACCESS_DENIED, "myexception"), "[Windows] Test message with int 3: Access is denied. (5)", "Test message with int {}", 3);
 }
 
 
@@ -815,6 +831,10 @@ TEST_P(LogOutputs_Test, Exception_RpcErrorWithMessageAndDetailAndPriorityIsEnabl
 	TestMethod<evt::Test_Event_Int>("", rpc_error(RPC_S_ADDRESS_ERROR, "myexception"), "Testing event with int 3", evt::Test_Event_Int, 3);
 }
 
+TEST_P(LogOutputs_Test, Exception_RpcErrorWithMessageAndStringDetailAndPriorityIsEnabled_LogWithLocation) {
+	TestMethod<evt::rpc_error_R>("", rpc_error(RPC_S_ADDRESS_ERROR, "myexception"), "[RPC] Test message with int 3: An addressing error occurred in the RPC server. (1768)", "Test message with int {}", 3);
+}
+
 
 //
 // com_error
@@ -844,6 +864,10 @@ TEST_P(LogOutputs_Test, Exception_ComErrorWithMessageAndDetailAndPriorityIsEnabl
 	TestMethod<evt::Test_Event_Int>("", com_error(E_ABORT, "myexception"), "Testing event with int 3", evt::Test_Event_Int, 3);
 }
 
+TEST_P(LogOutputs_Test, Exception_ComErrorWithMessageAndStringDetailAndPriorityIsEnabled_LogWithLocation) {
+	TestMethod<evt::com_error_H>("", com_error(E_ABORT, "myexception"), "[COM] Test message with int 3: Operation aborted (0x80004004)", "Test message with int {}", 3);
+}
+
 
 //
 // std::nested_exception
@@ -859,6 +883,10 @@ TEST_P(LogAll_Test, Exception_NestedExceptionWithLocationAndPriorityIsEnabled_Lo
 
 TEST_P(LogAll_Test, Exception_NestedExceptionWithDetailAndPriorityIsEnabled_LogWithLocation) {
 	TestMethod<evt::Test_Event_Int, true>("", std::exception("myexception"), "Testing event with int 3", evt::Test_Event_Int, 3);
+}
+
+TEST_P(LogAll_Test, Exception_NestedExceptionWithStringDetailAndPriorityIsEnabled_LogWithLocation) {
+	TestMethod<evt::std_exception, true>("", std::exception("myexception"), "Test message with int 3", "Test message with int {}", 3);
 }
 
 
