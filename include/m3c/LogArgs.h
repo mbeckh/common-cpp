@@ -192,6 +192,8 @@ private:
 	std::size_t m_size = 0;                                     ///< @brief The number of formatter arguments.
 };
 
+
+/// @brief Base class for a container for event arguments.
 class LogEventArgsBase {
 public:
 	[[nodiscard]] LogEventArgsBase() noexcept = default;
@@ -362,8 +364,10 @@ private:
 
 /// @brief A container for arguments to `std::format`.
 /// @remarks Modeled as a subclass of `internal::LogFormatArgsBase` to hide access to `AddArgument` methods.
+/// Methods `AddArgument` MUST be public in base class, else `internal::LogArgAddableTo` cannot detect them.
 class LogFormatArgs : private internal::LogFormatArgsBase {
 public:
+	// public visibility for selected members
 	using LogFormatArgsBase::LogFormatArgsBase;
 	using LogFormatArgsBase::operator*;
 	using LogFormatArgsBase::size;
@@ -408,8 +412,10 @@ public:
 
 /// @brief A container for arguments to `EventWrite`.
 /// @remarks Modeled as a subclass of `internal::LogEventArgsBase` to hide access to methods `AddArgument` and `StoreArgument`.
+/// Methods `AddArgument` MUST be public in base class, else `internal::LogArgAddableTo` cannot detect them.
 class LogEventArgs : private internal::LogEventArgsBase {
 public:
+	// public visibility for selected members
 	using LogEventArgsBase::data;
 	using LogEventArgsBase::LogEventArgsBase;
 	using LogEventArgsBase::operator[];
