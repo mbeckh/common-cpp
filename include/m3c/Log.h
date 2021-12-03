@@ -128,6 +128,9 @@ private:
 	const M m_message;                            ///< @brief The log messsage.
 };
 
+extern template class LogContext<const EVENT_DESCRIPTOR&>;
+extern template class LogContext<const char*>;
+
 
 /// @brief A wrapper for calling a capturing lambda closure using a function pointer.
 /// @tparam kNoexcept `true` if the closure is noexcept.
@@ -179,6 +182,11 @@ using ClosureExcept = Closure<false, R, Args...>;
 
 template <typename R, typename... Args>
 using ClosureNoexcept = Closure<true, R, Args...>;
+
+// Explicit instantiation for specializations used in this header
+extern template class Closure<false, void, LogFormatArgs&>;
+extern template class Closure<false, void, LogEventArgs&>;
+extern template class Closure<true, void, Priority, HRESULT>;
 
 
 /// @brief Get the string message for the event id.
@@ -551,5 +559,22 @@ private:
 private:
 	REGHANDLE m_handle = 0;  ///< @brief Handle of the windows event logger.
 };
+
+extern template void Log::LogInternalError(const internal::LogContext<const EVENT_DESCRIPTOR&>&) noexcept;
+extern template void Log::LogInternalError(const internal::LogContext<const char*>&) noexcept;
+
+extern template void Log::DoLogMessage(Priority, const internal::LogContext<const EVENT_DESCRIPTOR&>&, const char*, const internal::ClosureExcept<void, LogFormatArgs&>&&, const internal::ClosureExcept<void, LogEventArgs&>&&);
+extern template void Log::DoLogMessage(Priority, const internal::LogContext<const char*>&, const char*, const internal::ClosureExcept<void, LogFormatArgs&>&&, const internal::ClosureExcept<void, LogEventArgs&>&&);
+
+extern template void Log::DoLogException(Priority, const internal::LogContext<const EVENT_DESCRIPTOR&>&, const internal::ClosureExcept<void, LogFormatArgs&>&&, const internal::ClosureExcept<void, LogEventArgs&>&&);
+extern template void Log::DoLogException(Priority, const internal::LogContext<const char*>&, const internal::ClosureExcept<void, LogFormatArgs&>&&, const internal::ClosureExcept<void, LogEventArgs&>&&);
+
+extern template void Log::WriteException<false, true>(Priority, const GUID&, std::string&);
+extern template void Log::WriteException<true, false>(Priority, const GUID&, std::string&);
+extern template void Log::WriteException<true, true>(Priority, const GUID&, std::string&);
+
+extern template void Log::DoWriteException<false, true>(Priority, const GUID&, std::string&);
+extern template void Log::DoWriteException<true, false>(Priority, const GUID&, std::string&);
+extern template void Log::DoWriteException<true, true>(Priority, const GUID&, std::string&);
 
 }  // namespace m3c

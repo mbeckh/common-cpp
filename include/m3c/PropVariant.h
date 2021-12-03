@@ -17,6 +17,8 @@ limitations under the License.
 /// @file
 #pragma once
 
+#include <m3c/format.h>
+
 #include <oaidl.h>
 #include <propidl.h>
 #include <wtypes.h>
@@ -107,3 +109,8 @@ public:
 };
 
 }  // namespace m3c
+
+extern template struct fmt::formatter<m3c::Variant, char>;
+extern template struct fmt::formatter<m3c::Variant, wchar_t>;
+extern template struct fmt::formatter<m3c::PropVariant, char>;
+extern template struct fmt::formatter<m3c::PropVariant, wchar_t>;

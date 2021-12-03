@@ -17,6 +17,7 @@ limitations under the License.
 /// @file
 #pragma once
 
+#include <m3c/format.h>
 #include <m3c/type_traits.h>
 
 #include <rpc.h>
@@ -140,6 +141,9 @@ private:
 	rpc_str_type m_ptr = nullptr;  ///< @brief The native pointer.
 };
 
+extern template class basic_rpc_string<char>;
+extern template class basic_rpc_string<wchar_t>;
+
 
 //
 // operator==
@@ -193,6 +197,17 @@ template <typename T>
 	return !str;
 }
 
+extern template bool operator==(const basic_rpc_string<char>& str, const basic_rpc_string<char>& oth) noexcept;
+extern template bool operator==(const basic_rpc_string<char>& str, typename basic_rpc_string<char>::rpc_str_type p) noexcept;
+extern template bool operator==(typename basic_rpc_string<char>::rpc_str_type p, const basic_rpc_string<char>& str) noexcept;
+extern template bool operator==(const basic_rpc_string<char>& str, std::nullptr_t) noexcept;
+extern template bool operator==(std::nullptr_t, const basic_rpc_string<char>& str) noexcept;
+
+extern template bool operator==(const basic_rpc_string<wchar_t>& str, const basic_rpc_string<wchar_t>& oth) noexcept;
+extern template bool operator==(const basic_rpc_string<wchar_t>& str, typename basic_rpc_string<wchar_t>::rpc_str_type p) noexcept;
+extern template bool operator==(typename basic_rpc_string<wchar_t>::rpc_str_type p, const basic_rpc_string<wchar_t>& str) noexcept;
+extern template bool operator==(const basic_rpc_string<wchar_t>& str, std::nullptr_t) noexcept;
+extern template bool operator==(std::nullptr_t, const basic_rpc_string<wchar_t>& str) noexcept;
 
 //
 // operator!=
@@ -246,6 +261,18 @@ template <typename T>
 	return !!str;
 }
 
+extern template bool operator!=(const basic_rpc_string<char>& str, const basic_rpc_string<char>& oth) noexcept;
+extern template bool operator!=(const basic_rpc_string<char>& str, typename basic_rpc_string<char>::rpc_str_type p) noexcept;
+extern template bool operator!=(typename basic_rpc_string<char>::rpc_str_type p, const basic_rpc_string<char>& str) noexcept;
+extern template bool operator!=(const basic_rpc_string<char>& str, std::nullptr_t) noexcept;
+extern template bool operator!=(std::nullptr_t, const basic_rpc_string<char>& str) noexcept;
+
+extern template bool operator!=(const basic_rpc_string<wchar_t>& str, const basic_rpc_string<wchar_t>& oth) noexcept;
+extern template bool operator!=(const basic_rpc_string<wchar_t>& str, typename basic_rpc_string<wchar_t>::rpc_str_type p) noexcept;
+extern template bool operator!=(typename basic_rpc_string<wchar_t>::rpc_str_type p, const basic_rpc_string<wchar_t>& str) noexcept;
+extern template bool operator!=(const basic_rpc_string<wchar_t>& str, std::nullptr_t) noexcept;
+extern template bool operator!=(std::nullptr_t, const basic_rpc_string<wchar_t>& str) noexcept;
+
 
 /// @brief Swap function.
 /// @tparam T The type of the managed native pointer.
@@ -256,13 +283,14 @@ constexpr void swap(basic_rpc_string<T>& str, basic_rpc_string<T>& oth) noexcept
 	str.swap(oth);
 }
 
-template <>
-RPC_STATUS basic_rpc_string<char>::destroy() noexcept;
-template <>
-RPC_STATUS basic_rpc_string<wchar_t>::destroy() noexcept;
+extern template void swap(basic_rpc_string<char>& str, basic_rpc_string<char>& oth) noexcept;
+extern template void swap(basic_rpc_string<wchar_t>& str, basic_rpc_string<wchar_t>& oth) noexcept;
 
-extern template class basic_rpc_string<char>;
-extern template class basic_rpc_string<wchar_t>;
+
+// template <>
+// RPC_STATUS basic_rpc_string<char>::destroy() noexcept;
+// template <>
+// RPC_STATUS basic_rpc_string<wchar_t>::destroy() noexcept;
 
 /// @brief A typedef for `char`-based RPC strings.
 using rpc_string = basic_rpc_string<char>;
@@ -280,3 +308,11 @@ struct std::hash<m3c::basic_rpc_string<T>> {
 		return str.hash();
 	}
 };
+
+extern template struct std::hash<m3c::basic_rpc_string<char>>;
+extern template struct std::hash<m3c::basic_rpc_string<wchar_t>>;
+
+extern template struct fmt::formatter<m3c::basic_rpc_string<char>, char>;
+extern template struct fmt::formatter<m3c::basic_rpc_string<char>, wchar_t>;
+extern template struct fmt::formatter<m3c::basic_rpc_string<wchar_t>, char>;
+extern template struct fmt::formatter<m3c::basic_rpc_string<wchar_t>, wchar_t>;

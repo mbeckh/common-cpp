@@ -409,6 +409,10 @@ private:
 	std::conditional_t<kIsEventDescriptor, const EVENT_DESCRIPTOR*, const char*> m_message;
 };
 
+// Explicit instantiations of both possibly specializations to reduce compile times
+extern template class BaseException<const EVENT_DESCRIPTOR&>;
+extern template class BaseException<const char*>;
+
 
 /// @brief The actual exception class thrown when adding context.
 /// @tparam E The type of the exception.
@@ -465,6 +469,18 @@ public:
 	}
 };
 
+// Explicit instantiations of most common specializations to reduce compile times
+extern template class ExceptionDetail<std::exception, const EVENT_DESCRIPTOR&>;
+extern template class ExceptionDetail<std::exception, const char*>;
+extern template class ExceptionDetail<windows_error, const EVENT_DESCRIPTOR&>;
+extern template class ExceptionDetail<windows_error, const char*>;
+extern template class ExceptionDetail<rpc_error, const EVENT_DESCRIPTOR&>;
+extern template class ExceptionDetail<rpc_error, const char*>;
+extern template class ExceptionDetail<com_error, const EVENT_DESCRIPTOR&>;
+extern template class ExceptionDetail<com_error, const char*>;
+extern template class ExceptionDetail<com_invalid_argument_error, const EVENT_DESCRIPTOR&>;
+extern template class ExceptionDetail<com_invalid_argument_error, const char*>;
+
 }  // namespace internal
 
 
@@ -487,6 +503,14 @@ template <m3c::Exception E>
 	return m3c::internal::ExceptionDetail<E, const char*>(std::forward<E>(exception), context);
 }
 
+// Explicit instantiations of most common specializations to reduce compile times
+extern template m3c::internal::ExceptionDetail<std::exception, const char*> operator+(std::exception&& exception, m3c::internal::DefaultContext&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<std::exception, const char*>(std::forward<std::exception>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::windows_error, const char*> operator+(m3c::windows_error&& exception, m3c::internal::DefaultContext&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::windows_error, const char*>(std::forward<m3c::windows_error>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::rpc_error, const char*> operator+(m3c::rpc_error&& exception, m3c::internal::DefaultContext&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::rpc_error, const char*>(std::forward<m3c::rpc_error>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::com_error, const char*> operator+(m3c::com_error&& exception, m3c::internal::DefaultContext&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::com_error, const char*>(std::forward<m3c::com_error>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::com_invalid_argument_error, const char*> operator+(m3c::com_invalid_argument_error&& exception, m3c::internal::DefaultContext&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::com_invalid_argument_error, const char*>(std::forward<m3c::com_invalid_argument_error>(exception), context)));
+
+
 /// @brief Create an exception enhanced with context information for source location and events.
 /// @details The operator MUST be in global scope to allow automatic instantiation of `m3c::internal::ExceptionContext` from `EVENT_DESCRIPTOR`.
 /// @warning The `EVENT_DESCRIPTOR` is stored as a reference only and therefore MUST not go out of scope when the exception is thrown.
@@ -498,6 +522,13 @@ template <m3c::Exception E>
 [[nodiscard]] constexpr m3c::internal::ExceptionDetail<E, const EVENT_DESCRIPTOR&> operator+(E&& exception, m3c::internal::ExceptionContext<const EVENT_DESCRIPTOR&>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<E, const EVENT_DESCRIPTOR&>(std::forward<E>(exception), context))) {
 	return m3c::internal::ExceptionDetail<E, const EVENT_DESCRIPTOR&>(std::forward<E>(exception), context);
 }
+
+// Explicit instantiations of most common specializations to reduce compile times
+extern template m3c::internal::ExceptionDetail<std::exception, const EVENT_DESCRIPTOR&> operator+(std::exception&& exception, m3c::internal::ExceptionContext<const EVENT_DESCRIPTOR&>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<std::exception, const EVENT_DESCRIPTOR&>(std::forward<std::exception>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::windows_error, const EVENT_DESCRIPTOR&> operator+(m3c::windows_error&& exception, m3c::internal::ExceptionContext<const EVENT_DESCRIPTOR&>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::windows_error, const EVENT_DESCRIPTOR&>(std::forward<m3c::windows_error>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::rpc_error, const EVENT_DESCRIPTOR&> operator+(m3c::rpc_error&& exception, m3c::internal::ExceptionContext<const EVENT_DESCRIPTOR&>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::rpc_error, const EVENT_DESCRIPTOR&>(std::forward<m3c::rpc_error>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::com_error, const EVENT_DESCRIPTOR&> operator+(m3c::com_error&& exception, m3c::internal::ExceptionContext<const EVENT_DESCRIPTOR&>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::com_error, const EVENT_DESCRIPTOR&>(std::forward<m3c::com_error>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::com_invalid_argument_error, const EVENT_DESCRIPTOR&> operator+(m3c::com_invalid_argument_error&& exception, m3c::internal::ExceptionContext<const EVENT_DESCRIPTOR&>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::com_invalid_argument_error, const EVENT_DESCRIPTOR&>(std::forward<m3c::com_invalid_argument_error>(exception), context)));
 
 
 /// @brief Create an exception enhanced with context information for source location and string messages.
@@ -511,6 +542,13 @@ template <m3c::Exception E>
 [[nodiscard]] constexpr m3c::internal::ExceptionDetail<E, const char*> operator+(E&& exception, m3c::internal::ExceptionContext<const char*>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<E, const char*>(std::forward<E>(exception), context))) {
 	return m3c::internal::ExceptionDetail<E, const char*>(std::forward<E>(exception), context);
 }
+
+// Explicit instantiations of most common specializations to reduce compile times
+extern template m3c::internal::ExceptionDetail<std::exception, const char*> operator+(std::exception&& exception, m3c::internal::ExceptionContext<const char*>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<std::exception, const char*>(std::forward<std::exception>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::windows_error, const char*> operator+(m3c::windows_error&& exception, m3c::internal::ExceptionContext<const char*>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::windows_error, const char*>(std::forward<m3c::windows_error>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::rpc_error, const char*> operator+(m3c::rpc_error&& exception, m3c::internal::ExceptionContext<const char*>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::rpc_error, const char*>(std::forward<m3c::rpc_error>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::com_error, const char*> operator+(m3c::com_error&& exception, m3c::internal::ExceptionContext<const char*>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::com_error, const char*>(std::forward<m3c::com_error>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::com_invalid_argument_error, const char*> operator+(m3c::com_invalid_argument_error&& exception, m3c::internal::ExceptionContext<const char*>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::com_invalid_argument_error, const char*>(std::forward<m3c::com_invalid_argument_error>(exception), context)));
 
 
 namespace m3c::internal {

@@ -123,6 +123,9 @@ private:
 	std::basic_string_view<CharT> m_view;  ///< @brief The source string data.
 };
 
+extern template class fmt_encode<char>;
+extern template class fmt_encode<wchar_t>;
+
 }  // namespace m3c
 
 
@@ -135,7 +138,6 @@ struct fmt::formatter<m3c::fmt_encode<CharT>, CharT> : fmt::formatter<std::basic
 		return __super::format(arg.get(), ctx);
 	}
 };
-
 
 /// @brief Specialization of `fmt::formatter` for cases where encoding is required.
 /// @tparam T The character type of the string.
@@ -160,6 +162,11 @@ private:
 	/// @brief Encode a string view to a string using @p CharT.
 	[[nodiscard]] static std::basic_string<CharT> encode(const std::basic_string_view<T>& arg);
 };
+
+extern template struct fmt::formatter<m3c::fmt_encode<char>, char>;
+extern template struct fmt::formatter<m3c::fmt_encode<char>, wchar_t>;
+extern template struct fmt::formatter<m3c::fmt_encode<wchar_t>, char>;
+extern template struct fmt::formatter<m3c::fmt_encode<wchar_t>, wchar_t>;
 
 
 //
@@ -186,6 +193,9 @@ private:
 	[[nodiscard]] static std::basic_string<CharT> to_string(const GUID& arg);
 };
 
+extern template struct fmt::formatter<GUID, char>;
+extern template struct fmt::formatter<GUID, wchar_t>;
+
 
 //
 // FILETIME, SYSTEMTIME
@@ -211,6 +221,9 @@ private:
 	[[nodiscard]] static std::basic_string<CharT> to_string(const FILETIME& arg);
 };
 
+extern template struct fmt::formatter<FILETIME, char>;
+extern template struct fmt::formatter<FILETIME, wchar_t>;
+
 
 /// @brief Specialization of `fmt::formatter` for a `SYSTEMTIME`.
 /// @tparam CharT The character type of the formatter.
@@ -234,6 +247,9 @@ private:
 	// allow std::formatter<FILETIME> to forward calls to this class
 	friend struct fmt::formatter<FILETIME, CharT>;
 };
+
+extern template struct fmt::formatter<SYSTEMTIME, char>;
+extern template struct fmt::formatter<SYSTEMTIME, wchar_t>;
 
 
 //
@@ -260,6 +276,9 @@ private:
 	/// @param arg The `SID` to format.
 	[[nodiscard]] static std::basic_string<CharT> to_string(const SID& arg);
 };
+
+extern template struct fmt::formatter<SID, char>;
+extern template struct fmt::formatter<SID, wchar_t>;
 
 
 //
@@ -296,6 +315,10 @@ public:
 private:
 	T m_code;  ///< @brief The wrapped error code.
 };
+
+extern template class error<DWORD>;
+extern template class error<HRESULT>;
+extern template class error<RPC_STATUS>;
 
 }  // namespace internal
 
@@ -348,6 +371,13 @@ private:
 	[[nodiscard]] static std::basic_string<CharT> to_string(const T& arg);
 };
 
+extern template struct fmt::formatter<m3c::win32_error, char>;
+extern template struct fmt::formatter<m3c::win32_error, wchar_t>;
+extern template struct fmt::formatter<m3c::hresult, char>;
+extern template struct fmt::formatter<m3c::hresult, wchar_t>;
+extern template struct fmt::formatter<m3c::rpc_status, char>;
+extern template struct fmt::formatter<m3c::rpc_status, wchar_t>;
+
 
 //
 // VARIANT, PROPVARIANT
@@ -397,6 +427,11 @@ private:
 	char m_presentation = '\0';  ///< @brief Select the data to print.
 };
 
+extern template struct BaseVariantFormatter<VARIANT, char>;
+extern template struct BaseVariantFormatter<VARIANT, wchar_t>;
+extern template struct BaseVariantFormatter<PROPVARIANT, char>;
+extern template struct BaseVariantFormatter<PROPVARIANT, wchar_t>;
+
 }  // namespace m3c::internal
 
 
@@ -432,6 +467,11 @@ struct fmt::formatter<T, CharT> : m3c::internal::BaseVariantFormatter<PROPVARIAN
 	}
 };
 
+extern template struct fmt::formatter<VARIANT, char>;
+extern template struct fmt::formatter<VARIANT, wchar_t>;
+extern template struct fmt::formatter<PROPVARIANT, char>;
+extern template struct fmt::formatter<PROPVARIANT, wchar_t>;
+
 
 //
 // Pointers
@@ -466,6 +506,9 @@ public:
 private:
 	T* m_p;  ///< @brief The wrapped pointer.
 };
+
+extern template class fmt_ptr<IUnknown>;
+extern template class fmt_ptr<IStream>;
 
 }  // namespace m3c
 
@@ -544,6 +587,9 @@ protected:
 	std::variant<fmt::formatter<std::basic_string<CharT>, CharT>, fmt::formatter<m3c::fmt_encode<wchar_t>, CharT>, fmt::formatter<void*, CharT>, fmt::formatter<ULONG, CharT>> m_formatter;
 };
 
+extern template struct fmt::formatter<m3c::fmt_ptr<IUnknown>, char>;
+extern template struct fmt::formatter<m3c::fmt_ptr<IUnknown>, wchar_t>;
+
 
 namespace m3c::internal {
 
@@ -620,6 +666,9 @@ private:
 	using fmt::formatter<m3c::fmt_ptr<IUnknown>, CharT>::m_formatter;
 };
 
+extern template struct fmt::formatter<m3c::fmt_ptr<IStream>, char>;
+extern template struct fmt::formatter<m3c::fmt_ptr<IStream>, wchar_t>;
+
 
 /// @brief Specialization of `fmt::formatter` for classes derived from `IUnknown`.
 /// @tparam T The type derived from `IUnknown` .
@@ -689,6 +738,9 @@ struct fmt::formatter<PROPERTYKEY, CharT> : public fmt::formatter<m3c::fmt_encod
 		return __super::format(m3c::fmt_encode(name), ctx);
 	}
 };
+
+extern template struct fmt::formatter<PROPERTYKEY, char>;
+extern template struct fmt::formatter<PROPERTYKEY, wchar_t>;
 
 
 //
@@ -781,6 +833,9 @@ private:
 	char m_presentation = '\0';  ///< @brief Select the data to print.
 };
 
+extern template struct fmt::formatter<WICRect, char>;
+extern template struct fmt::formatter<WICRect, wchar_t>;
+
 
 //
 // FILE_ID_128
@@ -800,6 +855,9 @@ struct fmt::formatter<FILE_ID_128, CharT> : fmt::formatter<GUID, CharT> {
 		return __super::format(std::bit_cast<GUID>(arg), ctx);
 	}
 };
+
+extern template struct fmt::formatter<FILE_ID_128, char>;
+extern template struct fmt::formatter<FILE_ID_128, wchar_t>;
 
 
 //

@@ -162,6 +162,10 @@ struct EncodingTraits<wchar_t, char> {
 };
 
 }  // namespace
+
+template class fmt_encode<char>;
+template class fmt_encode<wchar_t>;
+
 }  // namespace m3c
 
 
@@ -177,8 +181,10 @@ std::basic_string<CharT> fmt::formatter<m3c::fmt_encode<T>, CharT>::encode(const
 	return m3c::EncodingTraits<T, CharT>::Encode(arg);
 }
 
-template std::basic_string<char> fmt::formatter<m3c::fmt_encode<wchar_t>, char>::encode(const std::basic_string_view<wchar_t>&);
-template std::basic_string<wchar_t> fmt::formatter<m3c::fmt_encode<char>, wchar_t>::encode(const std::basic_string_view<char>&);
+template struct fmt::formatter<m3c::fmt_encode<char>, char>;
+template struct fmt::formatter<m3c::fmt_encode<char>, wchar_t>;
+template struct fmt::formatter<m3c::fmt_encode<wchar_t>, char>;
+template struct fmt::formatter<m3c::fmt_encode<wchar_t>, wchar_t>;
 
 
 //
@@ -200,6 +206,9 @@ std::basic_string<CharT> fmt::formatter<GUID, CharT>::to_string(const GUID& arg)
 	return rpc.c_str();
 }
 
+template struct fmt::formatter<GUID, char>;
+template struct fmt::formatter<GUID, wchar_t>;
+
 
 //
 // FILETIME, SYSTEMTIME
@@ -217,8 +226,8 @@ std::basic_string<CharT> fmt::formatter<FILETIME, CharT>::to_string(const FILETI
 	return fmt::formatter<SYSTEMTIME, CharT>::to_string(st);
 }
 
-template std::basic_string<char> fmt::formatter<FILETIME, char>::to_string(const FILETIME& arg);
-template std::basic_string<wchar_t> fmt::formatter<FILETIME, wchar_t>::to_string(const FILETIME& arg);
+template struct fmt::formatter<FILETIME, char>;
+template struct fmt::formatter<FILETIME, wchar_t>;
 
 
 template <typename CharT>
@@ -228,8 +237,8 @@ std::basic_string<CharT> fmt::formatter<SYSTEMTIME, CharT>::to_string(const SYST
 	    arg.wYear, arg.wMonth, arg.wDay, arg.wHour, arg.wMinute, arg.wSecond, arg.wMilliseconds);
 }
 
-template std::basic_string<char> fmt::formatter<SYSTEMTIME, char>::to_string(const SYSTEMTIME& arg);
-template std::basic_string<wchar_t> fmt::formatter<SYSTEMTIME, wchar_t>::to_string(const SYSTEMTIME& arg);
+template struct fmt::formatter<SYSTEMTIME, char>;
+template struct fmt::formatter<SYSTEMTIME, wchar_t>;
 
 
 //
@@ -266,8 +275,8 @@ std::basic_string<CharT> fmt::formatter<SID, CharT>::to_string(const SID& arg) {
 	return str;
 }
 
-template std::basic_string<char> fmt::formatter<SID, char>::to_string(const SID& arg);
-template std::basic_string<wchar_t> fmt::formatter<SID, wchar_t>::to_string(const SID& arg);
+template struct fmt::formatter<SID, char>;
+template struct fmt::formatter<SID, wchar_t>;
 
 
 //
@@ -328,6 +337,15 @@ std::basic_string<CharT> FormatSystemErrorCode(const std::uint32_t errorCode) {
 }
 
 }  // namespace
+
+namespace internal {
+
+template struct error<DWORD>;
+template struct error<HRESULT>;
+template struct error<RPC_STATUS>;
+
+}  // namespace internal
+
 }  // namespace m3c
 
 
@@ -345,12 +363,12 @@ std::basic_string<CharT> fmt::formatter<T, CharT>::to_string(const T& arg) {
 	}
 }
 
-template std::basic_string<char> fmt::formatter<m3c::win32_error, char>::to_string(const m3c::win32_error& arg);
-template std::basic_string<wchar_t> fmt::formatter<m3c::win32_error, wchar_t>::to_string(const m3c::win32_error& arg);
-template std::basic_string<char> fmt::formatter<m3c::rpc_status, char>::to_string(const m3c::rpc_status& arg);
-template std::basic_string<wchar_t> fmt::formatter<m3c::rpc_status, wchar_t>::to_string(const m3c::rpc_status& arg);
-template std::basic_string<char> fmt::formatter<m3c::hresult, char>::to_string(const m3c::hresult& arg);
-template std::basic_string<wchar_t> fmt::formatter<m3c::hresult, wchar_t>::to_string(const m3c::hresult& arg);
+template struct fmt::formatter<m3c::win32_error, char>;
+template struct fmt::formatter<m3c::win32_error, wchar_t>;
+template struct fmt::formatter<m3c::hresult, char>;
+template struct fmt::formatter<m3c::hresult, wchar_t>;
+template struct fmt::formatter<m3c::rpc_status, char>;
+template struct fmt::formatter<m3c::rpc_status, wchar_t>;
 
 
 //
@@ -451,11 +469,32 @@ std::basic_string<CharT> BaseVariantFormatter<T, CharT>::to_string(const T& arg)
 	return FMT_FORMAT(SelectString<CharT>(M3C_SELECT_STRING("({})")), fmt_encode(vt));
 }
 
-template std::basic_string<char> BaseVariantFormatter<VARIANT, char>::to_string(const VARIANT& arg) const;
-template std::basic_string<wchar_t> BaseVariantFormatter<VARIANT, wchar_t>::to_string(const VARIANT& arg) const;
-template std::basic_string<char> BaseVariantFormatter<PROPVARIANT, char>::to_string(const PROPVARIANT& arg) const;
-template std::basic_string<wchar_t> BaseVariantFormatter<PROPVARIANT, wchar_t>::to_string(const PROPVARIANT& arg) const;
+template struct BaseVariantFormatter<VARIANT, char>;
+template struct BaseVariantFormatter<VARIANT, wchar_t>;
+template struct BaseVariantFormatter<PROPVARIANT, char>;
+template struct BaseVariantFormatter<PROPVARIANT, wchar_t>;
 
+}  // namespace m3c::internal
+
+
+template struct fmt::formatter<VARIANT, char>;
+template struct fmt::formatter<VARIANT, wchar_t>;
+template struct fmt::formatter<PROPVARIANT, char>;
+template struct fmt::formatter<PROPVARIANT, wchar_t>;
+
+
+namespace m3c {
+
+template class fmt_ptr<IUnknown>;
+template class fmt_ptr<IStream>;
+
+}  // namespace m3c
+
+
+template struct fmt::formatter<m3c::fmt_ptr<IUnknown>, char>;
+template struct fmt::formatter<m3c::fmt_ptr<IUnknown>, wchar_t>;
+
+namespace m3c::internal {
 
 //
 // IUnknown, IStream
@@ -480,6 +519,13 @@ std::wstring BaseIStreamFormatter::GetName(IStream* const ptr) {
 	return statstg.pwcsName ? statstg.pwcsName : L"<IStream>";
 }
 
+}  // namespace m3c::internal
+
+template struct fmt::formatter<m3c::fmt_ptr<IStream>, char>;
+template struct fmt::formatter<m3c::fmt_ptr<IStream>, wchar_t>;
+
+
+namespace m3c::internal {
 
 //
 // PROPERTYKEY
@@ -497,6 +543,16 @@ std::wstring BasePropertyKeyFormatter::GetName(const PROPERTYKEY& arg) {
 }
 
 }  // namespace m3c::internal
+
+template struct fmt::formatter<PROPERTYKEY, char>;
+template struct fmt::formatter<PROPERTYKEY, wchar_t>;
+
+template struct fmt::formatter<WICRect, char>;
+template struct fmt::formatter<WICRect, wchar_t>;
+
+template struct fmt::formatter<FILE_ID_128, char>;
+template struct fmt::formatter<FILE_ID_128, wchar_t>;
+
 
 #pragma pop_macro("UuidToString")
 #pragma pop_macro("ConvertSidToStringSid")

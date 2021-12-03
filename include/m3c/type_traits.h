@@ -52,6 +52,10 @@ consteval _Ret_z_ const CharT* SelectString(_In_z_ const char* const sz, _In_z_ 
 	}
 }
 
+extern template _Ret_z_ const char* SelectString(_In_z_ const char* const sz, _In_z_ const wchar_t* const wsz) noexcept;
+extern template _Ret_z_ const wchar_t* SelectString(_In_z_ const char* const sz, _In_z_ const wchar_t* const wsz) noexcept;
+
+
 // forward declaration of class
 template <typename T>
 class unique_ptr;

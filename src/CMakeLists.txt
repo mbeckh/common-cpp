@@ -32,6 +32,7 @@ add_library(m3c
     "PropVariant.cpp"
     "rpc_string.cpp"
     "string_encode.cpp"
+    "type_traits.cpp"
     "unique_ptr.cpp"
     "../include/m3c/ClassFactory.h"
     "../include/m3c/COM.h"

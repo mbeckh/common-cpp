@@ -49,6 +49,17 @@ limitations under the License.
 
 namespace m3c {
 
+namespace internal {
+
+template class LogContext<const EVENT_DESCRIPTOR&>;
+template class LogContext<const char*>;
+
+template class Closure<false, void, LogFormatArgs&>;
+template class Closure<false, void, LogEventArgs&>;
+template class Closure<true, void, Priority, HRESULT>;
+
+}  // namespace internal
+
 namespace {
 
 /// @brief Get the string for a message id.
