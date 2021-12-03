@@ -32,6 +32,8 @@ limitations under the License.
 #define static_assert_no_clang(...) static_assert(__VA_ARGS__)
 #endif
 
+#define M3C_SELECT_STRING(...) __VA_ARGS__, L##__VA_ARGS__
+
 namespace m3c {
 
 /// @brief A compile-time evaluated helper function to select one of two strings based on character type.

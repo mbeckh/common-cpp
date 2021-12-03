@@ -58,7 +58,7 @@ namespace m3c {
 namespace {
 
 template <typename CharT>
-inline constexpr const CharT* kError = SelectString<CharT>("<Error>", L"<Error>");
+inline constexpr const CharT* kError = SelectString<CharT>(M3C_SELECT_STRING("<Error>"));
 
 
 /// @brief Helper to select functions and types dependent on character type.
@@ -194,9 +194,7 @@ std::basic_string<CharT> fmt::formatter<GUID, CharT>::to_string(const GUID& arg)
 		[[unlikely]];
 		m3c::Log::ErrorOnce(m3c::evt::FormatUuid_R, arg, m3c::rpc_status(status));
 		return FMT_FORMAT(
-		    m3c::SelectString<CharT>(
-		        "{:08x}-{:04x}-{:04x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
-		        L"{:08x}-{:04x}-{:04x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}"),
+		    m3c::SelectString<CharT>(M3C_SELECT_STRING("{:08x}-{:04x}-{:04x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}")),
 		    arg.Data1, arg.Data2, arg.Data3, arg.Data4[0], arg.Data4[1], arg.Data4[2], arg.Data4[3], arg.Data4[4], arg.Data4[5], arg.Data4[6], arg.Data4[7]);  // NOLINT(readability-magic-numbers): Fixed GUID format.
 	}
 	return rpc.c_str();
@@ -226,9 +224,7 @@ template std::basic_string<wchar_t> fmt::formatter<FILETIME, wchar_t>::to_string
 template <typename CharT>
 std::basic_string<CharT> fmt::formatter<SYSTEMTIME, CharT>::to_string(const SYSTEMTIME& arg) {
 	return FMT_FORMAT(
-	    m3c::SelectString<CharT>(
-	        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}.{:03}Z",
-	        L"{:04}-{:02}-{:02}T{:02}:{:02}:{:02}.{:03}Z"),
+	    m3c::SelectString<CharT>(M3C_SELECT_STRING("{:04}-{:02}-{:02}T{:02}:{:02}:{:02}.{:03}Z")),
 	    arg.wYear, arg.wMonth, arg.wDay, arg.wHour, arg.wMinute, arg.wSecond, arg.wMilliseconds);
 }
 
@@ -257,8 +253,8 @@ std::basic_string<CharT> fmt::formatter<SID, CharT>::to_string(const SID& arg) {
 		                                | (static_cast<std::uint64_t>(arg.IdentifierAuthority.Value[4]) << 8)
 		                                | static_cast<std::uint64_t>(arg.IdentifierAuthority.Value[5]);
 		return FMT_FORMAT(
-		    m3c::SelectString<CharT>("S-{}-{}-{}", L"S-{}-{}-{}"),
-		    arg.Revision, authority, fmt::join(std::span(arg.SubAuthority, arg.SubAuthorityCount), m3c::SelectString<CharT>("-", L"-")));
+		    m3c::SelectString<CharT>(M3C_SELECT_STRING("S-{}-{}-{}")),
+		    arg.Revision, authority, fmt::join(std::span(arg.SubAuthority, arg.SubAuthorityCount), m3c::SelectString<CharT>(M3C_SELECT_STRING("-"))));
 	}
 
 	auto f = m3c::finally([str]() noexcept {
@@ -340,11 +336,11 @@ std::basic_string<CharT> fmt::formatter<T, CharT>::to_string(const T& arg) {
 	const auto& code = arg.code();
 	if constexpr (std::is_same_v<T, m3c::hresult>) {
 		return FMT_FORMAT(
-		    m3c::SelectString<CharT>("{} (0x{:X})", L"{} (0x{:X})"),
+		    m3c::SelectString<CharT>(M3C_SELECT_STRING("{} (0x{:X})")),
 		    m3c::FormatSystemErrorCode<CharT>(code), static_cast<std::make_unsigned_t<HRESULT>>(code));
 	} else {
 		return FMT_FORMAT(
-		    m3c::SelectString<CharT>("{} ({})", L"{} ({})"),
+		    m3c::SelectString<CharT>(M3C_SELECT_STRING("{} ({})")),
 		    m3c::FormatSystemErrorCode<CharT>(code), code);
 	}
 }
@@ -441,18 +437,18 @@ std::basic_string<CharT> BaseVariantFormatter<T, CharT>::to_string(const T& arg)
 				return EncodingTraits<wchar_t, CharT>::Encode(pwsz.get());
 			}
 			return FMT_FORMAT(
-			    SelectString<CharT>("({}: {})", L"({}: {})"),
+			    SelectString<CharT>(M3C_SELECT_STRING("({}: {})")),
 			    fmt_encode(vt), fmt_encode(pwsz.get()));
 		}
 	}
 	// not convertible to string
 	if (m_presentation == 'v') {
 		if (arg.vt == VARENUM::VT_EMPTY || (arg.vt == (VARENUM::VT_VARIANT | VARENUM::VT_BYREF) && arg.pvarVal->vt == VARENUM::VT_EMPTY)) {
-			return SelectString<CharT>("", L"");
+			return SelectString<CharT>(M3C_SELECT_STRING(""));
 		}
-		return SelectString<CharT>("<?>", L"<?>");
+		return SelectString<CharT>(M3C_SELECT_STRING("<?>"));
 	}
-	return FMT_FORMAT(SelectString<CharT>("({})", L"({})"), fmt_encode(vt));
+	return FMT_FORMAT(SelectString<CharT>(M3C_SELECT_STRING("({})")), fmt_encode(vt));
 }
 
 template std::basic_string<char> BaseVariantFormatter<VARIANT, char>::to_string(const VARIANT& arg) const;

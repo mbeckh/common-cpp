@@ -531,7 +531,7 @@ struct fmt::formatter<m3c::fmt_ptr<IUnknown>, CharT> {
 		const ULONG ref = ptr ? (ptr->AddRef(), ptr->Release()) : 0;
 		if (std::holds_alternative<fmt::formatter<std::basic_string<CharT>, CharT>>(m_formatter)) {
 			std::basic_string<CharT> value = FMT_FORMAT(
-			    m3c::SelectString<CharT>("(ptr={}, ref={})", L"(ptr={}, ref={})"),
+			    m3c::SelectString<CharT>(M3C_SELECT_STRING("(ptr={}, ref={})")),
 			    fmt::ptr(ptr), ref);
 			return std::get<fmt::formatter<std::basic_string<CharT>, CharT>>(m_formatter).format(value, ctx);
 		}
@@ -607,7 +607,7 @@ struct fmt::formatter<m3c::fmt_ptr<IStream>, CharT> : fmt::formatter<m3c::fmt_pt
 			// AddRef to get the ref count
 			const ULONG ref = ptr ? (ptr->AddRef(), ptr->Release()) : 0;
 			std::basic_string<CharT> value = FMT_FORMAT(
-			    m3c::SelectString<CharT>("({}, ptr={}, ref={})", L"({}, ptr={}, ref={})"),
+			    m3c::SelectString<CharT>(M3C_SELECT_STRING("({}, ptr={}, ref={})")),
 			    m3c::fmt_encode(name), fmt::ptr(ptr), ref);
 			return std::get<fmt::formatter<std::basic_string<CharT>, CharT>>(m_formatter).format(value, ctx);
 		}

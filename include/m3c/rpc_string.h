@@ -97,7 +97,7 @@ public:
 			[[likely]];
 			return reinterpret_cast<const char_type*>(m_ptr);
 		}
-		return SelectString<char_type>("", L"");
+		return SelectString<char_type>(M3C_SELECT_STRING(""));
 	}
 
 	/// @brief Get the number of characters in this string.
