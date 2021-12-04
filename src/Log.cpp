@@ -430,7 +430,7 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 	const std::source_location* pSourceLocation = nullptr;
 
 	// Container to persist value until end of function.
-	union {
+	union {  // NOLINT(cppcoreguidelines-pro-type-member-init): Only used locally in blocks, but MUST exist until end of funtion.
 		DWORD code;
 		win32_error win32;
 		hresult hr;
@@ -473,7 +473,7 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 		if (!event.Id) {
 			// logged with evt::Default or string message
 			event = evt::windows_error_E;
-			const char* msg;
+			const char* msg;  // NOLINT(cppcoreguidelines-init-variables): Initialization would require checking condition twice.
 			if (message.empty()) {
 				msg = e.message();
 				if (*msg == '\0') {
@@ -501,7 +501,7 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 		if (!event.Id) {
 			// logged with evt::Default or string message
 			event = evt::com_error_H;
-			const char* msg;
+			const char* msg;  // NOLINT(cppcoreguidelines-init-variables): Initialization would require checking condition twice.
 			if (message.empty()) {
 				msg = e.message();
 				if (*msg == '\0') {
@@ -529,7 +529,7 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 		if (!event.Id) {
 			// logged with evt::Default or string message
 			event = evt::rpc_error_R;
-			const char* msg;
+			const char* msg;  // NOLINT(cppcoreguidelines-init-variables): Initialization would require checking condition twice.
 			if (message.empty()) {
 				msg = e.message();
 				if (*msg == '\0') {
@@ -557,7 +557,7 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 		if (!event.Id) {
 			// logged with evt::Default or string message
 			event = evt::system_error;
-			const char* msg;
+			const char* msg;  // NOLINT(cppcoreguidelines-init-variables): Initialization would require checking condition twice.
 			if (message.empty()) {
 				msg = e.what();
 				if (*msg == '\0') {
@@ -597,7 +597,7 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 				// logged with evt::Default or string message
 				event = evt::system_error;
 
-				const char* msg;
+				const char* msg;  // NOLINT(cppcoreguidelines-init-variables): Initialization would require checking condition twice.
 				if (message.empty()) {
 					msg = e.what();
 					if (*msg == '\0') {
