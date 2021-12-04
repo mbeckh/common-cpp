@@ -380,6 +380,7 @@ public:
 class LogEventArgs : private internal::LogEventArgsBase {
 public:
 	// public visibility for selected members
+	using LogEventArgsBase::data;
 	using LogEventArgsBase::LogEventArgsBase;
 	using LogEventArgsBase::operator[];
 	using LogEventArgsBase::size;
