@@ -18,7 +18,6 @@ limitations under the License.
 #pragma once
 
 #include <m3c/format.h>  // IWYU pragma: export
-#include <m3c/string_encode.h>
 #include <m3c/type_traits.h>
 
 #include <fmt/args.h>
@@ -33,7 +32,6 @@ limitations under the License.
 #include <cassert>
 #include <concepts>
 #include <cstddef>
-#include <cstring>
 #include <memory>
 #include <span>
 #include <string>
@@ -72,6 +70,7 @@ concept LogCustomTo = requires(T&& arg, Arguments& args) {
 	std::forward<T>(arg) >> args;
 };
 
+
 /// @brief Base class for a container for arguments to `std::format`.
 class LogFormatArgsBase {
 public:
@@ -93,15 +92,13 @@ public:
 		requires std::same_as<typename T::value_type, char>;
 	}
 	void AddArgument(const T& arg) {
-		m_args.push_back(arg);
-		++m_size;
+		m_args.emplace_back(fmt::detail::make_arg<fmt::format_context>(arg));
 	}
 
 	/// @brief Add a native C-string argument for logging.
 	/// @param arg The log argument.
 	void AddArgument(_In_z_ const char* __restrict const arg) {
-		m_args.push_back(arg);
-		++m_size;
+		m_args.emplace_back(fmt::detail::make_arg<fmt::format_context>(arg));
 	}
 
 	/// @brief Add a "stringish" argument for logging.
@@ -112,15 +109,14 @@ public:
 		requires(!SpecializationOf<T, std::basic_string>);
 	}
 	void AddArgument(const T& arg) {
-		m_args.push_back(std::string_view(arg.c_str(), internal::ConvertibleToCStrTraits<T>::length(arg)));
-		++m_size;
+		m_args.emplace_back(fmt::detail::make_arg<fmt::format_context>(
+		    std::string_view(arg.c_str(), internal::ConvertibleToCStrTraits<T>::length(arg))));
 	}
 
 	/// @brief Add a native wide-character C-string argument for logging.
 	/// @param arg The log argument.
 	void AddArgument(_In_z_ const wchar_t* __restrict const arg) {
-		m_args.push_back(fmt_encode(arg));
-		++m_size;
+		m_args.emplace_back(fmt::detail::make_arg<fmt::format_context>(Store(fmt_encode(arg))));
 	}
 
 	/// @brief Add a wide-character "stringish" argument for logging.
@@ -128,8 +124,8 @@ public:
 	/// @param arg The log argument.
 	template <internal::ConvertibleToCStrOf<wchar_t> T>
 	void AddArgument(const T& arg) {
-		m_args.push_back(fmt_encode(std::wstring_view(arg.c_str(), internal::ConvertibleToCStrTraits<T>::length(arg))));
-		++m_size;
+		m_args.emplace_back(fmt::detail::make_arg<fmt::format_context>(
+		    Store(fmt_encode<wchar_t>(std::wstring_view(arg.c_str(), internal::ConvertibleToCStrTraits<T>::length(arg))))));
 	}
 
 	/// @brief Add a wide-character `std::basic_string_view` argument for logging.
@@ -137,22 +133,20 @@ public:
 	/// @param arg The log argument.
 	template <typename... Args>
 	void AddArgument(const std::basic_string_view<wchar_t, Args...>& arg) {
-		m_args.push_back(fmt_encode(arg));
-		++m_size;
+		m_args.emplace_back(fmt::detail::make_arg<fmt::format_context>(Store(fmt_encode(arg))));
 	}
 
 	/// @brief Add a native pointer argument for logging.
 	/// @param arg The log argument.
 	void AddArgument(_In_opt_ const void* __restrict const arg) {
-		m_args.push_back(arg);
-		++m_size;
+		m_args.emplace_back(fmt::detail::make_arg<fmt::format_context>(arg));
 	}
 
 	/// @brief Add a native pointer argument for logging.
 	/// @param arg The log argument.
 	template <typename T>
 	void AddArgument(_In_opt_ T* __restrict const arg) {
-		AddArgument(fmt_ptr(arg));
+		AddArgument(Store(fmt_ptr(arg)));
 	}
 
 	/// @brief Add a wrapped pointer argument for logging.
@@ -160,8 +154,7 @@ public:
 	/// @param arg The log argument.
 	template <typename T>
 	void AddArgument(const fmt_ptr<T>& arg) {
-		m_args.push_back(arg);
-		++m_size;
+		m_args.emplace_back(fmt::detail::make_arg<fmt::format_context>(arg));
 	}
 
 	/// @brief Add an arbitrary type as a reference to prevent slicing.
@@ -171,25 +164,36 @@ public:
 	template <typename T>
 	void AddArgumentFallback(const T& arg) {
 		// prevent slicing for any other types
-		m_args.push_back(std::cref(arg));
-		++m_size;
+		m_args.emplace_back(fmt::detail::make_arg<fmt::format_context>(arg));
 	}
 
+protected:
+	/// @brief Add a log argument to the backing store.
+	/// @tparam T The type of the log argument.
+	/// @tparam Stored The stored type of the log argument.
+	/// @param arg The log argument.
+	/// @return A reference to the log argument in the backing store.
+	template <typename T, typename Stored = std::remove_reference_t<T>>
+	const Stored& Store(T&& arg) {
+		return m_backingStore.push<Stored, std::remove_reference_t<T>>(std::forward<T>(arg));
+	}
+
+public:
 	/// @brief Get the actual formatter arguments.
 	/// @return A reference to the formatter arguments.
-	[[nodiscard]] constexpr const fmt::dynamic_format_arg_store<fmt::format_context>& operator*() const noexcept {
-		return m_args;
+	[[nodiscard]] constexpr const fmt::format_args operator*() const noexcept {
+		return fmt::format_args(m_args.data(), static_cast<int>(m_args.size()));
 	}
 
 	/// @brief Get the number of formatter arguments.
 	/// @return The number of formatter arguments.
 	[[nodiscard]] constexpr std::size_t size() const noexcept {
-		return m_size;
+		return m_args.size();
 	}
 
 private:
-	fmt::dynamic_format_arg_store<fmt::format_context> m_args;  ///< @brief The formatter arguments.
-	std::size_t m_size = 0;                                     ///< @brief The number of formatter arguments.
+	std::vector<fmt::format_args::format_arg> m_args;  ///< @brief References to the formatter arguments.
+	fmt::detail::dynamic_arg_list m_backingStore;      ///< @brief The backing store for formatter arguments.
 };
 
 
@@ -270,71 +274,18 @@ public:
 		EventDataDescCreate(&m_args.emplace_back(), arg.data(), static_cast<ULONG>(arg.size_bytes()));
 	}
 
-	/// @brief Add a log argument and copy the data to an internal store.
+protected:
+	/// @brief Add a log argument to the backing store.
 	/// @tparam T The type of the log argument.
+	/// @tparam Stored The stored type of the log argument.
 	/// @param arg The log argument.
-	template <typename T>
-	requires std::is_trivially_copyable_v<T>
-	void StoreArgument(const T& arg) {
-		constexpr std::size_t kSize = sizeof(T);
-		std::unique_ptr<std::byte[]> buffer = std::make_unique_for_overwrite<std::byte[]>(kSize);
-		std::memcpy(buffer.get(), std::addressof(arg), kSize);
-		EventDataDescCreate(&m_args.emplace_back(), buffer.get(), static_cast<ULONG>(kSize));
-		m_backingStore.push_back(std::move(buffer));
+	/// @return A reference to the log argument in the backing store.
+	template <typename T, typename Stored = std::remove_reference_t<T>>
+	const Stored& Store(T&& arg) {
+		return m_backingStore.push<Stored, std::remove_reference_t<T>>(std::forward<T>(arg));
 	}
 
-	/// @brief Add a native string log argument and copy the data to an internal store.
-	/// @tparam T The character type of the log argument.
-	/// @param arg The log argument.
-	template <AnyOf<char, wchar_t> T>
-	void StoreArgument(_In_z_ const T* __restrict const arg) {
-		const std::size_t size = (std::char_traits<T>::length(arg) + 1) * sizeof(T);
-		std::unique_ptr<std::byte[]> buffer = std::make_unique_for_overwrite<std::byte[]>(size);
-		std::memcpy(buffer.get(), arg, size);
-		EventDataDescCreate(&m_args.emplace_back(), buffer.get(), static_cast<ULONG>(size));
-		m_backingStore.push_back(std::move(buffer));
-	}
-
-	/// @brief Add a "stringish" log argument and copy the data to an internal store.
-	/// @tparam T The type of the log argument.
-	/// @param arg The log argument.
-	template <internal::ConvertibleToCStr T>
-	void StoreArgument(const T& arg) {
-		const std::size_t size = (internal::ConvertibleToCStrTraits<T>::length(arg) + 1) * sizeof(typename internal::ConvertibleToCStrTraits<T>::CharT);
-		std::unique_ptr<std::byte[]> buffer = std::make_unique_for_overwrite<std::byte[]>(size);
-		std::memcpy(buffer.get(), arg.c_str(), size);
-		EventDataDescCreate(&m_args.emplace_back(), buffer.get(), static_cast<ULONG>(size));
-		m_backingStore.push_back(std::move(buffer));
-	}
-
-	/// @brief Add a `std::basic_string_view` log argument and copy the data to an internal store.
-	/// @tparam Args Template arguments of `std::basic_string_view` after the character type.
-	/// @param arg The log argument.
-	template <typename... Args>
-	void StoreArgument(const std::basic_string_view<Args...>& arg) {
-		using CharT = typename std::basic_string_view<Args...>::value_type;
-
-		const std::size_t lengthInBytes = arg.size() * sizeof(CharT);
-		std::unique_ptr<std::byte[]> buffer = std::make_unique_for_overwrite<std::byte[]>(lengthInBytes + sizeof(CharT));
-		std::memcpy(buffer.get(), arg.data(), lengthInBytes);
-		std::memset(buffer.get() + lengthInBytes, 0, sizeof(CharT));
-		EventDataDescCreate(&m_args.emplace_back(), buffer.get(), static_cast<ULONG>(lengthInBytes + sizeof(CharT)));
-		m_backingStore.push_back(std::move(buffer));
-	}
-
-	/// @brief Add a raw data log argument and copy the data to an internal store.
-	/// @tparam T The type of the native buffer
-	/// @tparam kExtent The size of the native buffer in number of elements.
-	/// @param arg The log argument.
-	template <typename T, size_t kExtent>
-	void StoreArgument(const std::span<T, kExtent>& arg) {
-		const std::size_t size = arg.size_bytes();
-		std::unique_ptr<std::byte[]> buffer = std::make_unique_for_overwrite<std::byte[]>(size);
-		std::memcpy(buffer.get(), arg.data(), size);
-		EventDataDescCreate(&m_args.emplace_back(), buffer.get(), static_cast<ULONG>(size));
-		m_backingStore.push_back(std::move(buffer));
-	}
-
+public:
 	/// @brief Get the actual event arguments.
 	/// @return A reference to the event arguments.
 	[[nodiscard]] constexpr __declspec(restrict) EVENT_DATA_DESCRIPTOR* data() noexcept {
@@ -355,8 +306,8 @@ public:
 	}
 
 private:
-	std::vector<EVENT_DATA_DESCRIPTOR> m_args;                 ///< @brief The event arguments.
-	std::vector<std::unique_ptr<std::byte[]>> m_backingStore;  ///< @brief The backing store for event arguments.
+	std::vector<EVENT_DATA_DESCRIPTOR> m_args;     ///< @brief The event arguments.
+	fmt::detail::dynamic_arg_list m_backingStore;  ///< @brief The backing store for event arguments.
 };
 
 }  // namespace internal
@@ -373,6 +324,7 @@ public:
 	using LogFormatArgsBase::size;
 
 	/// @brief Add an argument of any other type for logging a string message.
+	/// @remarks This method does NOT use custom `operator>>` for a type.
 	/// @tparam T The type of the log argument.
 	/// @param arg The log argument.
 	/// @return The current object for method chaining.
@@ -407,6 +359,18 @@ public:
 			static_assert_no_clang(false, "MUST NOT use rvalue to add to LogFormatArgs");
 		}
 		return *this;
+	}
+
+	/// @brief Add a log argument and copy the data to an internal store.
+	/// @remarks Custom `operator<<` is not taken into account.
+	/// @tparam T The type of the log argument.
+	/// @param arg The log argument.
+	/// @return The current object for method chaining.
+	template <typename T>
+	LogFormatArgs& operator+(T&& arg) {
+		const T& stored = Store(std::forward<T>(arg));
+		// do not use <<, else number of arguments could be wrong
+		return *this % stored;
 	}
 };
 
@@ -447,11 +411,9 @@ public:
 	/// @param arg The log argument.
 	/// @return The current object for method chaining.
 	template <typename T>
-	LogEventArgs& operator+(const T& arg) {
-		// forward to the internal function
-		StoreArgument(arg);
-
-		return *this;
+	LogEventArgs& operator+(T&& arg) {
+		const T& stored = Store(std::forward<T>(arg));
+		return *this << stored;
 	}
 };
 

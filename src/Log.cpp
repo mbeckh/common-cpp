@@ -429,7 +429,13 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 	LogEventArgs eventArgs;
 	const std::source_location* pSourceLocation = nullptr;
 
-	DWORD code;  // NOLINT(cppcoreguidelines-init-variables): Container to persist value until end of function.
+	// Container to persist value until end of function.
+	union {
+		DWORD code;
+		win32_error win32;
+		hresult hr;
+		rpc_status rpc;
+	} code;
 	try {
 		try {
 			throw;
@@ -463,7 +469,7 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 			throw;
 		}
 	} catch (const windows_error& e) {
-		code = static_cast<DWORD>(e.code().value());
+		code.win32 = win32_error(e.code().value());
 		if (!event.Id) {
 			// logged with evt::Default or string message
 			event = evt::windows_error_E;
@@ -485,14 +491,13 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 			}
 		}
 		if constexpr (kPrint) {
-			formatArgs << win32_error(code);
+			formatArgs << code.win32;
 		}
 		if constexpr (kEvent) {
-			eventArgs << code;
+			eventArgs << code.win32;
 		}
 	} catch (const com_error& e) {
-		code = static_cast<DWORD>(e.code().value());
-		static_assert(sizeof(DWORD) == sizeof(HRESULT));
+		code.hr = hresult(e.code().value());
 		if (!event.Id) {
 			// logged with evt::Default or string message
 			event = evt::com_error_H;
@@ -514,14 +519,13 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 			}
 		}
 		if constexpr (kPrint) {
-			formatArgs << hresult(static_cast<HRESULT>(code));
+			formatArgs << code.hr;
 		}
 		if constexpr (kEvent) {
-			eventArgs << code;
+			eventArgs << code.hr;
 		}
 	} catch (const rpc_error& e) {
-		code = static_cast<DWORD>(e.code().value());
-		static_assert(sizeof(DWORD) == sizeof(RPC_STATUS));
+		code.rpc = rpc_status(e.code().value());
 		if (!event.Id) {
 			// logged with evt::Default or string message
 			event = evt::rpc_error_R;
@@ -543,13 +547,13 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 			}
 		}
 		if constexpr (kPrint) {
-			formatArgs << rpc_status(static_cast<RPC_STATUS>(code));
+			formatArgs << code.rpc;
 		}
 		if constexpr (kEvent) {
-			eventArgs << code;
+			eventArgs << code.rpc;
 		}
 	} catch (const system_error& e) {
-		code = static_cast<DWORD>(e.code().value());
+		code.code = static_cast<DWORD>(e.code().value());
 		if (!event.Id) {
 			// logged with evt::Default or string message
 			event = evt::system_error;
@@ -566,10 +570,10 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 			if constexpr (kPrint) {
 				if (message.empty()) {
 					// Add code to error message for printing outputs
-					message = FMT_FORMAT("{} ({})", msg, code);
+					message = FMT_FORMAT("{} ({})", msg, code.code);
 				} else {
 					// Add message with code to error message for printing string messages
-					message = FMT_FORMAT("{}: {}", message, win32_error(code));
+					message = FMT_FORMAT("{}: {}", message, win32_error(code.code));
 				}
 				formatArgs << message;
 			}
@@ -578,15 +582,15 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 			}
 		}
 		if constexpr (kPrint) {
-			formatArgs << code;
+			formatArgs << code.code;
 		}
 		if constexpr (kEvent) {
-			eventArgs << code;
+			eventArgs << code.code;
 		}
 	} catch (const std::system_error& e) {
 		const std::error_code& errorCode = e.code();
 		const std::error_category& category = errorCode.category();
-		code = static_cast<DWORD>(errorCode.value());
+		code.code = static_cast<DWORD>(errorCode.value());
 
 		if (category == std::system_category()) {
 			if (!event.Id) {
@@ -605,7 +609,7 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 				}
 				if constexpr (kPrint) {
 					const std::string errorMessage = errorCode.message();
-					const std::string formattedCode = FMT_FORMAT(" ({})", code);
+					const std::string formattedCode = FMT_FORMAT(" ({})", code.code);
 					if (message.empty()) {
 						message = msg;
 						// Add code to error message for printing outputs
@@ -624,10 +628,10 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 				}
 			}
 			if constexpr (kPrint) {
-				formatArgs << code;
+				formatArgs << code.code;
 			}
 			if constexpr (kEvent) {
-				eventArgs << code;
+				eventArgs << code.code;
 			}
 		} else {
 			// other categories than std::system_category never have context data
@@ -637,10 +641,10 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 			const char* const categoryName = category.name();
 			const char* const msg = message.empty() ? e.what() : message.c_str();
 			if constexpr (kPrint) {
-				formatArgs << categoryName << msg << code;
+				formatArgs << categoryName << msg << code.code;
 			}
 			if constexpr (kEvent) {
-				eventArgs << categoryName << msg << code;
+				eventArgs << categoryName << msg << code.code;
 			}
 		}
 	} catch (const std::exception& e) {

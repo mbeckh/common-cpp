@@ -18,10 +18,8 @@ limitations under the License.
 
 #include "m3c/LogArgs.h"
 
-#include "m3c/format.h"
-
 void operator>>(const VARIANT& arg, _Inout_ m3c::LogFormatArgs& formatArgs) {
-	formatArgs << FMT_FORMAT("{:t}", arg) << FMT_FORMAT("{:v}", arg);
+	formatArgs + FMT_FORMAT("{:t}", arg) + FMT_FORMAT("{:v}", arg);
 }
 
 void operator>>(const VARIANT& arg, _Inout_ m3c::LogEventArgs& eventArgs) {
@@ -29,7 +27,7 @@ void operator>>(const VARIANT& arg, _Inout_ m3c::LogEventArgs& eventArgs) {
 }
 
 void operator>>(const PROPVARIANT& arg, _Inout_ m3c::LogFormatArgs& formatArgs) {
-	formatArgs << FMT_FORMAT("{:t}", arg) << FMT_FORMAT("{:v}", arg);
+	formatArgs + FMT_FORMAT("{:t}", arg) + FMT_FORMAT("{:v}", arg);
 }
 
 void operator>>(const PROPVARIANT& arg, _Inout_ m3c::LogEventArgs& eventArgs) {
