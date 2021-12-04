@@ -181,7 +181,7 @@ protected:
 public:
 	/// @brief Get the actual formatter arguments.
 	/// @return A reference to the formatter arguments.
-	[[nodiscard]] constexpr const fmt::format_args operator*() const noexcept {
+	[[nodiscard]] constexpr fmt::format_args operator*() const noexcept {
 		return fmt::format_args(m_args.data(), static_cast<int>(m_args.size()));
 	}
 
