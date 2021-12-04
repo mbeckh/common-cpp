@@ -63,7 +63,6 @@ target_sources(m3c INTERFACE "$<$<NOT:$<IN_LIST:$<TARGET_PROPERTY:TYPE>,STATIC_L
 target_compile_definitions(m3c PRIVATE WIN32_LEAN_AND_MEAN=1 NOMINMAX=1)
 target_compile_features(m3c PUBLIC cxx_std_20)
 target_precompile_headers(m3c PRIVATE "pch.h")
-set_property(SOURCE "${CMAKE_CURRENT_BINARY_DIR}/m3c.dir/cmake_pch.cxx" APPEND PROPERTY COMPILE_OPTIONS $<$<CONFIG:Release>:/Yl>)
 
 target_include_directories(m3c PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>" "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 
