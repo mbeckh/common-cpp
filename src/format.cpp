@@ -340,9 +340,9 @@ std::basic_string<CharT> FormatSystemErrorCode(const std::uint32_t errorCode) {
 
 namespace internal {
 
-template struct error<DWORD>;
-template struct error<HRESULT>;
-template struct error<RPC_STATUS>;
+template class error<DWORD>;
+template class error<HRESULT>;
+template class error<RPC_STATUS>;
 
 }  // namespace internal
 
