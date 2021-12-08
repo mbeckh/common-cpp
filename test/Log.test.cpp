@@ -967,7 +967,7 @@ TEST_P(LogAll_Test, ExceptionToHRESULT_NestedExceptionAndPriorityIsEnabled_LogWi
 TEST_F(LogString_Test, FormatEvent_Reversed_PrintReversed) {
 	Log::Critical(evt::Test_FormatReversed, 3, 5, 7, L"Test-\u00FC");
 
-	EXPECT_THAT(m_debug, t::HasSubstr("] Reversed: Test-\u00C3\u00BC; 7; 5; 3\n\tat"));
+	EXPECT_THAT(m_debug, t::HasSubstr("] Reversed: Test-\xC3\xBC; 7; 5; 3\n\tat"));
 }
 
 TEST_F(LogString_Test, FormatEvent_Width_PrintPadded) {
@@ -1033,7 +1033,7 @@ TEST_F(LogString_Test, FormatEvent_SpecialCharacters_PrintSpecialCharacters) {
 TEST_F(LogString_Test, FormatString_Reversed_PrintReversed) {
 	Log::Critical("Reversed: {3}; {2}; {1}; {0}", 3, 5, 7, L"Test-\u00FC");
 
-	EXPECT_THAT(m_debug, t::HasSubstr("] Reversed: Test-\u00C3\u00BC; 7; 5; 3\n\tat"));
+	EXPECT_THAT(m_debug, t::HasSubstr("] Reversed: Test-\xC3\xBC; 7; 5; 3\n\tat"));
 }
 
 TEST_F(LogString_Test, Variant_Value_Print) {

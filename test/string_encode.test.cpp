@@ -128,7 +128,7 @@ TEST_F(string_encode_Test, EncodeUtf8_RequiresDynamicBufferAfterEncoding_ReturnE
 	    .InSequence(seq);
 
 	const std::string str = EncodeUtf8(std::wstring(kFixedBufferSize - 1, L'x').append(1, L'\u00FC').c_str());
-	EXPECT_EQ(std::string(kFixedBufferSize - 1, 'x') + "\u00C3\u00BC", str);
+	EXPECT_EQ(std::string(kFixedBufferSize - 1, 'x') + "\xC3\xBC", str);
 }
 
 TEST_F(string_encode_Test, EncodeUtf8_FitsInternalBufferAndError_ThrowException) {
