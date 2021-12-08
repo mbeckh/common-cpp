@@ -83,7 +83,7 @@ jobs:
     
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v2.2.4
 
     - name: Report
       uses: mbeckh/code-quality-actions/report@master
