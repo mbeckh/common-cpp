@@ -7,7 +7,7 @@
     {
       "kind": "git",
       "repository": "https://github.com/mbeckh/vcpkg-registry.git",
-      "baseline": "0823b722a9ca0e30763810d9d4eadc98e9159797",
+      "baseline": "f121cc3a86029bbb0b0cfe5bbd955ecfb02e23a0",
       "packages": [ "common-cpp-testing", "detours", "detours-gmock", "fmt", "gtest" ]
     }
   ]
