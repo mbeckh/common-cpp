@@ -50,8 +50,14 @@ jobs:
       uses: mbeckh/code-quality-actions/coverage@master
       with:
         binary-dir: build/${{matrix.configuration}}
-        codecov: true
         codacy-token: ${{secrets.CODACY_PROJECT_API_TOKEN}}
+
+    - name: Codecov
+      if: matrix.configuration == 'Debug'
+      uses: codecov/codecov-action@v2
+      with:
+        files: build/${{matrix.configuration}}/coverage-*.xml
+        fail_ci_if_error: true
 
     - name: Reconfigure
       uses: mbeckh/cmake-utils/configure@master
