@@ -33,7 +33,6 @@ jobs:
         build-root: build
         binary-dir: build/${{matrix.configuration}}
         configuration: ${{matrix.configuration}}
-        extra-args: -D CMAKE_UNITY_BUILD:BOOL=ON
 
     - name: Build
       shell: cmd
@@ -53,6 +52,14 @@ jobs:
         binary-dir: build/${{matrix.configuration}}
         codecov: true
         codacy-token: ${{secrets.CODACY_PROJECT_API_TOKEN}}
+
+    - name: Reconfigure
+      uses: mbeckh/cmake-utils/configure@master
+      with:
+        build-root: build
+        binary-dir: build/${{matrix.configuration}}
+        configuration: ${{matrix.configuration}}
+        extra-args: -D CMAKE_UNITY_BUILD:BOOL=ON
 
     - name: Analyze
       shell: cmd
