@@ -33,11 +33,12 @@ jobs:
         build-root: build
         binary-dir: build/${{matrix.configuration}}
         configuration: ${{matrix.configuration}}
+        extra-args: -D CMAKE_UNITY_BUILD:BOOL=ON
 
     - name: Build
       shell: cmd
       working-directory: build/${{matrix.configuration}}
-      run: cmake --build .
+      run: cmake --build . -v
 
     - name: Test
       if: matrix.configuration != 'Debug'
@@ -58,14 +59,6 @@ jobs:
       with:
         files: build/${{matrix.configuration}}/coverage-*.xml
         fail_ci_if_error: true
-
-    - name: Reconfigure
-      uses: mbeckh/cmake-utils/configure@master
-      with:
-        build-root: build
-        binary-dir: build/${{matrix.configuration}}
-        configuration: ${{matrix.configuration}}
-        extra-args: -D CMAKE_UNITY_BUILD:BOOL=ON
 
     - name: Analyze
       shell: cmd
