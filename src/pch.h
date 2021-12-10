@@ -68,3 +68,10 @@ limitations under the License.
 #include <utility>
 #include <variant>
 #include <vector>
+
+namespace m3c::keep {
+// Provide a function in precompiled header to prevent LNK4206
+void KeepMe() {
+	OutputDebugStringA("Keep me");
+}
+}  // namespace m3c::keep
