@@ -40,6 +40,7 @@ jobs:
         build-root: build
         binary-dir: build/Release
         configuration: Release
+        extra-args: -D CMAKE_DISABLE_PRECOMPILE_HEADERS:BOOL=ON
 
     - name: Build
       shell: cmd
