@@ -38,7 +38,7 @@ jobs:
     - name: Build
       shell: cmd
       working-directory: build/${{matrix.configuration}}
-      run: cmake --build . -v
+      run: cmake --build .
 
     - name: Test
       if: matrix.configuration != 'Debug'
