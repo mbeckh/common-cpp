@@ -69,7 +69,7 @@ target_include_directories(m3c PUBLIC "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/i
 add_custom_target(m3c_patch_pch
                  DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/m3c.dir/.patch_pch" "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/m3c.dir/cmake_pch.cxx")
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/m3c.dir/.patch_pch" "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/m3c.dir/cmake_pch.cxx"
-                   COMMAND cmd /c echo "namespace m3c::build::keepme { void KeepMe() { OutputDebugStringA(\"Keep Me\"); }}" >> "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/m3c.dir/cmake_pch.cxx"
+                   COMMAND cmd /c echo namespace m3c::build::keepme { const int kKeepMe = 1\; } >> "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/m3c.dir/cmake_pch.cxx"
                    COMMAND "${CMAKE_COMMAND}" -E touch "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/m3c.dir/.patch_pch"
                    COMMENT "Patching precompiled header")
 add_dependencies(m3c m3c_patch_pch)
