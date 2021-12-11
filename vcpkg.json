@@ -1,6 +1,6 @@
 {
   "name": "common-cpp",
-  "version": "0.0.1",
+  "version": "0.1.2",
   "port-version": 0,
   "dependencies": [
     "fmt"
