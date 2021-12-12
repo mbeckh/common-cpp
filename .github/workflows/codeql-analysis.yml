@@ -62,7 +62,7 @@ jobs:
     - name: Build
       shell: cmd
       working-directory: build/Release
-      run: cmake --build .
+      run: cmake --build . --target m3c
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1.0.25
