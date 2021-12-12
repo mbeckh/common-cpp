@@ -18,9 +18,9 @@ limitations under the License.
 
 #include "m3c/string_encode.h"
 
-#include "m3c/exception.h"
+#include "m3c_events.h"
 
-#include "m3c.events.h"
+#include "m3c/exception.h"
 
 #include <windows.h>
 

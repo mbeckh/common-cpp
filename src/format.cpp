@@ -18,6 +18,8 @@ limitations under the License.
 
 #include "m3c/format.h"
 
+#include "m3c_events.h"
+
 #include "m3c/Log.h"
 #include "m3c/PropVariant.h"
 #include "m3c/com_heap_ptr.h"
@@ -25,8 +27,6 @@ limitations under the License.
 #include "m3c/rpc_string.h"
 #include "m3c/string_encode.h"
 #include "m3c/type_traits.h"
-
-#include "m3c.events.h"
 
 #include <fmt/format.h>
 #include <fmt/xchar.h>

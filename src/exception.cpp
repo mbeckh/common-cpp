@@ -18,9 +18,9 @@ limitations under the License.
 
 #include "m3c/exception.h"
 
-#include "m3c/Log.h"
+#include "m3c_events.h"
 
-#include "m3c.events.h"
+#include "m3c/Log.h"
 
 #include <cstring>
 #include <string>

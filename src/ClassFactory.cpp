@@ -18,13 +18,13 @@ limitations under the License.
 
 #include "m3c/ClassFactory.h"
 
+#include "m3c_events.h"
+
 #include "m3c/COM.h"
 #include "m3c/ComObject.h"
 #include "m3c/Log.h"
 #include "m3c/exception.h"
 #include "m3c/finally.h"
-
-#include "m3c.events.h"
 
 #include <windows.h>
 #include <unknwn.h>

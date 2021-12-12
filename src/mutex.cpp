@@ -18,9 +18,9 @@ limitations under the License.
 
 #include "m3c/mutex.h"
 
-#include "m3c/exception.h"
+#include "m3c_events.h"
 
-#include "m3c.events.h"
+#include "m3c/exception.h"
 
 namespace m3c {
 

@@ -18,13 +18,13 @@ limitations under the License.
 
 #include "m3c/Log.h"
 
+#include "m3c_events.h"
+
 #include "m3c/LogArgs.h"
 #include "m3c/LogData.h"
 #include "m3c/exception.h"
 #include "m3c/finally.h"
 #include "m3c/source_location.h"
-
-#include "m3c.events.h"
 
 #include <windows.h>
 #include <evntprov.h>

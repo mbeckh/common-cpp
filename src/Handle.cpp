@@ -18,10 +18,10 @@ limitations under the License.
 
 #include "m3c/Handle.h"
 
+#include "m3c_events.h"
+
 #include "m3c/Log.h"
 #include "m3c/exception.h"
-
-#include "m3c.events.h"
 
 namespace m3c::internal {
 

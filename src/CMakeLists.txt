@@ -82,7 +82,7 @@ set_target_properties(m3c PROPERTIES
 )
 
 target_link_libraries(m3c PUBLIC fmt::fmt PRIVATE rpcrt4 propsys)
-common_cpp_target_events(m3c "m3c.events.man" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/m3c")
+common_cpp_target_events(m3c "m3c_events.man" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/m3c")
 
 install(TARGETS m3c EXPORT m3c-targets)
 install(EXPORT m3c-targets DESTINATION "share/${PROJECT_NAME}" NAMESPACE "${PROJECT_NAME}::")

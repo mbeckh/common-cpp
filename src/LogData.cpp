@@ -45,6 +45,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 
 #include "m3c/LogData.h"
 
+#include "m3c_events.h"
+
 #include "m3c/Log.h"
 #include "m3c/LogArgs.h"
 #include "m3c/PropVariant.h"
@@ -52,8 +54,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 #include "m3c/format.h"
 #include "m3c/string_encode.h"
 #include "m3c/type_traits.h"
-
-#include "m3c.events.h"
 
 #include <windows.h>
 #include <oleauto.h>
