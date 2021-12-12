@@ -41,6 +41,11 @@ jobs:
         configuration: Release
         extra-args: -D CMAKE_UNITY_BUILD:BOOL=ON -D CMAKE_DISABLE_PRECOMPILE_HEADERS:BOOL=ON
 
+    - name: Build Generated Sources
+      shell: cmd
+      working-directory: build/Release
+      run: cmake --build . --target generated-sources
+
     - name: Initialize CodeQL
       if: github.event_name != 'pull_request'
       uses: github/codeql-action/init@v1.0.25
