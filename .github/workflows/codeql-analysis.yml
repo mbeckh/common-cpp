@@ -34,7 +34,7 @@ jobs:
       uses: mbeckh/msvc-dev-cmd@master
 
     - name: Configure
-      uses: mbeckh/cmake-utils/configure@test
+      uses: mbeckh/cmake-utils/configure@master
       with:
         build-root: build
         binary-dir: build/Release
