@@ -48,14 +48,14 @@ jobs:
 
     - name: Initialize CodeQL
       if: github.event_name != 'pull_request'
-      uses: github/codeql-action/init@v1.0.25
+      uses: github/codeql-action/init@v1
       with:
         languages: cpp
         queries: security-and-quality
 
     - name: Initialize CodeQL for Pull Request
       if: github.event_name == 'pull_request'
-      uses: github/codeql-action/init@v1.0.25
+      uses: github/codeql-action/init@v1
       with:
         languages: cpp
 
@@ -65,7 +65,7 @@ jobs:
       run: cmake --build . --target m3c
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v1.0.25
+      uses: github/codeql-action/analyze@v1
 
     - name: Save Logs
       if: always()
