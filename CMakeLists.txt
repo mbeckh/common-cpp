@@ -18,6 +18,8 @@ project("common-cpp" VERSION 0.1.2
     HOMEPAGE_URL "https://github.com/mbeckh/common-cpp"
     LANGUAGES CXX)
 
+set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "/external:I" CACHE STRING "" FORCE)
+
 include(GNUInstallDirs)
 
 add_subdirectory(src)
