@@ -39,7 +39,7 @@ jobs:
         build-root: build
         binary-dir: build/Release
         configuration: Release
-        extra-args: -D CMAKE_UNITY_BUILD:BOOL=ON -D CMAKE_DISABLE_PRECOMPILE_HEADERS:BOOL=ON
+        extra-args: -D CMAKE_UNITY_BUILD:BOOL=ON -D CMAKE_DISABLE_PRECOMPILE_HEADERS:BOOL=ON -D CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE:BOOL=OFF
 
     - name: Initialize CodeQL
       if: github.event_name != 'pull_request'
