@@ -21,7 +21,7 @@ project("common-cpp" VERSION 0.1.2
 set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "/I" CACHE STRING "" FORCE)
 
 include(GNUInstallDirs)
-
+add_compile_options(/MP)
 add_subdirectory(src)
 
 include(CMakePackageConfigHelpers)
