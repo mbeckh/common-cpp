@@ -199,3 +199,8 @@ PropVariant::~PropVariant() noexcept {
 }
 
 }  // namespace m3c
+
+template struct fmt::formatter<m3c::Variant, char>;
+template struct fmt::formatter<m3c::Variant, wchar_t>;
+template struct fmt::formatter<m3c::PropVariant, char>;
+template struct fmt::formatter<m3c::PropVariant, wchar_t>;

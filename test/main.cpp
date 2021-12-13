@@ -42,10 +42,10 @@ void Print(const m3c::Priority priority, const std::string& message) {
 int main(int argc, char** argv) {
 	const HRESULT hr = CoInitialize(nullptr);
 	if (FAILED(hr)) {
-		m3c::Log::Critical(m3c::evt::Test_Init_H, hr);
+		m3c::Log::Critical("CoInitialize: {}", m3c::hresult(hr));
 		return 1;
 	}
-	auto f = m3c::finally([]() noexcept {
+	const auto f = m3c::finally([]() noexcept {
 		CoUninitialize();
 	});
 

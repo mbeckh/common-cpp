@@ -30,18 +30,6 @@ limitations under the License.
 
 namespace m3c {
 
-std::string EncodeUtf8(_In_z_ const wchar_t* __restrict const str) {
-	return EncodeUtf8(str, std::char_traits<wchar_t>::length(str));
-}
-
-std::string EncodeUtf8(const std::wstring& str) {
-	return EncodeUtf8(str.c_str(), str.size());
-}
-
-std::string EncodeUtf8(const std::wstring_view& str) {
-	return EncodeUtf8(str.data(), str.size());
-}
-
 std::string EncodeUtf8(_In_reads_(length) const wchar_t* __restrict const str, const std::size_t length) {
 	if (!length) {
 		[[unlikely]];
@@ -75,19 +63,6 @@ std::string EncodeUtf8(_In_reads_(length) const wchar_t* __restrict const str, c
 		}
 	}
 	throw windows_error() + evt::Encode_E << length;
-}
-
-
-std::wstring EncodeUtf16(_In_z_ const char* __restrict const str) {
-	return EncodeUtf16(str, std::char_traits<char>::length(str));
-}
-
-std::wstring EncodeUtf16(const std::string& str) {
-	return EncodeUtf16(str.c_str(), str.size());
-}
-
-std::wstring EncodeUtf16(const std::string_view& str) {
-	return EncodeUtf16(str.data(), str.size());
 }
 
 std::wstring EncodeUtf16(_In_reads_(length) const char* __restrict const str, const std::size_t length) {

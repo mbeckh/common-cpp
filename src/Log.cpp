@@ -49,6 +49,17 @@ limitations under the License.
 
 namespace m3c {
 
+namespace internal {
+
+template class LogContext<const EVENT_DESCRIPTOR&>;
+template class LogContext<const char*>;
+
+template class Closure<false, void, LogFormatArgs&>;
+template class Closure<false, void, LogEventArgs&>;
+template class Closure<true, void, Priority, HRESULT>;
+
+}  // namespace internal
+
 namespace {
 
 /// @brief Get the string for a message id.
@@ -412,15 +423,23 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 	EVENT_DESCRIPTOR event;
 	EventDescSetId(&event, 0);
 
+	std::string message;
+
 	LogFormatArgs formatArgs;
 	LogEventArgs eventArgs;
 	const std::source_location* pSourceLocation = nullptr;
 
-	DWORD code;  // NOLINT(cppcoreguidelines-init-variables): Container to persist value until end of function.
+	// Container to persist value until end of function.
+	union {  // NOLINT(cppcoreguidelines-pro-type-member-init): Only used locally in blocks, but MUST exist until end of funtion.
+		DWORD code;
+		win32_error win32;
+		hresult hr;
+		rpc_status rpc;
+	} code;
 	try {
 		try {
 			throw;
-		} catch (const internal::BaseException& e) {
+		} catch (const internal::BaseException<const EVENT_DESCRIPTOR&>& e) {
 			[[likely]];
 			event = e.GetEvent();
 
@@ -433,136 +452,186 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 				logData.CopyArgumentsTo(eventArgs);
 			}
 			throw;
+		} catch (const internal::BaseException<const char*>& e) {
+			[[likely]];
+			const char* pattern = e.GetLogMessage();
+
+			const LogData& logData = e.GetLogData();
+			pSourceLocation = &e.GetSourceLocation();
+
+			if (pattern) {
+				// Format with a "private" set of arguments (except for Default message)
+				LogFormatArgs args;
+				logData.CopyArgumentsTo(args);
+				message = fmt::vformat(pattern, *args);
+			}
+
+			throw;
 		}
 	} catch (const windows_error& e) {
-		code = static_cast<DWORD>(e.code().value());
+		code.win32 = win32_error(e.code().value());
 		if (!event.Id) {
-			// logged with evt::Default
+			// logged with evt::Default or string message
 			event = evt::windows_error_E;
-			const char* message = e.message();
-			if (*message == '\0') {
-				message = "Error";
+			const char* msg;  // NOLINT(cppcoreguidelines-init-variables): Initialization would require checking condition twice.
+			if (message.empty()) {
+				msg = e.message();
+				if (*msg == '\0') {
+					[[unlikely]];
+					msg = "Error";
+				}
+			} else {
+				msg = message.c_str();
 			}
 			if constexpr (kPrint) {
-				formatArgs << message;
+				formatArgs << msg;
 			}
 			if constexpr (kEvent) {
-				eventArgs << message;
+				eventArgs << msg;
 			}
 		}
 		if constexpr (kPrint) {
-			formatArgs << win32_error(code);
+			formatArgs << code.win32;
 		}
 		if constexpr (kEvent) {
-			eventArgs << code;
+			eventArgs << code.win32;
 		}
 	} catch (const com_error& e) {
-		code = static_cast<DWORD>(e.code().value());
-		static_assert(sizeof(DWORD) == sizeof(HRESULT));
+		code.hr = hresult(e.code().value());
 		if (!event.Id) {
-			// logged with evt::Default
+			// logged with evt::Default or string message
 			event = evt::com_error_H;
-			const char* message = e.message();
-			if (*message == '\0') {
-				message = "Error";
+			const char* msg;  // NOLINT(cppcoreguidelines-init-variables): Initialization would require checking condition twice.
+			if (message.empty()) {
+				msg = e.message();
+				if (*msg == '\0') {
+					[[unlikely]];
+					msg = "Error";
+				}
+			} else {
+				msg = message.c_str();
 			}
 			if constexpr (kPrint) {
-				formatArgs << message;
+				formatArgs << msg;
 			}
 			if constexpr (kEvent) {
-				eventArgs << message;
+				eventArgs << msg;
 			}
 		}
 		if constexpr (kPrint) {
-			formatArgs << hresult(static_cast<HRESULT>(code));
+			formatArgs << code.hr;
 		}
 		if constexpr (kEvent) {
-			eventArgs << code;
+			eventArgs << code.hr;
 		}
 	} catch (const rpc_error& e) {
-		code = static_cast<DWORD>(e.code().value());
-		static_assert(sizeof(DWORD) == sizeof(RPC_STATUS));
+		code.rpc = rpc_status(e.code().value());
 		if (!event.Id) {
-			// logged with evt::Default
+			// logged with evt::Default or string message
 			event = evt::rpc_error_R;
-			const char* message = e.message();
-			if (*message == '\0') {
-				message = "Error";
+			const char* msg;  // NOLINT(cppcoreguidelines-init-variables): Initialization would require checking condition twice.
+			if (message.empty()) {
+				msg = e.message();
+				if (*msg == '\0') {
+					[[unlikely]];
+					msg = "Error";
+				}
+			} else {
+				msg = message.c_str();
 			}
 			if constexpr (kPrint) {
+				formatArgs << msg;
+			}
+			if constexpr (kEvent) {
+				eventArgs << msg;
+			}
+		}
+		if constexpr (kPrint) {
+			formatArgs << code.rpc;
+		}
+		if constexpr (kEvent) {
+			eventArgs << code.rpc;
+		}
+	} catch (const system_error& e) {
+		code.code = static_cast<DWORD>(e.code().value());
+		if (!event.Id) {
+			// logged with evt::Default or string message
+			event = evt::system_error;
+			const char* msg;  // NOLINT(cppcoreguidelines-init-variables): Initialization would require checking condition twice.
+			if (message.empty()) {
+				msg = e.what();
+				if (*msg == '\0') {
+					[[unlikely]];
+					msg = "Error";
+				}
+			} else {
+				msg = message.c_str();
+			}
+			if constexpr (kPrint) {
+				if (message.empty()) {
+					// Add code to error message for printing outputs
+					message = FMT_FORMAT("{} ({})", msg, code.code);
+				} else {
+					// Add message with code to error message for printing string messages
+					message = FMT_FORMAT("{}: {}", message, win32_error(code.code));
+				}
 				formatArgs << message;
 			}
 			if constexpr (kEvent) {
-				eventArgs << message;
+				eventArgs << msg;
 			}
 		}
 		if constexpr (kPrint) {
-			formatArgs << rpc_status(static_cast<RPC_STATUS>(code));
+			formatArgs << code.code;
 		}
 		if constexpr (kEvent) {
-			eventArgs << code;
-		}
-	} catch (const system_error& e) {
-		code = static_cast<DWORD>(e.code().value());
-		if (!event.Id) {
-			// logged with evt::Default
-			event = evt::system_error;
-			const char* what = e.what();
-			if (*what == '\0') {
-				what = "Error";
-			}
-			if constexpr (kPrint) {
-				// Add code to error message for printing outputs
-				formatArgs << FMT_FORMAT("{} ({})", what, code);
-			}
-			if constexpr (kEvent) {
-				eventArgs << what;
-			}
-		}
-		if constexpr (kPrint) {
-			formatArgs << code;
-		}
-		if constexpr (kEvent) {
-			eventArgs << code;
+			eventArgs << code.code;
 		}
 	} catch (const std::system_error& e) {
 		const std::error_code& errorCode = e.code();
 		const std::error_category& category = errorCode.category();
-		code = static_cast<DWORD>(errorCode.value());
+		code.code = static_cast<DWORD>(errorCode.value());
 
 		if (category == std::system_category()) {
 			if (!event.Id) {
-				// logged with evt::Default
-				const char* what = e.what();
+				// logged with evt::Default or string message
 				event = evt::system_error;
 
-				if (*what == '\0') {
-					[[unlikely]];
-					what = "Error";
-				}
-
-				if constexpr (kPrint) {
-					std::string systemErrorMessage = what;
-					// Add code to error message for printing outputs
-					const std::string errorMessage = errorCode.message();
-					const std::string formattedCode = FMT_FORMAT(" ({})", code);
-					if (const auto pos = systemErrorMessage.find(errorMessage); pos != std::string::npos) {
-						systemErrorMessage.insert(pos + errorMessage.size(), formattedCode);
-					} else {
-						systemErrorMessage.append(formattedCode);
+				const char* msg;  // NOLINT(cppcoreguidelines-init-variables): Initialization would require checking condition twice.
+				if (message.empty()) {
+					msg = e.what();
+					if (*msg == '\0') {
+						[[unlikely]];
+						msg = "Error";
 					}
-					formatArgs << systemErrorMessage;
+				} else {
+					msg = message.c_str();
+				}
+				if constexpr (kPrint) {
+					const std::string errorMessage = errorCode.message();
+					const std::string formattedCode = FMT_FORMAT(" ({})", code.code);
+					if (message.empty()) {
+						message = msg;
+						// Add code to error message for printing outputs
+						if (const auto pos = message.find(errorMessage); pos != std::string::npos) {
+							message.insert(pos + errorMessage.size(), formattedCode);
+						} else {
+							message.append(formattedCode);
+						}
+					} else {
+						message.append(": ").append(errorMessage).append(formattedCode);
+					}
+					formatArgs << message;
 				}
 				if constexpr (kEvent) {
-					eventArgs << what;
+					eventArgs << msg;
 				}
 			}
-
 			if constexpr (kPrint) {
-				formatArgs << code;
+				formatArgs << code.code;
 			}
 			if constexpr (kEvent) {
-				eventArgs << code;
+				eventArgs << code.code;
 			}
 		} else {
 			// other categories than std::system_category never have context data
@@ -570,28 +639,29 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 			event = evt::std_system_error;
 
 			const char* const categoryName = category.name();
-			const char* const what = e.what();
+			const char* const msg = message.empty() ? e.what() : message.c_str();
 			if constexpr (kPrint) {
-				formatArgs << categoryName << what << code;
+				formatArgs << categoryName << msg << code.code;
 			}
 			if constexpr (kEvent) {
-				eventArgs << categoryName << what << code;
+				eventArgs << categoryName << msg << code.code;
 			}
 		}
 	} catch (const std::exception& e) {
 		if (!event.Id) {
-			const char* const what = e.what();
-			// logged with evt::Default
+			// logged with evt::Default or string message
 			event = evt::std_exception;
+			const char* const msg = message.empty() ? e.what() : message.c_str();
 			if constexpr (kPrint) {
-				formatArgs << what;
+				formatArgs << msg;
 			}
 			if constexpr (kEvent) {
-				eventArgs << what;
+				eventArgs << msg;
 			}
 		}
 	} catch (...) {
 		assert(!event.Id);
+		assert(message.empty());
 		event = evt::exception;
 	}
 

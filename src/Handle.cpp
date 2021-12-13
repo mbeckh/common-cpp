@@ -56,4 +56,31 @@ void FindCloser::CloseSilently(HANDLE hNative) noexcept {
 template class BaseHandle<HandleCloser>;
 template class BaseHandle<FindCloser>;
 
+template bool operator==(const BaseHandle<HandleCloser>& handle, const BaseHandle<HandleCloser>& oth) noexcept;
+template bool operator==(const BaseHandle<HandleCloser>& handle, const HANDLE hNative) noexcept;
+template bool operator==(const HANDLE hNative, const BaseHandle<HandleCloser>& handle) noexcept;
+
+template bool operator==(const BaseHandle<FindCloser>& handle, const BaseHandle<FindCloser>& oth) noexcept;
+template bool operator==(const BaseHandle<FindCloser>& handle, const HANDLE hNative) noexcept;
+template bool operator==(const HANDLE hNative, const BaseHandle<FindCloser>& handle) noexcept;
+
+template bool operator!=(const BaseHandle<HandleCloser>& handle, const BaseHandle<HandleCloser>& oth) noexcept;
+template bool operator!=(const BaseHandle<HandleCloser>& handle, const HANDLE hNative) noexcept;
+template bool operator!=(const HANDLE hNative, const BaseHandle<HandleCloser>& handle) noexcept;
+
+template bool operator!=(const BaseHandle<FindCloser>& handle, const BaseHandle<FindCloser>& oth) noexcept;
+template bool operator!=(const BaseHandle<FindCloser>& handle, const HANDLE hNative) noexcept;
+template bool operator!=(const HANDLE hNative, const BaseHandle<FindCloser>& handle) noexcept;
+
+template void swap(BaseHandle<HandleCloser>& handle, BaseHandle<HandleCloser>& oth) noexcept;
+template void swap(BaseHandle<FindCloser>& handle, BaseHandle<FindCloser>& oth) noexcept;
+
 }  // namespace m3c::internal
+
+template struct std::hash<m3c::internal::BaseHandle<m3c::internal::HandleCloser>>;
+template struct std::hash<m3c::internal::BaseHandle<m3c::internal::FindCloser>>;
+
+template struct fmt::formatter<m3c::internal::BaseHandle<m3c::internal::HandleCloser>, char>;
+template struct fmt::formatter<m3c::internal::BaseHandle<m3c::internal::HandleCloser>, wchar_t>;
+template struct fmt::formatter<m3c::internal::BaseHandle<m3c::internal::FindCloser>, char>;
+template struct fmt::formatter<m3c::internal::BaseHandle<m3c::internal::FindCloser>, wchar_t>;

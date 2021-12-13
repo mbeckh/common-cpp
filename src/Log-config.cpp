@@ -84,16 +84,16 @@ Log::~Log() noexcept {
 template <internal::LogMessage M>
 void Log::DoLogMessage(const Priority priority, const internal::LogContext<M>& context, _In_z_ const char* const cause, const internal::ClosureExcept<void, LogFormatArgs&>&& print, const internal::ClosureExcept<void, LogEventArgs&>&& event) {
 #ifdef _DEBUG
-	std::size_t assertArgCount;
+	std::size_t assertArgCount = 0;
 #endif
 	const std::source_location& sourceLocation = context.GetSourceLocation();
 	if constexpr (kOutputPrint) {
 		LogFormatArgs formatArgs;
 		print(formatArgs);
-#ifdef _DEBUG
-		assertArgCount = formatArgs.size();
-#endif
 		if constexpr (internal::LogContext<M>::kIsEventDescriptor) {
+#ifdef _DEBUG
+			assertArgCount = formatArgs.size();
+#endif
 			Print(priority, internal::GetEventMessagePattern(context.GetLogMessage().Id).c_str(), formatArgs, cause, sourceLocation);
 		} else {
 			Print(priority, context.GetLogMessage(), formatArgs, cause, sourceLocation);

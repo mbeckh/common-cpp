@@ -254,10 +254,10 @@ TEST(ComObject_Test, QueryInterface_Aggregated_ReturnObjectAndIncrementReference
 TEST(ComObject_Test, QueryInterfaceWithIID_IIDIsNotSupported_ThrowsException) {
 	Foo foo;
 	EXPECT_THAT([&foo]() { return foo.QueryInterface(IID_IStream); },
-	            t::Throws<internal::ExceptionDetail<com_error>>(
+	            (t::Throws<internal::ExceptionDetail<com_error, const EVENT_DESCRIPTOR&>>(
 	                t::AllOf(
 	                    t::Property(&com_error::code, t::Property(&std::error_code::value, E_NOINTERFACE)),
-	                    t::Property(&internal::BaseException::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::IUnknown_QueryInterface_H.Id)))));
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::IUnknown_QueryInterface_H.Id))))));
 }
 
 TEST(ComObject_Test, QueryInterfaceWithIID_SingleInterface_ReturnObjectAndIncrementReferenceCount) {
@@ -296,10 +296,10 @@ TEST(ComObject_Test, QueryInterfaceWithIID_TwoInterfaces_ReturnObjectAndIncremen
 TEST(ComObject_Test, QueryInterfaceWithType_IIDIsNotSupported_ThrowsException) {
 	Foo foo;
 	EXPECT_THAT([&foo]() { return foo.QueryInterface<IStream>(); },
-	            t::Throws<internal::ExceptionDetail<com_error>>(
+	            (t::Throws<internal::ExceptionDetail<com_error, const EVENT_DESCRIPTOR&>>(
 	                t::AllOf(
 	                    t::Property(&com_error::code, t::Property(&std::error_code::value, E_NOINTERFACE)),
-	                    t::Property(&internal::BaseException::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::IUnknown_QueryInterface_H.Id)))));
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::IUnknown_QueryInterface_H.Id))))));
 }
 
 TEST(ComObject_Test, QueryInterfaceWithType_SingleInterface_ReturnObjectAndIncrementReferenceCount) {

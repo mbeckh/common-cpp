@@ -68,3 +68,7 @@ limitations under the License.
 #include <utility>
 #include <variant>
 #include <vector>
+
+namespace m3c::build::keepme {
+extern const int kKeepMe;
+}  // namespace m3c::build::keepme

@@ -2,13 +2,13 @@
 engines:
   coverage:
     exclude_paths:
-      - '**/test/**'
+      - 'test/**'
   duplication:
     exclude_paths:
-      - '**/test/**'
+      - 'test/**'
   metric:
     exclude_paths:
-      - '**/test/**'
+      - 'test/**'
 languages:
   cpp:
     extensions:

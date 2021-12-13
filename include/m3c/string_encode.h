@@ -25,47 +25,59 @@ limitations under the License.
 
 namespace m3c {
 
-/// @brief Convert a wide character string to a UTF-8 encoded string.
-/// @param str The source string.
-/// @return The source string in UTF-8 encoding.
-[[nodiscard]] std::string EncodeUtf8(_In_z_ const wchar_t* __restrict str);
-
-/// @brief Convert a wide character string to a UTF-8 encoded string.
-/// @param str The source string.
-/// @return The source string in UTF-8 encoding.
-[[nodiscard]] std::string EncodeUtf8(const std::wstring& str);
-
-/// @brief Convert a wide character string view to a UTF-8 encoded string.
-/// @param str The source string view.
-/// @return The source string in UTF-8 encoding.
-[[nodiscard]] std::string EncodeUtf8(const std::wstring_view& str);
-
 /// @brief Convert part of a wide character string to a UTF-8 encoded string.
 /// @param str The source string.
 /// @param length The number of characters to convert starting at @p str.
 /// @return The first cchLen characters of the source string in UTF-8 encoding.
 [[nodiscard]] std::string EncodeUtf8(_In_reads_(length) const wchar_t* __restrict str, std::size_t length);
 
-
-/// @brief Convert a UTF-8 encoded string to a UTF-16 encoded character string.
+/// @brief Convert a wide character string to a UTF-8 encoded string.
 /// @param str The source string.
-/// @return The source string in UITF-16 encoding.
-[[nodiscard]] std::wstring EncodeUtf16(_In_z_ const char* __restrict str);
+/// @return The source string in UTF-8 encoding.
+[[nodiscard]] inline std::string EncodeUtf8(_In_z_ const wchar_t* __restrict str) {
+	return EncodeUtf8(str, std::char_traits<wchar_t>::length(str));
+}
 
-/// @brief Convert a UTF-8 encoded string to a UTF-16 encoded character string.
+/// @brief Convert a wide character string to a UTF-8 encoded string.
 /// @param str The source string.
-/// @return The source string in UITF-16 encoding.
-[[nodiscard]] std::wstring EncodeUtf16(const std::string& str);
+/// @return The source string in UTF-8 encoding.
+[[nodiscard]] inline std::string EncodeUtf8(const std::wstring& str) {
+	return EncodeUtf8(str.c_str(), str.size());
+}
 
-/// @brief Convert a UTF-8 encoded string view to a UTF-16 encoded character string.
+/// @brief Convert a wide character string view to a UTF-8 encoded string.
 /// @param str The source string view.
-/// @return The source string in UITF-16 encoding.
-[[nodiscard]] std::wstring EncodeUtf16(const std::string_view& str);
+/// @return The source string in UTF-8 encoding.
+[[nodiscard]] inline std::string EncodeUtf8(const std::wstring_view& str) {
+	return EncodeUtf8(str.data(), str.size());
+}
+
 
 /// @brief Convert part of a UTF-8 encoded character string to a UTF-16 encoded string.
 /// @param str The source string.
 /// @param length The number of characters to convert starting at @p wstr.
 /// @return The first cchLen characters of the source string in UTF-16 encoding.
 [[nodiscard]] std::wstring EncodeUtf16(_In_reads_(length) const char* __restrict str, std::size_t length);
+
+/// @brief Convert a UTF-8 encoded string to a UTF-16 encoded character string.
+/// @param str The source string.
+/// @return The source string in UITF-16 encoding.
+[[nodiscard]] inline std::wstring EncodeUtf16(_In_z_ const char* __restrict str) {
+	return EncodeUtf16(str, std::char_traits<char>::length(str));
+}
+
+/// @brief Convert a UTF-8 encoded string to a UTF-16 encoded character string.
+/// @param str The source string.
+/// @return The source string in UITF-16 encoding.
+[[nodiscard]] inline std::wstring EncodeUtf16(const std::string& str) {
+	return EncodeUtf16(str.c_str(), str.size());
+}
+
+/// @brief Convert a UTF-8 encoded string view to a UTF-16 encoded character string.
+/// @param str The source string view.
+/// @return The source string in UITF-16 encoding.
+[[nodiscard]] inline std::wstring EncodeUtf16(const std::string_view& str) {
+	return EncodeUtf16(str.data(), str.size());
+}
 
 }  // namespace m3c

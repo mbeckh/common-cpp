@@ -116,6 +116,15 @@ public:
 		return *this;
 	}
 
+	/// @brief Get the address of the internal `HANDLE`, e.g. for use as an out parameter.
+	/// @details The currently held handle is closed before returning the address.
+	/// When a value is assigned to the return value of this function, ownership is managed by this instance.
+	/// @return The address of the handle which is managed internally.
+	[[nodiscard]] constexpr _Ret_notnull_ HANDLE* operator&() {
+		close();
+		return std::addressof(m_hNative);
+	}
+
 	/// @brief Check if this instance currently manages a valid handle.
 	/// @return `true` if the native handle does not equal `INVALID_HANDLE_VALUE`, else `false`.
 	[[nodiscard]] constexpr explicit operator bool() const noexcept {
@@ -223,6 +232,14 @@ template <typename Closer>
 	return handle.get() == hNative;
 }
 
+extern template bool operator==(const BaseHandle<HandleCloser>& handle, const BaseHandle<HandleCloser>& oth) noexcept;
+extern template bool operator==(const BaseHandle<HandleCloser>& handle, const HANDLE hNative) noexcept;
+extern template bool operator==(const HANDLE hNative, const BaseHandle<HandleCloser>& handle) noexcept;
+
+extern template bool operator==(const BaseHandle<FindCloser>& handle, const BaseHandle<FindCloser>& oth) noexcept;
+extern template bool operator==(const BaseHandle<FindCloser>& handle, const HANDLE hNative) noexcept;
+extern template bool operator==(const HANDLE hNative, const BaseHandle<FindCloser>& handle) noexcept;
+
 
 //
 // operator!=
@@ -258,6 +275,15 @@ template <typename Closer>
 	return handle.get() != hNative;
 }
 
+extern template bool operator!=(const BaseHandle<HandleCloser>& handle, const BaseHandle<HandleCloser>& oth) noexcept;
+extern template bool operator!=(const BaseHandle<HandleCloser>& handle, const HANDLE hNative) noexcept;
+extern template bool operator!=(const HANDLE hNative, const BaseHandle<HandleCloser>& handle) noexcept;
+
+extern template bool operator!=(const BaseHandle<FindCloser>& handle, const BaseHandle<FindCloser>& oth) noexcept;
+extern template bool operator!=(const BaseHandle<FindCloser>& handle, const HANDLE hNative) noexcept;
+extern template bool operator!=(const HANDLE hNative, const BaseHandle<FindCloser>& handle) noexcept;
+
+
 /// @brief Swap function.
 /// @tparam Closer The type of the strategy to close the handle.
 /// @param handle A `BaseHandle` object.
@@ -266,6 +292,9 @@ template <typename Closer>
 constexpr void swap(BaseHandle<Closer>& handle, BaseHandle<Closer>& oth) noexcept {
 	handle.swap(oth);
 }
+
+extern template void swap(BaseHandle<HandleCloser>& handle, BaseHandle<HandleCloser>& oth) noexcept;
+extern template void swap(BaseHandle<FindCloser>& handle, BaseHandle<FindCloser>& oth) noexcept;
 
 }  // namespace internal
 
@@ -294,6 +323,10 @@ struct std::hash<m3c::internal::BaseHandle<Closer>> {
 	}
 };
 
+extern template struct std::hash<m3c::internal::BaseHandle<m3c::internal::HandleCloser>>;
+extern template struct std::hash<m3c::internal::BaseHandle<m3c::internal::FindCloser>>;
+
+
 /// @brief Specialization of `fmt::formatter` for a `BaseHandle`.
 /// @tparam Closer The type of the strategy to close the handle.
 /// @tparam CharT The character type of the string.
@@ -309,3 +342,8 @@ struct fmt::formatter<m3c::internal::BaseHandle<Closer>, CharT> : public fmt::fo
 		return __super::format(static_cast<const void*>(arg.get()), ctx);
 	}
 };
+
+extern template struct fmt::formatter<m3c::internal::BaseHandle<m3c::internal::HandleCloser>, char>;
+extern template struct fmt::formatter<m3c::internal::BaseHandle<m3c::internal::HandleCloser>, wchar_t>;
+extern template struct fmt::formatter<m3c::internal::BaseHandle<m3c::internal::FindCloser>, char>;
+extern template struct fmt::formatter<m3c::internal::BaseHandle<m3c::internal::FindCloser>, wchar_t>;

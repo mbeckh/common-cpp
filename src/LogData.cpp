@@ -201,7 +201,7 @@ constexpr std::uint8_t kTypeSizes[] = {
     sizeof(TypeId) /*+ std::byte[padding] */ + sizeof(GUID),
     sizeof(TypeId) /*+ std::byte[padding] */ + sizeof(FILETIME),
     sizeof(TypeId) /*+ std::byte[padding] */ + sizeof(SYSTEMTIME),
-    sizeof(TypeId) /*+ std::byte[padding] */ + sizeof(SID) /* + DWORD[n] */,
+    sizeof(TypeId) /*+ std::byte[padding] + SID + DWORD[n] */,
     sizeof(TypeId) /*+ std::byte[padding] */ + sizeof(win32_error),
     sizeof(TypeId) /*+ std::byte[padding] */ + sizeof(rpc_status),
     sizeof(TypeId) /*+ std::byte[padding] */ + sizeof(hresult),
@@ -257,6 +257,15 @@ template <typename T>
 }
 
 /// @brief Read a value from the buffer.
+/// @tparam T The target type to read.
+/// @param buffer The source address to read from. This MUST be properly aligned for type @p T.
+/// @return The read value.
+template <typename T>
+[[nodiscard]] __declspec(noalias) const T& GetAlignedValue(_In_ const std::byte* __restrict const buffer) noexcept {
+	return *reinterpret_cast<const T*>(buffer);
+}
+
+/// @brief Read a value from the buffer.
 /// @details Use std::memcpy to comply with strict aliasing and alignment rules.
 /// @tparam T The target type to read.
 /// @param buffer The source address to read from.
@@ -289,16 +298,15 @@ void DecodeArgument(_Inout_ A& args, _In_ const std::byte* __restrict const buff
 	const Align padding = GetPadding<T>(&buffer[pos]);
 	const std::byte* __restrict const pData = &buffer[pos + padding];
 
+	const T& arg = GetAlignedValue<T>(pData);
 	if constexpr (std::is_same_v<A, LogEventArgs>) {
-		args << *reinterpret_cast<const T*>(pData);
+		args << arg;
 	} else if constexpr (std::is_same_v<A, LogFormatArgs>) {
-		const T arg = GetValue<T>(pData);
 		if constexpr (std::is_same_v<T, wchar_t>) {
 			if (arg < 0x20) {
 				args << static_cast<char>(arg);
 			} else {
-				// string types (but not string_views) are copied into format args
-				args << EncodeUtf8(&arg, 1);
+				args + EncodeUtf8(&arg, 1);
 			}
 		} else {
 			args << arg;
@@ -331,7 +339,7 @@ void DecodeArgument(_Inout_ A& args, _In_ const std::byte* __restrict const buff
 		if constexpr (std::is_same_v<B, char>) {
 			args << std::string_view(str, length);
 		} else if constexpr (std::is_same_v<B, wchar_t>) {
-			args << EncodeUtf8(str, length);
+			args + EncodeUtf8(str, length);
 		} else {
 			static_assert_no_clang(false, "Unknown string type");
 		}
@@ -353,19 +361,18 @@ void DecodeArgument(_Inout_ A& args, _In_ const std::byte* __restrict const buff
 	const Align padding = GetPadding<SID>(&buffer[pos]);
 	const std::byte* __restrict const pData = &buffer[pos + padding];
 
-	const auto subAuthorityCount = GetValue<decltype(SID::SubAuthorityCount)>(pData + offsetof(SID, SubAuthorityCount));
-	const Size add = subAuthorityCount * sizeof(SID::SubAuthority[0]) - sizeof(SID::SubAuthority);
+	const SID& arg = GetAlignedValue<SID>(pData);
+	const Size size = SECURITY_SID_SIZE(arg.SubAuthorityCount);
 
 	if constexpr (std::is_same_v<A, LogEventArgs>) {
-		args << std::span<const std::byte>(pData, sizeof(SID) + add);
+		args << std::span<const std::byte>(pData, size);
 	} else if constexpr (std::is_same_v<A, LogFormatArgs>) {
-		const SID& arg = *reinterpret_cast<const SID*>(pData);
 		args << arg;
 	} else {
 		static_assert_no_clang(false, "Unknown argument type");
 	}
 
-	position += kTypeSize<SID> + padding + add;
+	position += kTypeSize<SID> + padding + size;
 }
 
 /// @brief Decode an argument from the buffer. @details The argument is made available for formatting by appending it to
@@ -420,10 +427,10 @@ void SkipSID(_In_ const std::byte* __restrict buffer, _Inout_ Size& position) no
 	const Align padding = GetPadding<SID>(&buffer[pos]);
 	const std::byte* __restrict const pData = &buffer[pos + padding];
 
-	const auto subAuthorityCount = GetValue<decltype(SID::SubAuthorityCount)>(pData + offsetof(SID, SubAuthorityCount));
-	const Size add = subAuthorityCount * sizeof(SID::SubAuthority[0]) - sizeof(SID::SubAuthority);
+	const SID& arg = GetAlignedValue<SID>(pData);
+	const Size size = SECURITY_SID_SIZE(arg.SubAuthorityCount);
 
-	position += kTypeSize<SID> + padding + add;
+	position += kTypeSize<SID> + padding + size;
 }
 
 /// @brief Skip a log argument of custom type.
@@ -1103,8 +1110,8 @@ template void LogDataBase::WriteString(const wchar_t* __restrict, std::size_t);
 void LogDataBase::WriteSID(const SID& arg) {
 	constexpr TypeId kId = kTypeId<SID>;
 	constexpr auto kArgSize = kTypeSize<SID>;
-	const Size add = arg.SubAuthorityCount * sizeof(SID::SubAuthority[0]) - sizeof(SID::SubAuthority);
-	const Size size = kArgSize + add;
+	const Size sidSize = SECURITY_SID_SIZE(arg.SubAuthorityCount);
+	const Size size = kArgSize + sidSize;
 
 	std::byte* __restrict buffer = GetWritePosition(size);
 	const Align padding = GetPadding<SID>(&buffer[sizeof(kId)]);
@@ -1115,7 +1122,7 @@ void LogDataBase::WriteSID(const SID& arg) {
 	assert((!m_hasHeapBuffer ? sizeof(m_stackBuffer) : GetHeapBufferSize()) - m_used >= size + padding);
 
 	std::memcpy(buffer, &kId, sizeof(kId));
-	std::memcpy(&buffer[sizeof(kId) + padding], &arg, sizeof(SID) + add);
+	std::memcpy(&buffer[sizeof(kId) + padding], &arg, sidSize);
 
 	m_used += size + padding;
 }
@@ -1187,7 +1194,7 @@ public:
 	/// @brief Add type and value to log arguments.
 	/// @param formatArgs The formatter arguments.
 	void operator>>(_Inout_ LogFormatArgs& formatArgs) const {
-		formatArgs << VariantTypeToString(m_vt) << FMT_FORMAT("{:v}", m_variant);
+		formatArgs + VariantTypeToString(m_vt) + FMT_FORMAT("{:v}", m_variant);
 	}
 
 	/// @brief Add type and value to log arguments.

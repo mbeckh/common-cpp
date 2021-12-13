@@ -128,7 +128,7 @@ TEST_F(string_encode_Test, EncodeUtf8_RequiresDynamicBufferAfterEncoding_ReturnE
 	    .InSequence(seq);
 
 	const std::string str = EncodeUtf8(std::wstring(kFixedBufferSize - 1, L'x').append(1, L'\u00FC').c_str());
-	EXPECT_EQ(std::string(kFixedBufferSize - 1, 'x') + "\u00C3\u00BC", str);
+	EXPECT_EQ(std::string(kFixedBufferSize - 1, 'x') + "\xC3\xBC", str);
 }
 
 TEST_F(string_encode_Test, EncodeUtf8_FitsInternalBufferAndError_ThrowException) {
@@ -136,10 +136,10 @@ TEST_F(string_encode_Test, EncodeUtf8_FitsInternalBufferAndError_ThrowException)
 	    .WillOnce(m4t::SetLastErrorAndReturn(ERROR_NOT_SUPPORTED, 0));
 
 	EXPECT_THAT([]() { return EncodeUtf8(L"Test"); },
-	            t::Throws<internal::ExceptionDetail<windows_error>>(
+	            (t::Throws<internal::ExceptionDetail<windows_error, const EVENT_DESCRIPTOR&>>(
 	                t::AllOf(
 	                    t::Property(&system_error::code, t::Property(&std::error_code::value, ERROR_NOT_SUPPORTED)),
-	                    t::Property(&internal::BaseException::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::Encode_E.Id)))));
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::Encode_E.Id))))));
 }
 
 TEST_F(string_encode_Test, EncodeUtf8_RequiresDynamicBufferAndErrorGettingSize_ThrowException) {
@@ -149,10 +149,10 @@ TEST_F(string_encode_Test, EncodeUtf8_RequiresDynamicBufferAndErrorGettingSize_T
 	    .WillOnce(m4t::SetLastErrorAndReturn(ERROR_NOT_SUPPORTED, 0));
 
 	EXPECT_THAT([]() { return EncodeUtf8(std::wstring(kLength, L'x').c_str()); },
-	            t::Throws<internal::ExceptionDetail<windows_error>>(
+	            (t::Throws<internal::ExceptionDetail<windows_error, const EVENT_DESCRIPTOR&>>(
 	                t::AllOf(
 	                    t::Property(&system_error::code, t::Property(&std::error_code::value, ERROR_NOT_SUPPORTED)),
-	                    t::Property(&internal::BaseException::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::Encode_E.Id)))));
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::Encode_E.Id))))));
 }
 
 TEST_F(string_encode_Test, EncodeUtf8_RequiresDynamicBufferAndErrorConverting_ThrowException) {
@@ -166,10 +166,10 @@ TEST_F(string_encode_Test, EncodeUtf8_RequiresDynamicBufferAndErrorConverting_Th
 	    .WillOnce(m4t::SetLastErrorAndReturn(ERROR_NOT_SUPPORTED, 0));
 
 	EXPECT_THAT([]() { return EncodeUtf8(std::wstring(kLength, L'x').c_str()); },
-	            t::Throws<internal::ExceptionDetail<windows_error>>(
+	            (t::Throws<internal::ExceptionDetail<windows_error, const EVENT_DESCRIPTOR&>>(
 	                t::AllOf(
 	                    t::Property(&system_error::code, t::Property(&std::error_code::value, ERROR_NOT_SUPPORTED)),
-	                    t::Property(&internal::BaseException::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::Encode_E.Id)))));
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::Encode_E.Id))))));
 }
 
 
@@ -241,10 +241,10 @@ TEST_F(string_encode_Test, EncodeUtf16_FitsInternalBufferAndError_ThrowException
 	    .WillOnce(m4t::SetLastErrorAndReturn(ERROR_NOT_SUPPORTED, 0));
 
 	EXPECT_THAT([]() { return EncodeUtf16("Test"); },
-	            t::Throws<internal::ExceptionDetail<windows_error>>(
+	            (t::Throws<internal::ExceptionDetail<windows_error, const EVENT_DESCRIPTOR&>>(
 	                t::AllOf(
 	                    t::Property(&system_error::code, t::Property(&std::error_code::value, ERROR_NOT_SUPPORTED)),
-	                    t::Property(&internal::BaseException::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::Encode_E.Id)))));
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::Encode_E.Id))))));
 }
 
 TEST_F(string_encode_Test, EncodeUtf16_RequiresDynamicBufferAndErrorGettingSize_ThrowException) {
@@ -254,10 +254,10 @@ TEST_F(string_encode_Test, EncodeUtf16_RequiresDynamicBufferAndErrorGettingSize_
 	    .WillOnce(m4t::SetLastErrorAndReturn(ERROR_NOT_SUPPORTED, 0));
 
 	EXPECT_THAT([]() { return EncodeUtf16(std::string(kLength, 'x').c_str()); },
-	            t::Throws<internal::ExceptionDetail<windows_error>>(
+	            (t::Throws<internal::ExceptionDetail<windows_error, const EVENT_DESCRIPTOR&>>(
 	                t::AllOf(
 	                    t::Property(&system_error::code, t::Property(&std::error_code::value, ERROR_NOT_SUPPORTED)),
-	                    t::Property(&internal::BaseException::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::Encode_E.Id)))));
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::Encode_E.Id))))));
 }
 
 TEST_F(string_encode_Test, EncodeUtf16_RequiresDynamicBufferAndErrorConverting_ThrowException) {
@@ -271,10 +271,10 @@ TEST_F(string_encode_Test, EncodeUtf16_RequiresDynamicBufferAndErrorConverting_T
 	    .WillOnce(m4t::SetLastErrorAndReturn(ERROR_NOT_SUPPORTED, 0));
 
 	EXPECT_THAT([]() { return EncodeUtf16(std::string(kLength, 'x').c_str()); },
-	            t::Throws<internal::ExceptionDetail<windows_error>>(
+	            (t::Throws<internal::ExceptionDetail<windows_error, const EVENT_DESCRIPTOR&>>(
 	                t::AllOf(
 	                    t::Property(&system_error::code, t::Property(&std::error_code::value, ERROR_NOT_SUPPORTED)),
-	                    t::Property(&internal::BaseException::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::Encode_E.Id)))));
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::Encode_E.Id))))));
 }
 
 }  // namespace

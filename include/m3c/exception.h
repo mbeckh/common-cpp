@@ -17,6 +17,7 @@ limitations under the License.
 /// @file
 #pragma once
 
+#include <m3c/Log.h>
 #include <m3c/LogData.h>
 #include <m3c/source_location.h>
 
@@ -275,18 +276,23 @@ private:
 };
 
 
-/// @brief Location and event context for exceptions.
+/// @brief Location and log message for exceptions.
 /// @details The class make `std::source_location` of the caller available to the overloaded operators.
+/// @warning Both `EVENT_DESCRIPTOR` and string are stored as references only and therefore MUST not go out of scope during exception handling.
+template <LogMessage M>
 class ExceptionContext : public DefaultContext {
 public:
 	/// @brief Create a new context.
-	/// @param event The event descriptor for the exception.
+	/// @param message The log message for the exception.
 	/// @param sourceLocation The source location.
-	[[nodiscard]] constexpr ExceptionContext(const EVENT_DESCRIPTOR& event, const std::source_location& sourceLocation = std::source_location::current()) noexcept  // NOLINT(google-explicit-constructor): Implicit conversion is intentional.
+	[[nodiscard]] constexpr ExceptionContext(const M message, const std::source_location& sourceLocation = std::source_location::current()) noexcept  // NOLINT(google-explicit-constructor): Implicit conversion is intentional.
 	    : DefaultContext(sourceLocation)
-	    , m_event(event) {
+	    , m_message(message) {
 		// empty
 	}
+
+	/// @brief Prevent creation from rvalue event descriptors which might go out of scope.
+	[[nodiscard]] constexpr ExceptionContext(EVENT_DESCRIPTOR&&, const std::source_location& sourceLocation = std::source_location::current()) = delete;
 
 	ExceptionContext(const ExceptionContext&) = delete;
 	ExceptionContext(ExceptionContext&&) = delete;
@@ -298,14 +304,14 @@ public:
 	ExceptionContext& operator=(ExceptionContext&&) = delete;
 
 public:
-	/// @brief Get the event descriptor.
-	/// @return The event descriptor.
-	[[nodiscard]] constexpr const EVENT_DESCRIPTOR& GetEvent() const noexcept {
-		return m_event;
+	/// @brief Get the log message
+	/// @return The log message.
+	[[nodiscard]] constexpr M GetLogMessage() const noexcept {
+		return m_message;
 	}
 
 private:
-	const EVENT_DESCRIPTOR m_event;  ///< @brief The event descriptor.
+	const M m_message;  ///< @brief The log message.
 };
 
 
@@ -314,20 +320,36 @@ private:
 //
 
 /// @brief A mixin class to carry additional logging context for exceptions.
+/// @tparam M The type of the log message.
+template <LogMessage M>
 class __declspec(novtable) BaseException {
+protected:
+	/// @brief `true` for log messages of event type, `false` for string messages.
+	static constexpr bool kIsEventDescriptor = std::is_same_v<M, const EVENT_DESCRIPTOR&>;
+
 protected:
 	/// @brief Create a new object with context information.
 	/// @param context A default exception context.
-	[[nodiscard]] constexpr explicit BaseException(const DefaultContext& context) noexcept  // NOLINT(cppcoreguidelines-pro-type-member-init): m_event initialized in body.
-	    : m_sourceLocation(context.GetSourceLocation()) {
-		m_event.Id = 0;  // EventDescSetId(&m_event, 0) is not constexpr
+	[[nodiscard]] constexpr explicit BaseException(const DefaultContext& context) noexcept requires(!kIsEventDescriptor)
+	    : m_sourceLocation(context.GetSourceLocation())
+	    , m_message(nullptr) {
+		// empty
 	}
 
 	/// @brief Create a new object with context information.
 	/// @param context An exception context.
-	[[nodiscard]] constexpr explicit BaseException(const ExceptionContext& context) noexcept
+	[[nodiscard]] constexpr explicit BaseException(const ExceptionContext<M>& context) noexcept requires kIsEventDescriptor
 	    : m_sourceLocation(context.GetSourceLocation())
-	    , m_event(context.GetEvent()) {
+	    , m_message(&context.GetLogMessage()) {
+		// empty
+	}
+
+	/// @brief Create a new object with context information.
+	/// @param context An exception context.
+	[[nodiscard]] constexpr explicit BaseException(const ExceptionContext<M>& context) noexcept requires(!kIsEventDescriptor)
+	    : m_sourceLocation(context.GetSourceLocation())
+	    , m_message(context.GetLogMessage()) {
+		// empty
 	}
 
 	/// @brief Defaulted non-throwing copy constructor required for exceptions.
@@ -353,10 +375,16 @@ public:
 		return m_sourceLocation;
 	}
 
-	/// @brief Get the event descriptor from the context.
-	/// @return The event descriptor.
-	[[nodiscard]] constexpr const EVENT_DESCRIPTOR& GetEvent() const noexcept {
-		return m_event;
+	/// @brief Get the log message from the context.
+	/// @return The log `EVENT_DESCRIPTOR`.
+	[[nodiscard]] constexpr M GetEvent() const noexcept requires kIsEventDescriptor {
+		return *m_message;
+	}
+
+	/// @brief Get the log message from the context.
+	/// @return The string log message.
+	[[nodiscard]] constexpr M GetLogMessage() const noexcept requires(!kIsEventDescriptor) {
+		return m_message;
 	}
 
 	/// @brief Allow access to the `LogData` of the context.
@@ -375,30 +403,43 @@ protected:
 private:
 	LogData m_logData;                      ///< @brief Additional information for logging.
 	std::source_location m_sourceLocation;  ///< @brief The source location where the exception happened.
-	EVENT_DESCRIPTOR m_event;               ///< @brief The event to log.
+
+	/// @brief The message to log.
+	/// @remarks `EVENT_DESCRIPTOR` is stored as a pointer to allow copy and move operations.
+	std::conditional_t<kIsEventDescriptor, const EVENT_DESCRIPTOR*, const char*> m_message;
 };
+
+// Explicit instantiations of both possibly specializations to reduce compile times
+extern template class BaseException<const EVENT_DESCRIPTOR&>;
+extern template class BaseException<const char*>;
 
 
 /// @brief The actual exception class thrown when adding context.
 /// @tparam E The type of the exception.
-template <typename E>
+/// @tparam M The type of the log message.
+template <typename E, LogMessage M>
 class ExceptionDetail : public E
-    , public BaseException {
+    , public BaseException<M> {
+private:
+	// Make members of templated base class available without using "this->"
+	using BaseException<M>::GetLogData;
+	using BaseException<M>::kIsEventDescriptor;
+
 public:
 	/// @brief Create a new exception from exception and context.
 	/// @param exception The exception object.
 	/// @param context Additional default context with source location.
-	[[nodiscard]] constexpr ExceptionDetail(E&& exception, const DefaultContext& context) noexcept(noexcept(E(std::forward<E>(exception))))
+	[[nodiscard]] constexpr ExceptionDetail(E&& exception, const DefaultContext& context) noexcept(noexcept(E(std::forward<E>(exception)))) requires(!kIsEventDescriptor)
 	    : E(std::forward<E>(exception))
-	    , BaseException(context) {
+	    , BaseException<M>(context) {
 	}
 
 	/// @brief Create a new exception from exception and context.
 	/// @param exception The exception object.
 	/// @param context Additional context with source location and event data.
-	[[nodiscard]] constexpr ExceptionDetail(E&& exception, const ExceptionContext& context) noexcept(noexcept(E(std::forward<E>(exception))))
+	[[nodiscard]] constexpr ExceptionDetail(E&& exception, const ExceptionContext<M>& context) noexcept(noexcept(E(std::forward<E>(exception))))
 	    : E(std::forward<E>(exception))
-	    , BaseException(context) {
+	    , BaseException<M>(context) {
 	}
 
 	/// @brief Defaulted non-throwing copy constructor required for exceptions.
@@ -428,6 +469,18 @@ public:
 	}
 };
 
+// Explicit instantiations of most common specializations to reduce compile times
+extern template class ExceptionDetail<std::exception, const EVENT_DESCRIPTOR&>;
+extern template class ExceptionDetail<std::exception, const char*>;
+extern template class ExceptionDetail<windows_error, const EVENT_DESCRIPTOR&>;
+extern template class ExceptionDetail<windows_error, const char*>;
+extern template class ExceptionDetail<rpc_error, const EVENT_DESCRIPTOR&>;
+extern template class ExceptionDetail<rpc_error, const char*>;
+extern template class ExceptionDetail<com_error, const EVENT_DESCRIPTOR&>;
+extern template class ExceptionDetail<com_error, const char*>;
+extern template class ExceptionDetail<com_invalid_argument_error, const EVENT_DESCRIPTOR&>;
+extern template class ExceptionDetail<com_invalid_argument_error, const char*>;
+
 }  // namespace internal
 
 
@@ -446,20 +499,56 @@ concept Exception = std::derived_from<E, std::exception>;
 /// @param context Context information for source location.
 /// @return A newly created exception with additional context.
 template <m3c::Exception E>
-[[nodiscard]] constexpr m3c::internal::ExceptionDetail<E> operator+(E&& exception, m3c::internal::DefaultContext&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<E>(std::forward<E>(exception), context))) {
-	return m3c::internal::ExceptionDetail<E>(std::forward<E>(exception), context);
+[[nodiscard]] constexpr m3c::internal::ExceptionDetail<E, const char*> operator+(E&& exception, m3c::internal::DefaultContext&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<E, const char*>(std::forward<E>(exception), context))) {
+	return m3c::internal::ExceptionDetail<E, const char*>(std::forward<E>(exception), context);
 }
+
+// Explicit instantiations of most common specializations to reduce compile times
+extern template m3c::internal::ExceptionDetail<std::exception, const char*> operator+(std::exception&& exception, m3c::internal::DefaultContext&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<std::exception, const char*>(std::forward<std::exception>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::windows_error, const char*> operator+(m3c::windows_error&& exception, m3c::internal::DefaultContext&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::windows_error, const char*>(std::forward<m3c::windows_error>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::rpc_error, const char*> operator+(m3c::rpc_error&& exception, m3c::internal::DefaultContext&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::rpc_error, const char*>(std::forward<m3c::rpc_error>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::com_error, const char*> operator+(m3c::com_error&& exception, m3c::internal::DefaultContext&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::com_error, const char*>(std::forward<m3c::com_error>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::com_invalid_argument_error, const char*> operator+(m3c::com_invalid_argument_error&& exception, m3c::internal::DefaultContext&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::com_invalid_argument_error, const char*>(std::forward<m3c::com_invalid_argument_error>(exception), context)));
+
 
 /// @brief Create an exception enhanced with context information for source location and events.
 /// @details The operator MUST be in global scope to allow automatic instantiation of `m3c::internal::ExceptionContext` from `EVENT_DESCRIPTOR`.
+/// @warning The `EVENT_DESCRIPTOR` is stored as a reference only and therefore MUST not go out of scope when the exception is thrown.
 /// @tparam E The type of the exception.
 /// @param exception The exception object.
 /// @param context Context information for source location and event data.
 /// @return A newly created exception with additional context.
 template <m3c::Exception E>
-[[nodiscard]] constexpr m3c::internal::ExceptionDetail<E> operator+(E&& exception, m3c::internal::ExceptionContext&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<E>(std::forward<E>(exception), context))) {
-	return m3c::internal::ExceptionDetail<E>(std::forward<E>(exception), context);
+[[nodiscard]] constexpr m3c::internal::ExceptionDetail<E, const EVENT_DESCRIPTOR&> operator+(E&& exception, m3c::internal::ExceptionContext<const EVENT_DESCRIPTOR&>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<E, const EVENT_DESCRIPTOR&>(std::forward<E>(exception), context))) {
+	return m3c::internal::ExceptionDetail<E, const EVENT_DESCRIPTOR&>(std::forward<E>(exception), context);
 }
+
+// Explicit instantiations of most common specializations to reduce compile times
+extern template m3c::internal::ExceptionDetail<std::exception, const EVENT_DESCRIPTOR&> operator+(std::exception&& exception, m3c::internal::ExceptionContext<const EVENT_DESCRIPTOR&>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<std::exception, const EVENT_DESCRIPTOR&>(std::forward<std::exception>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::windows_error, const EVENT_DESCRIPTOR&> operator+(m3c::windows_error&& exception, m3c::internal::ExceptionContext<const EVENT_DESCRIPTOR&>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::windows_error, const EVENT_DESCRIPTOR&>(std::forward<m3c::windows_error>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::rpc_error, const EVENT_DESCRIPTOR&> operator+(m3c::rpc_error&& exception, m3c::internal::ExceptionContext<const EVENT_DESCRIPTOR&>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::rpc_error, const EVENT_DESCRIPTOR&>(std::forward<m3c::rpc_error>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::com_error, const EVENT_DESCRIPTOR&> operator+(m3c::com_error&& exception, m3c::internal::ExceptionContext<const EVENT_DESCRIPTOR&>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::com_error, const EVENT_DESCRIPTOR&>(std::forward<m3c::com_error>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::com_invalid_argument_error, const EVENT_DESCRIPTOR&> operator+(m3c::com_invalid_argument_error&& exception, m3c::internal::ExceptionContext<const EVENT_DESCRIPTOR&>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::com_invalid_argument_error, const EVENT_DESCRIPTOR&>(std::forward<m3c::com_invalid_argument_error>(exception), context)));
+
+
+/// @brief Create an exception enhanced with context information for source location and string messages.
+/// @details The operator MUST be in global scope to allow automatic instantiation of `m3c::internal::ExceptionContext` from `EVENT_DESCRIPTOR`.
+/// @warning The string message is stored as a reference only and therefore MUST not go out of scope when the exception is thrown.
+/// @tparam E The type of the exception.
+/// @param exception The exception object.
+/// @param context Context information for source location and event data.
+/// @return A newly created exception with additional context.
+template <m3c::Exception E>
+[[nodiscard]] constexpr m3c::internal::ExceptionDetail<E, const char*> operator+(E&& exception, m3c::internal::ExceptionContext<const char*>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<E, const char*>(std::forward<E>(exception), context))) {
+	return m3c::internal::ExceptionDetail<E, const char*>(std::forward<E>(exception), context);
+}
+
+// Explicit instantiations of most common specializations to reduce compile times
+extern template m3c::internal::ExceptionDetail<std::exception, const char*> operator+(std::exception&& exception, m3c::internal::ExceptionContext<const char*>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<std::exception, const char*>(std::forward<std::exception>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::windows_error, const char*> operator+(m3c::windows_error&& exception, m3c::internal::ExceptionContext<const char*>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::windows_error, const char*>(std::forward<m3c::windows_error>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::rpc_error, const char*> operator+(m3c::rpc_error&& exception, m3c::internal::ExceptionContext<const char*>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::rpc_error, const char*>(std::forward<m3c::rpc_error>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::com_error, const char*> operator+(m3c::com_error&& exception, m3c::internal::ExceptionContext<const char*>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::com_error, const char*>(std::forward<m3c::com_error>(exception), context)));
+extern template m3c::internal::ExceptionDetail<m3c::com_invalid_argument_error, const char*> operator+(m3c::com_invalid_argument_error&& exception, m3c::internal::ExceptionContext<const char*>&& context) noexcept(noexcept(m3c::internal::ExceptionDetail<m3c::com_invalid_argument_error, const char*>(std::forward<m3c::com_invalid_argument_error>(exception), context)));
 
 
 namespace m3c::internal {
@@ -471,7 +560,18 @@ namespace m3c::internal {
 /// @param context Context with source location and event information.
 /// @param args Arguments to add to the context.
 template <typename... Args>
-[[noreturn]] inline void throw_com_exception(_In_range_(<, 0) const HRESULT hr, ExceptionContext&& context, Args&&... args) {
+[[noreturn]] inline void throw_com_exception(_In_range_(<, 0) const HRESULT hr, ExceptionContext<const EVENT_DESCRIPTOR&>&& context, Args&&... args) {
+	throw((m3c::com_error(hr) + std::move(context)) << ... << std::forward<Args>(args));
+}
+
+/// @brief Throws a `com_exception` with additional context.
+/// @details Required as a function to evaluate the variable arguments properly (unpack operator call, prevent double evaluation).
+/// @tparam Args The argument pack.
+/// @param hr The `HRESULT` value.
+/// @param context Context with source location and message information.
+/// @param args Arguments to add to the context.
+template <typename... Args>
+[[noreturn]] inline void throw_com_exception(_In_range_(<, 0) const HRESULT hr, ExceptionContext<const char*>&& context, Args&&... args) {
 	throw((m3c::com_error(hr) + std::move(context)) << ... << std::forward<Args>(args));
 }
 

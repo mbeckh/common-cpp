@@ -186,10 +186,10 @@ TEST_F(com_ptr_Test, ctorCopyAndQuery_WithUnsupportedInterfaceValue_ThrowsExcept
 	com_ptr<IStream> oth(&m_object);
 
 	EXPECT_THAT([&oth]() { com_ptr<IPersistStream> ptr(oth); },
-	            t::Throws<internal::ExceptionDetail<com_error>>(
+	            (t::Throws<internal::ExceptionDetail<com_error, const EVENT_DESCRIPTOR&>>(
 	                t::AllOf(
 	                    t::Property(&com_error::code, t::Property(&std::error_code::value, E_NOINTERFACE)),
-	                    t::Property(&internal::BaseException::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::IUnknown_QueryInterface_H.Id)))));
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::IUnknown_QueryInterface_H.Id))))));
 
 	EXPECT_EQ(&m_object, oth);
 	COM_MOCK_EXPECT_REFCOUNT(2, m_object);
@@ -472,10 +472,10 @@ TEST_F(com_ptr_Test, opCopyAndQuery_UnsupportedValueToEmpty_ThrowsException) {
 	const com_ptr<IStream> oth(&m_object);
 	com_ptr<IPersistStream> ptr;
 	EXPECT_THAT(([&ptr, &oth]() { ptr = oth; }),
-	            t::Throws<internal::ExceptionDetail<com_error>>(
+	            (t::Throws<internal::ExceptionDetail<com_error, const EVENT_DESCRIPTOR&>>(
 	                t::AllOf(
 	                    t::Property(&com_error::code, t::Property(&std::error_code::value, E_NOINTERFACE)),
-	                    t::Property(&internal::BaseException::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::IUnknown_QueryInterface_H.Id)))));
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::IUnknown_QueryInterface_H.Id))))));
 
 	EXPECT_NULL(ptr);
 	EXPECT_EQ(&m_object, oth);
@@ -495,10 +495,10 @@ TEST_F(com_ptr_Test, opCopyAndQuery_UnsupportedValueToValue_ThrowsException) {
 	const com_ptr<IStream> oth(&m_other);
 	com_ptr<IPersistStream> ptr(reinterpret_cast<IPersistStream*>(&m_object));
 	EXPECT_THAT(([&ptr, &oth]() { ptr = oth; }),
-	            t::Throws<internal::ExceptionDetail<com_error>>(
+	            (t::Throws<internal::ExceptionDetail<com_error, const EVENT_DESCRIPTOR&>>(
 	                t::AllOf(
 	                    t::Property(&com_error::code, t::Property(&std::error_code::value, E_NOINTERFACE)),
-	                    t::Property(&internal::BaseException::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::IUnknown_QueryInterface_H.Id)))));
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::IUnknown_QueryInterface_H.Id))))));
 
 	EXPECT_EQ((void*) &m_object, ptr);
 	EXPECT_EQ(&m_other, oth);
@@ -839,10 +839,10 @@ TEST_F(com_ptr_Test, getOwnerAndQuery_ValueWithUnknownInterface_ThrowsException)
 	const com_ptr<IStream> ptr(&m_object);
 
 	EXPECT_THAT([&ptr]() { return ptr.get_owner<IPersistStream>(); },
-	            t::Throws<internal::ExceptionDetail<com_error>>(
+	            (t::Throws<internal::ExceptionDetail<com_error, const EVENT_DESCRIPTOR&>>(
 	                t::AllOf(
 	                    t::Property(&com_error::code, t::Property(&std::error_code::value, E_NOINTERFACE)),
-	                    t::Property(&internal::BaseException::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::IUnknown_QueryInterface_H.Id)))));
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::IUnknown_QueryInterface_H.Id))))));
 
 	EXPECT_EQ(&m_object, ptr);
 	COM_MOCK_EXPECT_REFCOUNT(2, m_object);

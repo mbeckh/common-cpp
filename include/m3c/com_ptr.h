@@ -436,7 +436,7 @@ constexpr void swap(com_ptr<T>& ptr, com_ptr<T>& oth) noexcept {
 /// @param formatArgs The output target.
 template <typename T>
 inline void operator>>(const com_ptr<T>& ptr, _Inout_ LogFormatArgs& formatArgs) {
-	formatArgs << fmt_ptr(static_cast<IUnknown* const&>(ptr.m_ptr));
+	formatArgs + fmt_ptr(static_cast<IUnknown* const&>(ptr.m_ptr));
 }
 
 /// @brief Use the address of the managed pointer as a log argument.

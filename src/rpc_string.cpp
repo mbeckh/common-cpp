@@ -90,4 +90,39 @@ RPC_STATUS basic_rpc_string<wchar_t>::destroy() noexcept {
 template class basic_rpc_string<char>;
 template class basic_rpc_string<wchar_t>;
 
+template bool operator==(const basic_rpc_string<char>& str, const basic_rpc_string<char>& oth) noexcept;
+template bool operator==(const basic_rpc_string<char>& str, typename basic_rpc_string<char>::rpc_str_type p) noexcept;
+template bool operator==(typename basic_rpc_string<char>::rpc_str_type p, const basic_rpc_string<char>& str) noexcept;
+template bool operator==(const basic_rpc_string<char>& str, std::nullptr_t) noexcept;
+template bool operator==(std::nullptr_t, const basic_rpc_string<char>& str) noexcept;
+
+template bool operator==(const basic_rpc_string<wchar_t>& str, const basic_rpc_string<wchar_t>& oth) noexcept;
+template bool operator==(const basic_rpc_string<wchar_t>& str, typename basic_rpc_string<wchar_t>::rpc_str_type p) noexcept;
+template bool operator==(typename basic_rpc_string<wchar_t>::rpc_str_type p, const basic_rpc_string<wchar_t>& str) noexcept;
+template bool operator==(const basic_rpc_string<wchar_t>& str, std::nullptr_t) noexcept;
+template bool operator==(std::nullptr_t, const basic_rpc_string<wchar_t>& str) noexcept;
+
+template bool operator!=(const basic_rpc_string<char>& str, const basic_rpc_string<char>& oth) noexcept;
+template bool operator!=(const basic_rpc_string<char>& str, typename basic_rpc_string<char>::rpc_str_type p) noexcept;
+template bool operator!=(typename basic_rpc_string<char>::rpc_str_type p, const basic_rpc_string<char>& str) noexcept;
+template bool operator!=(const basic_rpc_string<char>& str, std::nullptr_t) noexcept;
+template bool operator!=(std::nullptr_t, const basic_rpc_string<char>& str) noexcept;
+
+template bool operator!=(const basic_rpc_string<wchar_t>& str, const basic_rpc_string<wchar_t>& oth) noexcept;
+template bool operator!=(const basic_rpc_string<wchar_t>& str, typename basic_rpc_string<wchar_t>::rpc_str_type p) noexcept;
+template bool operator!=(typename basic_rpc_string<wchar_t>::rpc_str_type p, const basic_rpc_string<wchar_t>& str) noexcept;
+template bool operator!=(const basic_rpc_string<wchar_t>& str, std::nullptr_t) noexcept;
+template bool operator!=(std::nullptr_t, const basic_rpc_string<wchar_t>& str) noexcept;
+
+template void swap(basic_rpc_string<char>& str, basic_rpc_string<char>& oth) noexcept;
+template void swap(basic_rpc_string<wchar_t>& str, basic_rpc_string<wchar_t>& oth) noexcept;
+
 }  // namespace m3c
+
+template struct std::hash<m3c::basic_rpc_string<char>>;
+template struct std::hash<m3c::basic_rpc_string<wchar_t>>;
+
+template struct fmt::formatter<m3c::basic_rpc_string<char>, char>;
+template struct fmt::formatter<m3c::basic_rpc_string<char>, wchar_t>;
+template struct fmt::formatter<m3c::basic_rpc_string<wchar_t>, char>;
+template struct fmt::formatter<m3c::basic_rpc_string<wchar_t>, wchar_t>;

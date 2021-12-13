@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-Copyright 2019-2021 Michael Beckh
+Copyright 2021 Michael Beckh
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -70,8 +70,6 @@ limitations under the License.
 					</template>
 				</templates>
 				<events>
-					<event symbol="m3c_Test_Init_H" value="500" version="0" template="m3c_H" channel="test" level="win:Critical" message="$(string.m3c_Test_Init_X)" />
-
 					<event symbol="m3c_Test_Event" value="510" version="0" template="m3c_context" channel="test" level="win:Informational" message="$(string.m3c_Test_Event)" />
 					<event symbol="m3c_Test_Event_Int" value="511" version="0" template="m3c_Test_Int" channel="test" level="win:Informational" message="$(string.m3c_Test_Event_Int)" />
 					<event symbol="m3c_Test_Event_String" value="512" version="0" template="m3c_Test_String" channel="test" level="win:Informational" message="$(string.m3c_Test_Event_String)" />
@@ -105,8 +103,6 @@ limitations under the License.
 			<stringTable>
 				<string id="m3c_Test.Provider.Name" value="m3c-Test" />
 				<string id="m3c_Test.channel.test" value="m3c-Test/Test" />
-
-				<string id="m3c_Test_Init_X" value="Error initializing tests:%n%1" />
 
 				<string id="m3c_Test_Event" value="Testing event without arguments" />
 				<string id="m3c_Test_Event_Int" value="Testing event with int %1" />

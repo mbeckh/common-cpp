@@ -42,7 +42,7 @@ void com_ptr_base::QueryInterface(_In_ IUnknown* const pUnknown, const IID& iid,
 
 template <>
 void operator>>(const com_ptr<IStream>& ptr, _Inout_ LogFormatArgs& formatArgs) {
-	formatArgs << fmt_ptr(reinterpret_cast<IUnknown* const&>(ptr.m_ptr)) << FMT_FORMAT("{:n}", ptr);
+	formatArgs + fmt_ptr(reinterpret_cast<IUnknown* const&>(ptr.m_ptr)) + FMT_FORMAT("{:n}", ptr);
 }
 
 template <>

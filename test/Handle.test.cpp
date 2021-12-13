@@ -356,6 +356,31 @@ TEST_F(Handle_Test, opAssign_ValueToValueAndErrorClosing_LogAndIsClosed) {
 	CloseHandle(GetFoo());
 }
 
+
+//
+// operator&()
+//
+
+TEST_F(Handle_Test, opAddressOf_Default_ReturnAddress) {
+	Handle hnd;
+
+	HANDLE* const ptr = &hnd;
+	*ptr = UseFoo();
+
+	EXPECT_EQ(GetFoo(), hnd);
+}
+
+TEST_F(Handle_Test, opAddressOf_Value_ReleaseAndReturnAddress) {
+	Handle hnd(UseFoo());
+
+	HANDLE* const ptr = &hnd;
+	*ptr = UseOther();
+
+	EXPECT_TRUE(IsFooClosed());
+	EXPECT_EQ(GetOther(), hnd);
+}
+
+
 //
 // (bool)
 //
@@ -431,10 +456,10 @@ TEST_F(Handle_Test, close_ValueAndErrorClosing_Throw) {
 	EXPECT_THAT(([&hnd]() {
 		            hnd.close();
 	            }),
-	            t::Throws<internal::ExceptionDetail<windows_error>>(
+	            (t::Throws<internal::ExceptionDetail<windows_error, const EVENT_DESCRIPTOR&>>(
 	                t::AllOf(
 	                    t::Property(&system_error::code, t::Property(&std::error_code::value, ERROR_INTERNAL_ERROR)),
-	                    t::Property(&internal::BaseException::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::HandleLeak_E.Id)))));
+	                    t::Property(&internal::BaseException<const EVENT_DESCRIPTOR&>::GetEvent, t::Field(&EVENT_DESCRIPTOR::Id, evt::HandleLeak_E.Id))))));
 
 	EXPECT_EQ(GetFoo(), hnd);
 	EXPECT_FALSE(IsFooClosed());

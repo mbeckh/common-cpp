@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-Copyright 2019-2021 Michael Beckh
+Copyright 2021 Michael Beckh
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -102,10 +102,7 @@ limitations under the License.
 						<data name="code" inType="win:Int32" outType="win:HResult" />
 					</template>
 
-					<template tid="m3c_Encode">
-						<data name="length" inType="win:Int32" outType="xs:int" />
-					</template>
-					<template tid="m3c_Encode_E">
+					<template tid="m3c_Length_E">
 						<data name="length" inType="win:Int32" outType="xs:int" />
 						<data name="code" inType="win:UInt32" outType="win:Win32Error" />
 					</template>
@@ -189,32 +186,32 @@ limitations under the License.
 						A swallowed exception while creating an exception message for m3c::system_error.
 					</event>
 
-					<event symbol="m3c_Encode_E" value="21" version="0" template="m3c_Encode_E" channel="op" message="$(string.m3c_Encode_X)">
+					<event symbol="m3c_Encode_E" value="21" version="0" template="m3c_Length_E" channel="op" message="$(string.m3c_Encode_X)">
 						Error encoding a string.
 					</event>
 
-					<event symbol="m3c_FormatEncode" value="30" version="0" template="m3c_Encode" channel="op"  message="$(string.m3c_FormatEncode)">
-						Error encoding a string during formatting.
+					<event symbol="m3c_Format" value="25" version="0" template="m3c_context" channel="op" message="$(string.m3c_Format)">
+						Error formatting.
 					</event>
-					<event symbol="m3c_FormatUuid_R" value="31" version="0" template="m3c_Uuid_H" channel="op" message="$(string.m3c_FormatUuid_X)">
+					<event symbol="m3c_FormatUuid_R" value="30" version="0" template="m3c_Uuid_H" channel="op" message="$(string.m3c_FormatUuid_X)">
 						Error formatting a UUID.
 					</event>
-					<event symbol="m3c_FormatFileTime_E" value="32" version="0" template="m3c_FileTime_E" channel="op" message="$(string.m3c_FormatFileTime_X)">
+					<event symbol="m3c_FormatFileTime_E" value="31" version="0" template="m3c_FileTime_E" channel="op" message="$(string.m3c_FormatFileTime_X)">
 						Error formatting a FILETIME.
 					</event>
-					<event symbol="m3c_FormatSid_E" value="33" version="0" template="m3c_Sid_E" channel="op" message="$(string.m3c_FormatSid_X)">
+					<event symbol="m3c_FormatSid_E" value="32" version="0" template="m3c_Sid_E" channel="op" message="$(string.m3c_FormatSid_X)">
 						Error formatting a SID.
 					</event>
-					<event symbol="m3c_FormatMessageId_E" value="34" version="0" template="m3c_MessageId_E" channel="op"  message="$(string.m3c_FormatMessageId_X)">
+					<event symbol="m3c_FormatMessageId_E" value="33" version="0" template="m3c_MessageId_E" channel="op"  message="$(string.m3c_FormatMessageId_X)">
 						Error calling FormatMessage.
 					</event>
-					<event symbol="m3c_FormatVariant_H" value="35" version="0" template="m3c_VariantType_H" channel="op" message="$(string.m3c_FormatVariant_X)">
+					<event symbol="m3c_FormatVariant_H" value="34" version="0" template="m3c_VariantType_H" channel="op" message="$(string.m3c_FormatVariant_X)">
 						Error formatting a VARIANT or PROPVARIANT.
 					</event>
-					<event symbol="m3c_FormatIStream_H" value="36" version="0" template="m3c_H" channel="op" message="$(string.m3c_FormatIStream_X)">
+					<event symbol="m3c_FormatIStream_H" value="35" version="0" template="m3c_H" channel="op" message="$(string.m3c_FormatIStream_X)">
 						Error formatting IStream.
 					</event>
-					<event symbol="m3c_FormatPropertyKey_H" value="37" version="0" template="m3c_Uuid_H" channel="op" message="$(string.m3c_FormatPropertyKey_X)">
+					<event symbol="m3c_FormatPropertyKey_H" value="36" version="0" template="m3c_Uuid_H" channel="op" message="$(string.m3c_FormatPropertyKey_X)">
 						Error formatting a PROPERTYKEY.
 					</event>
 
@@ -286,7 +283,7 @@ limitations under the License.
 
 				<string id="m3c_Encode_X" value="Error encoding string with length %1:%n%2" />
 
-				<string id="m3c_FormatEncode" value="Error encoding string with length %1" />
+				<string id="m3c_Format" value="Error formatting." />
 				<string id="m3c_FormatUuid_X" value="Error formatting UUID %1:%n%2" />
 				<string id="m3c_FormatFileTime_X" value="Error formatting FILETIME %1:%n%2" />
 				<string id="m3c_FormatSid_X" value="Error formatting SID %1:%n%2" />

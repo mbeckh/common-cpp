@@ -474,7 +474,7 @@ TEST_F(LogData_Test, CopyArgumentsTo_wcharNewline_PrintNewline) {
 }
 
 TEST_F(LogData_Test, CopyArgumentsTo_wcharHighAscii_PrintUtf8) {
-	TestMethod<wchar_t>(L'\u00FC', "\u00C3\u00BC");
+	TestMethod<wchar_t>(L'\u00FC', "\xC3\xBC");
 }
 
 TEST_F(LogData_Test, CopyMove_wcharLetter_PrintLetter) {
@@ -762,7 +762,7 @@ TEST_F(LogData_Test, CopyArgumentsTo_charptrEmpty_PrintEmpty) {
 }
 
 TEST_F(LogData_Test, CopyArgumentsTo_charptrUtf8_PrintUtf8) {
-	TestMethod<const char*>(reinterpret_cast<const char*>(u8"\u00FC"), "\u00C3\u00BC");
+	TestMethod<const char*>(reinterpret_cast<const char*>(u8"\u00FC"), "\xC3\xBC");
 }
 
 TEST_F(LogData_Test, CopyArgumentsTo_charptrControlChars_PrintControlChars) {
@@ -818,7 +818,7 @@ TEST_F(LogData_Test, CopyArgumentsTo_wcharptrEmpty_PrintEmpty) {
 }
 
 TEST_F(LogData_Test, CopyArgumentsTo_wcharptrHighAscii_PrintUtf8) {
-	TestMethod<const wchar_t*>(L"\u00FC", "\u00C3\u00BC");
+	TestMethod<const wchar_t*>(L"\u00FC", "\xC3\xBC");
 }
 
 TEST_F(LogData_Test, CopyArgumentsTo_wcharptrControlChars_PrintControlChars) {
@@ -873,7 +873,7 @@ TEST_F(LogData_Test, CopyArgumentsTo_stringEmpty_PrintEmpty) {
 }
 
 TEST_F(LogData_Test, CopyArgumentsTo_stringUtf8_PrintUtf8) {
-	TestMethod<std::string>("\u00C3\u00BC", "\u00C3\u00BC");
+	TestMethod<std::string>("\u00FC", "\xC3\xBC");
 }
 
 TEST_F(LogData_Test, CopyArgumentsTo_stringTemporary_GetValue) {
@@ -919,7 +919,7 @@ TEST_F(LogData_Test, CopyArgumentsTo_wstringEmpty_PrintEmpty) {
 }
 
 TEST_F(LogData_Test, CopyArgumentsTo_wstringHightAscii_PrintUtf8) {
-	TestMethod<std::wstring>(L"\u00FC", "\u00C3\u00BC");
+	TestMethod<std::wstring>(L"\u00FC", "\xC3\xBC");
 }
 
 TEST_F(LogData_Test, CopyArgumentsTo_wstringTemporary_GetValue) {
@@ -986,7 +986,7 @@ TEST_F(LogData_Test, CopyArgumentsTo_wstringviewEmpty_PrintEmpty) {
 }
 
 TEST_F(LogData_Test, CopyArgumentsTo_wstringviewHightAscii_PrintUtf8) {
-	TestMethod<std::wstring_view>(L"\u00FC", "\u00C3\u00BC");
+	TestMethod<std::wstring_view>(L"\u00FC", "\xC3\xBC");
 }
 
 TEST_F(LogData_Test, CopyMove_wstringviewText_PrintText) {
