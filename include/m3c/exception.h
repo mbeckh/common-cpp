@@ -330,7 +330,7 @@ protected:
 protected:
 	/// @brief Create a new object with context information.
 	/// @param context A default exception context.
-	[[nodiscard]] constexpr explicit BaseException(const DefaultContext& context) noexcept requires !kIsEventDescriptor
+	[[nodiscard]] constexpr explicit BaseException(const DefaultContext& context) noexcept requires(!kIsEventDescriptor)
 	    : m_sourceLocation(context.GetSourceLocation())
 	    , m_message(nullptr) {
 		// empty
@@ -346,7 +346,7 @@ protected:
 
 	/// @brief Create a new object with context information.
 	/// @param context An exception context.
-	[[nodiscard]] constexpr explicit BaseException(const ExceptionContext<M>& context) noexcept requires !kIsEventDescriptor
+	[[nodiscard]] constexpr explicit BaseException(const ExceptionContext<M>& context) noexcept requires(!kIsEventDescriptor)
 	    : m_sourceLocation(context.GetSourceLocation())
 	    , m_message(context.GetLogMessage()) {
 		// empty
@@ -383,7 +383,7 @@ public:
 
 	/// @brief Get the log message from the context.
 	/// @return The string log message.
-	[[nodiscard]] constexpr M GetLogMessage() const noexcept requires !kIsEventDescriptor {
+	[[nodiscard]] constexpr M GetLogMessage() const noexcept requires(!kIsEventDescriptor) {
 		return m_message;
 	}
 
@@ -429,7 +429,7 @@ public:
 	/// @brief Create a new exception from exception and context.
 	/// @param exception The exception object.
 	/// @param context Additional default context with source location.
-	[[nodiscard]] constexpr ExceptionDetail(E&& exception, const DefaultContext& context) noexcept(noexcept(E(std::forward<E>(exception)))) requires !kIsEventDescriptor
+	[[nodiscard]] constexpr ExceptionDetail(E&& exception, const DefaultContext& context) noexcept(noexcept(E(std::forward<E>(exception)))) requires(!kIsEventDescriptor)
 	    : E(std::forward<E>(exception))
 	    , BaseException<M>(context) {
 	}
