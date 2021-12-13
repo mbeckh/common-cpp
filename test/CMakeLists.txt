@@ -73,10 +73,6 @@ target_link_libraries(m3c_Test PRIVATE common-cpp::m3c common-cpp-testing::m4t G
 target_link_libraries(m3c_Test_Log_Print PRIVATE common-cpp::m3c common-cpp-testing::m4t GTest::gmock detours-gmock::detours-gmock)
 target_link_libraries(m3c_Test_Log_Event PRIVATE common-cpp::m3c common-cpp-testing::m4t GTest::gmock detours-gmock::detours-gmock)
 
-target_link_options(m3c_Test PRIVATE "/d2:-SSAOptimizer-")
-target_link_options(m3c_Test_Log_Print PRIVATE "/d2:-SSAOptimizer-")
-target_link_options(m3c_Test_Log_Event PRIVATE "/d2:-SSAOptimizer-")
-
 common_cpp_target_events(m3c_Test "test.events.man" LEVEL Trace PRINT EVENT)
 common_cpp_target_events(m3c_Test_Log_Print "test.events.man" LEVEL Debug PRINT)
 common_cpp_target_events(m3c_Test_Log_Event "test.events.man" LEVEL Debug EVENT)
