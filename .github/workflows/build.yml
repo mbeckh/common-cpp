@@ -11,5 +11,5 @@ on:
 
 jobs:
   build:
-    uses: mbeckh/cmake-utils/.github/workflows/run-build.yml@v1
+    uses: mbeckh/cmake-utils/.github/workflows/run-build.yml@feature-vcpkg
     secrets: inherit
