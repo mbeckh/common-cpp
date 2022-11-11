@@ -13,7 +13,7 @@
 # limitations under the License.
 cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
 
-project("common-cpp" VERSION 0.1.2
+project("common-cpp" VERSION 0.1.3
     DESCRIPTION "Common C++ library"
     HOMEPAGE_URL "https://github.com/mbeckh/common-cpp"
     LANGUAGES CXX)
