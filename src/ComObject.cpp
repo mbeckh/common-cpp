@@ -40,7 +40,7 @@ ULONG Unknown::UnknownImpl::Release() noexcept {
 }
 
 AbstractComObject* Unknown::UnknownImpl::GetAbstractComObject() noexcept {
-	static_assert_no_clang(offsetof(Unknown, m_unknown) == 0);
+	static_assert(offsetof(Unknown, m_unknown) == 0);
 #pragma warning(suppress : 26491)                                              // valid as checked by static_assert
 	return static_cast<AbstractComObject*>(reinterpret_cast<Unknown*>(this));  // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast): Pointer magic :-)
 }

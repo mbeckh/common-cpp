@@ -336,7 +336,7 @@ public:
 			AddArgumentFallback(arg);
 		} else {
 			// prevent storing references to temporary objects
-			static_assert_no_clang(false, "MUST NOT use rvalue to add to LogFormatArgs");
+			static_assert(sizeof(T) == 0, "MUST NOT use rvalue to add to LogFormatArgs");
 		}
 		return *this;
 	}
@@ -356,7 +356,7 @@ public:
 			AddArgumentFallback(arg);
 		} else {
 			// prevent storing references to temporary objects
-			static_assert_no_clang(false, "MUST NOT use rvalue to add to LogFormatArgs");
+			static_assert(sizeof(T) == 0, "MUST NOT use rvalue to add to LogFormatArgs");
 		}
 		return *this;
 	}
@@ -398,10 +398,10 @@ public:
 			AddArgument(std::forward<T>(arg));
 		} else {
 			if constexpr (std::is_rvalue_reference_v<T&&>) {
-				static_assert_no_clang(false, "MUST NOT use rvalue to add to LogEventArgs");
+				static_assert(sizeof(T) == 0, "MUST NOT use rvalue to add to LogEventArgs");
 			}
 			// prevent storing references to temporary objects
-			static_assert_no_clang(false, "MUST use custom operator>> to add to LogEventArgs");
+			static_assert(sizeof(T) == 0, "MUST use custom operator>> to add to LogEventArgs");
 		}
 		return *this;
 	}

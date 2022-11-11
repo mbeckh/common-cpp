@@ -1,4 +1,4 @@
-name: build
+name: Build
 
 on:
   push:
@@ -11,91 +11,5 @@ on:
 
 jobs:
   build:
-    name: Build and Analyze
-    runs-on: windows-2022
-    strategy:
-      matrix:
-        configuration: [ Debug, Release ]
-    
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-
-    - name: Cache vcpkg
-      uses: actions/cache@v2
-      with:
-        path: build/${{matrix.configuration}}/vcpkg_installed
-        key: vcpkg_installed-${{matrix.configuration}}-${{hashFiles('**/vcpkg.json', '**/vcpkg-configuration.json', '!build/**')}}
-
-    - name: Setup MSVC Environment
-      uses: mbeckh/msvc-dev-cmd@master
-
-    - name: Configure
-      uses: mbeckh/cmake-utils/configure@master
-      with:
-        build-root: build
-        binary-dir: build/${{matrix.configuration}}
-        configuration: ${{matrix.configuration}}
-        extra-args: -D CMAKE_UNITY_BUILD:BOOL=ON -D CMAKE_DISABLE_PRECOMPILE_HEADERS:BOOL=ON -D CMU_DISABLE_DEBUG_INFORMATION_RELEASE:BOOL=ON
-
-    - name: Build
-      shell: cmd
-      working-directory: build/${{matrix.configuration}}
-      run: cmake --build .
-
-    - name: Test
-      if: matrix.configuration != 'Debug'
-      shell: cmd
-      working-directory: build/${{matrix.configuration}}
-      run: ctest --output-on-failure
-
-    - name: Coverage
-      if: matrix.configuration == 'Debug'
-      uses: mbeckh/code-quality-actions/coverage@master
-      with:
-        binary-dir: build/${{matrix.configuration}}
-        codacy-token: ${{secrets.CODACY_PROJECT_API_TOKEN}}
-
-    - name: Codecov
-      if: matrix.configuration == 'Debug'
-      uses: codecov/codecov-action@v2
-      with:
-        files: build/${{matrix.configuration}}/coverage-*.xml
-        fail_ci_if_error: true
-
-    - name: Analyze
-      shell: cmd
-      working-directory: build/${{matrix.configuration}}
-      run: cmake --build . --target clang-tidy
-
-    - name: Report
-      uses: mbeckh/code-quality-actions/report@master
-      with:
-        mode: partial
-        binary-dir: build/${{matrix.configuration}}
-        codacy-token: ${{secrets.CODACY_PROJECT_API_TOKEN}}
-
-    - name: Save Logs
-      if: always()
-      uses: actions/upload-artifact@v2.2.4
-      with:
-        name: ${{matrix.configuration}}-Logs
-        path: |
-            build/**/vcpkg-buildtrees/*/*.log
-            build/${{matrix.configuration}}/Testing/**/*.log
-            build/${{matrix.configuration}}/clang-tidy-*.log
-
-  final:
-    name: Send Completion Message
-    runs-on: windows-latest
-    needs: build
-    
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-
-    - name: Report
-      uses: mbeckh/code-quality-actions/report@master
-      with:
-        mode: final
-        codacy-token: ${{secrets.CODACY_PROJECT_API_TOKEN}}
+    uses: mbeckh/cmake-utils/.github/workflows/run-build.yml@v1
+    secrets: inherit

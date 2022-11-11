@@ -24,14 +24,6 @@ limitations under the License.
 #include <span>
 #include <type_traits>
 
-#ifdef __clang_analyzer__
-// clang can't handle some static_assert checks in templated code
-// NOLINTNEXTLINE(readability-identifier-naming): Kind of funny that clang complains about a macro to work around shortcomings of clang.
-#define static_assert_no_clang(...)
-#else
-#define static_assert_no_clang(...) static_assert(__VA_ARGS__)
-#endif
-
 #define M3C_SELECT_STRING(...) __VA_ARGS__, L##__VA_ARGS__
 
 namespace m3c {
@@ -48,7 +40,7 @@ consteval _Ret_z_ const CharT* SelectString(_In_z_ const char* const sz, _In_z_ 
 	} else if constexpr (std::is_same_v<wchar_t, CharT>) {
 		return wsz;
 	} else {
-		static_assert_no_clang(false, "Unknown char type");
+		static_assert(sizeof(CharT) == 0, "Unknown char type");
 	}
 }
 
