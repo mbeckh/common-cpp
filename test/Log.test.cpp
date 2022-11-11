@@ -209,7 +209,7 @@ protected:
 	}
 
 	template <EVENT_DESCRIPTOR kLoggedExceptionEvent = EVENT_DESCRIPTOR{}, bool kNested = false, bool kHResult = false, typename E = int, typename D = int, typename... Args>
-	auto TestMethod(const char* const dynamicLogMessage = "", E&& exception = 0, const char* const exceptionMessage = nullptr, const D detail = 0, Args&&... args) {
+	auto TestMethod(const char* const dynamicLogMessage = "", E&& exception = 0, const char* const exceptionMessage = nullptr, [[maybe_unused]] const D detail = 0, Args&&... args) {
 		constexpr bool kException = !std::is_same_v<E, int>;
 		constexpr bool kDetail = !std::is_same_v<D, int>;
 		const EventType eventType = GetEventType();

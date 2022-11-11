@@ -92,7 +92,7 @@ struct CharTNames {
 		} else if constexpr (std::is_same_v<T, wchar_t>) {
 			return "1_wchar_t";
 		} else {
-			static_assert_no_clang(false, "unknown type");
+			static_assert(sizeof(T) == 0, "unknown type");
 		}
 	}
 };

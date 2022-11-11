@@ -1,13 +1,13 @@
 {
   "default-registry": {
     "kind": "builtin",
-    "baseline": "70033dbb31527fb3e69654731f540f59c87787f9"
+    "baseline": "48cc0c71ed61be1c0e3c9543dd0f2b997037d1c9"
   },
   "registries": [
     {
       "kind": "git",
       "repository": "https://github.com/mbeckh/vcpkg-registry.git",
-      "baseline": "ded1cdfa4453537af1dcf9dda1de2d82e7646fe6",
+      "baseline": "3968e6edc820dc3d666b3d3383f096b1998eb8e7",
       "packages": [ "common-cpp-testing", "detours", "detours-gmock", "fmt", "gtest" ]
     }
   ]

@@ -312,7 +312,7 @@ void DecodeArgument(_Inout_ A& args, _In_ const std::byte* __restrict const buff
 			args << arg;
 		}
 	} else {
-		static_assert_no_clang(false, "Unknown argument type");
+		static_assert(sizeof(A) == 0, "Unknown argument type");
 	}
 
 	position += kTypeSize<T> + padding;
@@ -341,10 +341,10 @@ void DecodeArgument(_Inout_ A& args, _In_ const std::byte* __restrict const buff
 		} else if constexpr (std::is_same_v<B, wchar_t>) {
 			args + EncodeUtf8(str, length);
 		} else {
-			static_assert_no_clang(false, "Unknown string type");
+			static_assert(sizeof(B) == 0, "Unknown string type");
 		}
 	} else {
-		static_assert_no_clang(false, "Unknown argument type");
+		static_assert(sizeof(A), "Unknown argument type");
 	}
 	position += kTypeSize<T> + padding + length * static_cast<Align>(sizeof(B)) + static_cast<Align>(sizeof(B));
 }
@@ -369,7 +369,7 @@ void DecodeArgument(_Inout_ A& args, _In_ const std::byte* __restrict const buff
 	} else if constexpr (std::is_same_v<A, LogFormatArgs>) {
 		args << arg;
 	} else {
-		static_assert_no_clang(false, "Unknown argument type");
+		static_assert(sizeof(A) == 0, "Unknown argument type");
 	}
 
 	position += kTypeSize<SID> + padding + size;
@@ -394,7 +394,7 @@ void DecodeArgument(_Inout_ A& args, _Inout_ const std::byte* __restrict const b
 	} else if constexpr (std::is_same_v<A, LogFormatArgs>) {
 		pFunctionTable->addFormatArgs(args, &buffer[position + kArgSize + padding]);
 	} else {
-		static_assert_no_clang(false, "Unknown argument type");
+		static_assert(sizeof(A) == 0, "Unknown argument type");
 	}
 	position += kArgSize + padding + pFunctionTable->size;
 }
@@ -783,13 +783,13 @@ LogDataBase::~LogDataBase() noexcept {
 	// ensure proper memory layout
 	static_assert(sizeof(LogDataBase) == M3C_LOGDATA_SIZE, "size of LogLine");
 
-	static_assert_no_clang(offsetof(LogDataBase, m_stackBuffer) == 0, "offset of m_stackBuffer");
+	static_assert(offsetof(LogDataBase, m_stackBuffer) == 0, "offset of m_stackBuffer");
 #if UINTPTR_MAX == UINT64_MAX
-	static_assert_no_clang(offsetof(LogDataBase, m_used) == M3C_LOGDATA_SIZE - 4, "offset of m_used");
+	static_assert(offsetof(LogDataBase, m_used) == M3C_LOGDATA_SIZE - 4, "offset of m_used");
 #elif UINTPTR_MAX == UINT32_MAX
-	static_assert_no_clang(offsetof(LogDataBase, m_used) == M3C_LOGDATA_SIZE - 4, "offset of m_used");
+	static_assert(offsetof(LogDataBase, m_used) == M3C_LOGDATA_SIZE - 4, "offset of m_used");
 #else
-	static_assert_no_clang(false, "layout assertions not defined");
+	static_assert(false, "layout assertions not defined");
 #endif
 	if ((!m_hasHeapBuffer || GetHeapBuffer().use_count() == 1) && m_hasNonTriviallyCopyable) {
 		[[unlikely]];
