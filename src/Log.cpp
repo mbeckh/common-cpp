@@ -181,7 +181,8 @@ namespace internal {
 					if (!flags.empty()) {
 						if (flags.find('-') != std::string::npos) {
 							subformat += '<';
-						} else {
+						} else if (!width.empty() && std::strchr("cCsS", type[0]) != nullptr) {
+							// add default right align for strings
 							subformat += '>';
 						}
 						if (flags.find('+') != std::string::npos) {
@@ -199,7 +200,9 @@ namespace internal {
 						}
 					}
 					if (!width.empty()) {
-						if (flags.empty()) {
+						std::string_view s;
+						if (flags.empty() && std::strchr("cCsS", type[0]) != nullptr) {
+							// width is ignored if alignment is set
 							subformat += '>';
 						}
 						if (width == "*") {

@@ -88,7 +88,7 @@ static std::ostream& operator<<(std::ostream& os, const Priority priority) {
 		name = "Trace";
 		break;
 	default:
-		throw std::out_of_range(FMT_FORMAT("priority {}", priority));
+		throw std::out_of_range(FMT_FORMAT("priority {}", static_cast<std::underlying_type_t<Priority>>(priority)));
 	}
 	return os << name;
 }
@@ -150,7 +150,7 @@ std::ostream& operator<<(std::ostream& os, const EventType eventType) {
 		name = "string_ref";
 		break;
 	default:
-		throw std::out_of_range(FMT_FORMAT("eventType {}", eventType));
+		throw std::out_of_range(FMT_FORMAT("eventType {}", static_cast<std::underlying_type_t<EventType>>(eventType)));
 	}
 	return os << name;
 }
@@ -178,7 +178,7 @@ protected:
 		case Priority::kTrace:
 			return "Trace";
 		default:
-			throw std::out_of_range(FMT_FORMAT("priority {}", priority));
+			throw std::out_of_range(FMT_FORMAT("priority {}", static_cast<std::underlying_type_t<Priority>>(priority)));
 		}
 	}
 
@@ -284,7 +284,7 @@ protected:
 					break;
 				}
 				default:
-					throw std::out_of_range(FMT_FORMAT("eventType {}", eventType));
+					throw std::out_of_range(FMT_FORMAT("eventType {}", static_cast<std::underlying_type_t<EventType>>(eventType)));
 				}
 			});
 		} else {
@@ -336,7 +336,7 @@ protected:
 							break;
 						}
 						default:
-							throw std::out_of_range(FMT_FORMAT("eventType {}", eventType));
+							throw std::out_of_range(FMT_FORMAT("eventType {}", static_cast<std::underlying_type_t<EventType>>(eventType)));
 						}
 					});
 				} else {
@@ -361,7 +361,7 @@ protected:
 							break;
 						}
 						default:
-							throw std::out_of_range(FMT_FORMAT("eventType {}", eventType));
+							throw std::out_of_range(FMT_FORMAT("eventType {}", static_cast<std::underlying_type_t<EventType>>(eventType)));
 						}
 					});
 				}
@@ -383,7 +383,7 @@ protected:
 			logOutput = GetLogEventOutput(!kHResult ? "string& event with string mymessage" : "string& event with string mymessage and error", dynamicLogMessage, location, line);
 			break;
 		default:
-			throw std::out_of_range(FMT_FORMAT("eventType {}", eventType));
+			throw std::out_of_range(FMT_FORMAT("eventType {}", static_cast<std::underlying_type_t<EventType>>(eventType)));
 		}
 
 		if constexpr (kException) {
