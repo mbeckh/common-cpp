@@ -5,11 +5,15 @@ on:
     branches: [ master, 'feature**' ]
   pull_request:
     branches: [ master ]
-    paths-ignore:
-      - '**/*.md'
-      - '**/*.txt'
+
+permissions: {}
 
 jobs:
   build:
+    name: Build
     uses: mbeckh/cmake-utils/.github/workflows/run-build.yml@v1
     secrets: inherit
+    permissions:
+      actions: write
+      contents: read
+      packages: write
