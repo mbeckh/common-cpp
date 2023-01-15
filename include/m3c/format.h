@@ -44,32 +44,6 @@ limitations under the License.
 
 namespace m3c {
 
-#ifdef __clang_analyzer__
-
-namespace internal {
-
-template <typename... Args>
-inline auto IwyuFormatWorkaround(const char* pattern, Args&&... args) {
-	return fmt::format(fmt::runtime(pattern), std::forward<Args>(args)...);
-}
-
-template <typename T, typename... Args>
-inline auto IwyuFormatWorkaround(T&& pattern, Args&&... args) {
-	return fmt::format(std::forward<T>(pattern), std::forward<Args>(args)...);
-}
-
-}  // namespace internal
-
-/// @brief Replace literal format strings for fmt compile with runtime strings.
-/// @details clang-tidy and include-what-you-use have problems parsing and diagnose false positives or hang/crash.
-#define FMT_FORMAT(...) m3c::internal::IwyuFormatWorkaround(__VA_ARGS__)
-#else
-/// @brief Replace literal format strings for fmt compile with runtime strings.
-/// @details clang-tidy and include-what-you-use have problems parsing and diagnose false positives or hang/crash.
-#define FMT_FORMAT(...) fmt::format(__VA_ARGS__)
-#endif
-
-
 //
 // String encoding
 //
@@ -573,7 +547,7 @@ struct fmt::formatter<m3c::fmt_ptr<IUnknown>, CharT> {
 		// AddRef to get the ref count
 		const ULONG ref = ptr ? (ptr->AddRef(), ptr->Release()) : 0;
 		if (std::holds_alternative<fmt::formatter<std::basic_string<CharT>, CharT>>(m_formatter)) {
-			std::basic_string<CharT> value = FMT_FORMAT(
+			const std::basic_string<CharT> value = fmt::format(
 			    m3c::SelectString<CharT>(M3C_SELECT_STRING("(ptr={}, ref={})")),
 			    fmt::ptr(ptr), ref);
 			return std::get<fmt::formatter<std::basic_string<CharT>, CharT>>(m_formatter).format(value, ctx);
@@ -652,7 +626,7 @@ struct fmt::formatter<m3c::fmt_ptr<IStream>, CharT> : fmt::formatter<m3c::fmt_pt
 
 			// AddRef to get the ref count
 			const ULONG ref = ptr ? (ptr->AddRef(), ptr->Release()) : 0;
-			std::basic_string<CharT> value = FMT_FORMAT(
+			const std::basic_string<CharT> value = fmt::format(
 			    m3c::SelectString<CharT>(M3C_SELECT_STRING("({}, ptr={}, ref={})")),
 			    m3c::fmt_encode(name), fmt::ptr(ptr), ref);
 			return std::get<fmt::formatter<std::basic_string<CharT>, CharT>>(m_formatter).format(value, ctx);
@@ -895,7 +869,8 @@ struct ConvertibleToCStrTraits {
 	/// @brief Calculate the length for objects having a `length()` method.
 	/// @param arg The object.
 	/// @return The number of characters excluding the terminating null character.
-	static constexpr auto length(const T& arg) noexcept(noexcept(arg.length())) requires requires {
+	static constexpr auto length(const T& arg) noexcept(noexcept(arg.length()))
+	requires requires {
 		{ arg.length() } -> StringLength;
 	}
 	{
@@ -905,7 +880,8 @@ struct ConvertibleToCStrTraits {
 	/// @brief Calculate the length for objects having no `length()` but a `size()` method.
 	/// @param arg The object.
 	/// @return The number of characters excluding the terminating null character.
-	static constexpr auto length(const T& arg) noexcept(noexcept(arg.size())) requires requires {
+	static constexpr auto length(const T& arg) noexcept(noexcept(arg.size()))
+	requires requires {
 		{ arg.size() } -> StringLength;
 		requires !requires {
 			{ arg.length() } -> StringLength;
@@ -919,7 +895,8 @@ struct ConvertibleToCStrTraits {
 	/// @details The string length is calculated using `std::char_traits`.
 	/// @param arg The object.
 	/// @return The number of characters excluding the terminating null character.
-	static constexpr auto length(const T& arg) noexcept(noexcept(std::char_traits<CharT>::length(arg))) requires requires {
+	static constexpr auto length(const T& arg) noexcept(noexcept(std::char_traits<CharT>::length(arg)))
+	requires requires {
 		requires !requires {
 			{ arg.length() } -> StringLength;
 		};

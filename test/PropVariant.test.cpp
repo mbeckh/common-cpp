@@ -118,7 +118,7 @@ INSTANTIATE_TEST_SUITE_P(VarType, VariantTypeToString_Test,
                              std::make_tuple(100 | VARENUM::VT_VECTOR, "ILLEGAL(0x1064)", "Invalid_VECTOR")),
                          [](const t::TestParamInfo<VariantTypeToString_Test::ParamType>& param) {
 	                         // if prefix param.index is missing, source link is not shown in Visual Studio
-	                         return FMT_FORMAT("{:02}_{}", param.index, std::get<2>(param.param));
+	                         return fmt::format("{:02}_{}", param.index, std::get<2>(param.param));
                          });
 #pragma pop_macro("VT")
 
@@ -492,7 +492,7 @@ TEST_F(Variant_Test, format_IsVariantEmptyAsValue_PrintVariantEmptyValue) {
 	arg.vt = VT_VARIANT | VT_BYREF;
 	arg.pvarVal = &var;
 
-	const std::string str = FMT_FORMAT("{:v}", arg);
+	const std::string str = fmt::format("{:v}", arg);
 
 	EXPECT_EQ("", str);
 }
@@ -516,7 +516,7 @@ TEST_F(Variant_Test, format_IsVariantInt16AsValue_PrintVariantI2Value) {
 	arg.vt = VT_VARIANT | VT_BYREF;
 	arg.pvarVal = &var;
 
-	const std::string str = FMT_FORMAT("{:v}", arg);
+	const std::string str = fmt::format("{:v}", arg);
 
 	EXPECT_EQ("37", str);
 }
@@ -603,7 +603,7 @@ TEST_F(PropVariant_Test, format_IsCurrencyCentered_PrintCYCenteredWithoutValue) 
 	arg.vt = VT_CY;
 	arg.cyVal.int64 = 37;
 
-	const std::string str = FMT_FORMAT("{:^6}", arg);
+	const std::string str = fmt::format("{:^6}", arg);
 
 	EXPECT_EQ(" (CY) ", str);
 }
@@ -683,7 +683,7 @@ TEST_F(PropVariant_Test, format_IsStringVectorAsType_PrintType) {
 	PropVariant arg;
 	InitPropVariantFromStringAsVector(L"red;green;blue", &arg);
 
-	const std::string str = FMT_FORMAT("{:t;}", arg);
+	const std::string str = fmt::format("{:t;}", arg);
 
 	EXPECT_EQ("LPWSTR|VECTOR", str);
 }
@@ -692,7 +692,7 @@ TEST_F(PropVariant_Test, format_IsStringVectorAsValue_PrintValie) {
 	PropVariant arg;
 	InitPropVariantFromStringAsVector(L"red;green;blue", &arg);
 
-	const std::string str = FMT_FORMAT("{:v}", arg);
+	const std::string str = fmt::format("{:v}", arg);
 
 	EXPECT_EQ("red; green; blue", str);
 }

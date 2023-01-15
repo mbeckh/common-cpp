@@ -719,10 +719,10 @@ TEST_F(Handle_Test, format_Empty_PrintInvalidHandle) {
 TEST_F(Handle_Test, format_EmptyCentered_PrintInvalidHandleCentered) {
 	Handle arg;
 
-	const std::string str = FMT_FORMAT("{:^20}", arg);
+	const std::string str = fmt::format("{:^20}", arg);
 
 	EXPECT_EQ(20, str.length());
-	EXPECT_EQ(FMT_FORMAT("{:^20}", fmt::ptr(kInvalidHandleValue)), str);
+	EXPECT_EQ(fmt::format("{:^20}", fmt::ptr(kInvalidHandleValue)), str);
 	EXPECT_THAT(str, m4t::MatchesRegex("\\s+0xf+\\s+"));
 }
 
@@ -747,10 +747,10 @@ TEST_F(Handle_Test, format_ValueW_PrintHandle) {
 TEST_F(Handle_Test, format_ValueCentered_PrintHandleCentered) {
 	Handle arg(UseFoo());
 
-	const std::string str = FMT_FORMAT("{:^20}", arg);
+	const std::string str = fmt::format("{:^20}", arg);
 
 	EXPECT_EQ(20, str.length());
-	EXPECT_EQ(FMT_FORMAT("{:^20}", fmt::ptr(GetFoo())), str);
+	EXPECT_EQ(fmt::format("{:^20}", fmt::ptr(GetFoo())), str);
 	EXPECT_THAT(str, m4t::MatchesRegex("\\s+0x[0-9a-f]+\\s+"));
 }
 
@@ -762,7 +762,7 @@ TEST_F(Handle_Test, format_ValueCentered_PrintHandleCentered) {
 TEST_F(Handle_Test, LogString_Empty_LogInvalidHandle) {
 	Handle arg;
 
-	EXPECT_CALL(m_log, Debug(t::_, FMT_FORMAT("{}\t", fmt::ptr(kInvalidHandleValue))));
+	EXPECT_CALL(m_log, Debug(t::_, fmt::format("{}\t", fmt::ptr(kInvalidHandleValue))));
 
 	Log::Info("{}{}", arg, '\t');
 }
@@ -770,7 +770,7 @@ TEST_F(Handle_Test, LogString_Empty_LogInvalidHandle) {
 TEST_F(Handle_Test, LogString_Value_LogHandle) {
 	Handle arg(UseFoo());
 
-	EXPECT_CALL(m_log, Debug(t::_, FMT_FORMAT("{}\t", fmt::ptr(GetFoo()))));
+	EXPECT_CALL(m_log, Debug(t::_, fmt::format("{}\t", fmt::ptr(GetFoo()))));
 
 	Log::Info("{}{}", arg, '\t');
 }
@@ -778,7 +778,7 @@ TEST_F(Handle_Test, LogString_Value_LogHandle) {
 TEST_F(Handle_Test, LogEvent_Empty_LogInvalidHandle) {
 	Handle arg;
 
-	EXPECT_CALL(m_log, Debug(t::_, FMT_FORMAT("ptr={}\t", fmt::ptr(kInvalidHandleValue))));
+	EXPECT_CALL(m_log, Debug(t::_, fmt::format("ptr={}\t", fmt::ptr(kInvalidHandleValue))));
 	EXPECT_CALL(m_log, Event(evt::Test_LogPtr.Id, t::_, t::_, 2));
 	EXPECT_CALL(m_log, EventArg(0, sizeof(void*), m4t::PointeeAs<void*>(kInvalidHandleValue)));
 	EXPECT_CALL(m_log, EventArg(1, sizeof(char), m4t::PointeeAs<char>('\t')));
@@ -789,7 +789,7 @@ TEST_F(Handle_Test, LogEvent_Empty_LogInvalidHandle) {
 TEST_F(Handle_Test, LogEvent_Value_LogHandle) {
 	Handle arg(UseFoo());
 
-	EXPECT_CALL(m_log, Debug(t::_, FMT_FORMAT("ptr={}\t", fmt::ptr(GetFoo()))));
+	EXPECT_CALL(m_log, Debug(t::_, fmt::format("ptr={}\t", fmt::ptr(GetFoo()))));
 	EXPECT_CALL(m_log, Event(evt::Test_LogPtr.Id, t::_, t::_, 2));
 	EXPECT_CALL(m_log, EventArg(0, sizeof(void*), m4t::PointeeAs<void*>(GetFoo())));
 	EXPECT_CALL(m_log, EventArg(1, sizeof(char), m4t::PointeeAs<char>('\t')));
@@ -803,7 +803,7 @@ TEST_F(Handle_Test, LogException_Empty_LogInvalidHandle) {
 
 		t::Sequence seqString;
 		t::Sequence seqEvent;
-		EXPECT_CALL(m_log, Debug(t::_, FMT_FORMAT("ptr={}\t", fmt::ptr(kInvalidHandleValue)))).InSequence(seqString);
+		EXPECT_CALL(m_log, Debug(t::_, fmt::format("ptr={}\t", fmt::ptr(kInvalidHandleValue)))).InSequence(seqString);
 		EXPECT_CALL(m_log, Debug(t::_, "~Log~")).InSequence(seqString);
 		EXPECT_CALL(m_log, Event(evt::Test_LogPtr.Id, t::_, t::_, 2)).InSequence(seqEvent);
 		EXPECT_CALL(m_log, EventArg(0, sizeof(void*), m4t::PointeeAs<void*>(kInvalidHandleValue))).InSequence(seqEvent);
@@ -822,7 +822,7 @@ TEST_F(Handle_Test, LogException_Value_LogHandle) {
 
 		t::Sequence seqString;
 		t::Sequence seqEvent;
-		EXPECT_CALL(m_log, Debug(t::_, FMT_FORMAT("ptr={}\t", fmt::ptr(GetFoo())))).InSequence(seqString);
+		EXPECT_CALL(m_log, Debug(t::_, fmt::format("ptr={}\t", fmt::ptr(GetFoo())))).InSequence(seqString);
 		EXPECT_CALL(m_log, Debug(t::_, "~Log~")).InSequence(seqString);
 		EXPECT_CALL(m_log, Event(evt::Test_LogPtr.Id, t::_, t::_, 2)).InSequence(seqEvent);
 		EXPECT_CALL(m_log, EventArg(0, sizeof(void*), m4t::PointeeAs<void*>(GetFoo()))).InSequence(seqEvent);

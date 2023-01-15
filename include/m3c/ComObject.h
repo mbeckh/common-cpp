@@ -38,7 +38,7 @@ template <std::derived_from<IUnknown> T>
 class com_ptr;
 
 template <typename T, std::derived_from<internal::AbstractComObject> C, typename... Args>
-com_ptr<T> make_com(Args&&... args);
+[[nodiscard]] com_ptr<T> make_com(Args&&... args);
 
 
 namespace internal {

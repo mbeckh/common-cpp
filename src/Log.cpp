@@ -273,15 +273,15 @@ namespace internal {
 }
 
 void Log::PrintDefault(const Priority priority, const std::string& message) {
-	const std::string str = FMT_FORMAT("[{}] [{}] {}", GetLevelName(priority), GetCurrentThreadId(), message);
+	const std::string str = fmt::format("[{}] [{}] {}", GetLevelName(priority), GetCurrentThreadId(), message);
 
 	OutputDebugStringA(str.c_str());
 
 	SYSTEMTIME st;
 	GetSystemTime(&st);
-	const std::string timeAndMessage = FMT_FORMAT("{:04}-{:02}-{:02} {:02}:{:02}:{:02}.{:03} {}",
-	                                              st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds,
-	                                              str);
+	const std::string timeAndMessage = fmt::format("{:04}-{:02}-{:02} {:02}:{:02}:{:02}.{:03} {}",
+	                                               st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds,
+	                                               str);
 	std::ignore = fputs(timeAndMessage.c_str(), stderr);
 	// no need to check return code; failure to write to stderr will prevent logging
 }
@@ -328,9 +328,9 @@ void Log::LogInternalError(const internal::LogContext<M>& loggedContext) noexcep
 #ifdef _DEBUG
 		} catch (const std::exception& e) {
 			if constexpr (internal::LogContext<M>::kIsEventDescriptor) {
-				OutputDebugStringA(FMT_FORMAT("Error logging event {}: {}\n\tat {}({})", eventData, e.what(), sourceLocation.file_name(), sourceLocation.line()).c_str());
+				OutputDebugStringA(fmt::format("Error logging event {}: {}\n\tat {}({})", eventData, e.what(), sourceLocation.file_name(), sourceLocation.line()).c_str());
 			} else {
-				OutputDebugStringA(FMT_FORMAT("Error logging event {}: {}\n\tat {}({}) ({})", eventData, e.what(), sourceLocation.file_name(), sourceLocation.line(), sourceLocation.function_name()).c_str());
+				OutputDebugStringA(fmt::format("Error logging event {}: {}\n\tat {}({}) ({})", eventData, e.what(), sourceLocation.file_name(), sourceLocation.line(), sourceLocation.function_name()).c_str());
 			}
 		}
 #endif
@@ -376,10 +376,10 @@ _Ret_range_(<, 0) HRESULT Log::ExceptionToHResult(const Priority priority, const
 }
 
 void Log::Print(const Priority priority, _In_z_ const char* const pattern, const LogFormatArgs& formatArgs, _In_z_ const char* cause, const std::source_location& sourceLocation) {
-	const std::string message = FMT_FORMAT("{}\n\tat {}({}) ({})\n{}",
-	                                       fmt::vformat(pattern, *formatArgs),
-	                                       sourceLocation.file_name(), sourceLocation.line(), sourceLocation.function_name(),
-	                                       cause);
+	const std::string message = fmt::format("{}\n\tat {}({}) ({})\n{}",
+	                                        fmt::vformat(pattern, *formatArgs),
+	                                        sourceLocation.file_name(), sourceLocation.line(), sourceLocation.function_name(),
+	                                        cause);
 	log::Print(priority, message);
 }
 
@@ -573,10 +573,10 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 			if constexpr (kPrint) {
 				if (message.empty()) {
 					// Add code to error message for printing outputs
-					message = FMT_FORMAT("{} ({})", msg, code.code);
+					message = fmt::format("{} ({})", msg, code.code);
 				} else {
 					// Add message with code to error message for printing string messages
-					message = FMT_FORMAT("{}: {}", message, win32_error(code.code));
+					message = fmt::format("{}: {}", message, win32_error(code.code));
 				}
 				formatArgs << message;
 			}
@@ -612,7 +612,7 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 				}
 				if constexpr (kPrint) {
 					const std::string errorMessage = errorCode.message();
-					const std::string formattedCode = FMT_FORMAT(" ({})", code.code);
+					const std::string formattedCode = fmt::format(" ({})", code.code);
 					if (message.empty()) {
 						message = msg;
 						// Add code to error message for printing outputs
@@ -677,11 +677,11 @@ void Log::DoWriteException(const Priority priority, const GUID& activityId, _Ino
 		std::string pattern = "\tcaused by: " + internal::GetEventMessagePattern(event.Id) + "\n";
 		if (pSourceLocation) {
 			const std::size_t count = formatArgs.size();
-			pattern += FMT_FORMAT("\t\tat {{{}}}({{{}}}) ({{{}}})\n", count, count + 1, count + 2);
+			pattern += fmt::format("\t\tat {{{}}}({{{}}}) ({{{}}})\n", count, count + 1, count + 2);
 			formatArgs << pSourceLocation->file_name() << pSourceLocation->line() << pSourceLocation->function_name();
 		}
 		if (!cause.empty()) {
-			pattern += FMT_FORMAT("{{{}}}", formatArgs.size());
+			pattern += fmt::format("{{{}}}", formatArgs.size());
 			formatArgs << cause;
 		}
 		cause = fmt::vformat(pattern, *formatArgs);

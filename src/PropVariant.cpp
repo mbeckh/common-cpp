@@ -88,7 +88,8 @@ std::string VariantTypeToString(const VARTYPE vt) {
 		VT(CLSID);
 		VT(VERSIONED_STREAM);
 		VT(BSTR_BLOB);
-		[[unlikely]] default : return FMT_FORMAT("ILLEGAL(0x{:x})", vt);
+	[[unlikely]] default:
+		return fmt::format("ILLEGAL(0x{:x})", vt);
 	}
 
 #undef VT
@@ -103,7 +104,8 @@ std::string VariantTypeToString(const VARTYPE vt) {
 		VT(ARRAY);
 		VT(BYREF);
 		VT(RESERVED);
-		[[unlikely]] default : return FMT_FORMAT("ILLEGAL(0x{:x})", vt);
+	[[unlikely]] default:
+		return fmt::format("ILLEGAL(0x{:x})", vt);
 	}
 #pragma pop_macro("VT")
 }

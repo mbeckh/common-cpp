@@ -116,7 +116,7 @@ public:
 
 public:
 	void operator>>(_Inout_ LogEventArgs& args) const {
-		args + FMT_FORMAT("CustomTrivialValue={}", GetValue());
+		args + fmt::format("CustomTrivialValue={}", GetValue());
 	}
 };
 
@@ -172,7 +172,7 @@ public:
 
 public:
 	void operator>>(_Inout_ LogEventArgs& args) const {
-		args + FMT_FORMAT("CustomMoveableValue={}", GetValue());
+		args + fmt::format("CustomMoveableValue={}", GetValue());
 	}
 };
 
@@ -216,7 +216,7 @@ struct fmt::formatter<m3c::test::CustomTypeTrivial> : public fmt::formatter<std:
 public:
 	template <typename FormatContext>
 	[[nodiscard]] auto format(const m3c::test::CustomTypeTrivial& arg, FormatContext& ctx) const -> decltype(ctx.out()) {
-		return __super::format(FMT_FORMAT("(CustomTypeTrivial: {})", arg.GetValue()), ctx);
+		return __super::format(fmt::format("(CustomTypeTrivial: {})", arg.GetValue()), ctx);
 	}
 };
 
@@ -229,7 +229,7 @@ struct fmt::formatter<m3c::test::CustomTypeMoveable> : public fmt::formatter<std
 public:
 	template <typename FormatContext>
 	[[nodiscard]] auto format(const m3c::test::CustomTypeMoveable& arg, FormatContext& ctx) const -> decltype(ctx.out()) {
-		return __super::format(FMT_FORMAT("(CustomTypeMoveable: {}, copy #{}, move #{})", arg.GetValue(), arg.GetCopies(), arg.GetMoves()), ctx);
+		return __super::format(fmt::format("(CustomTypeMoveable: {}, copy #{}, move #{})", arg.GetValue(), arg.GetCopies(), arg.GetMoves()), ctx);
 	}
 };
 
@@ -242,7 +242,7 @@ struct fmt::formatter<m3c::test::CustomTypeNonMoveable> : public fmt::formatter<
 public:
 	template <typename FormatContext>
 	[[nodiscard]] auto format(const m3c::test::CustomTypeNonMoveable& arg, FormatContext& ctx) const -> decltype(ctx.out()) {
-		return __super::format(FMT_FORMAT("(CustomTypeNonMoveable: {}, copy #{}, move #{})", arg.GetValue(), arg.GetCopies(), arg.GetMoves()), ctx);
+		return __super::format(fmt::format("(CustomTypeNonMoveable: {}, copy #{}, move #{})", arg.GetValue(), arg.GetCopies(), arg.GetMoves()), ctx);
 	}
 };
 
@@ -251,7 +251,7 @@ struct fmt::formatter<m3c::test::CustomTypeThrowConstructible> : public fmt::for
 public:
 	template <typename FormatContext>
 	[[nodiscard]] auto format(const m3c::test::CustomTypeThrowConstructible& arg, FormatContext& ctx) const -> decltype(ctx.out()) {
-		return __super::format(FMT_FORMAT("(CustomTypeThrowConstructible: {}, copy #{}, move #{})", arg.GetValue(), arg.GetCopies(), arg.GetMoves()), ctx);
+		return __super::format(fmt::format("(CustomTypeThrowConstructible: {}, copy #{}, move #{})", arg.GetValue(), arg.GetCopies(), arg.GetMoves()), ctx);
 	}
 };
 

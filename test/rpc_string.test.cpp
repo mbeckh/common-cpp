@@ -543,7 +543,7 @@ TEST_F(rpc_string_Test, format_Empty_PrintEmpty) {
 TEST_F(rpc_string_Test, format_EmptyCentered_PrintEmptyCentered) {
 	const rpc_string str;
 
-	EXPECT_EQ("  ", FMT_FORMAT("{:^2}", str));
+	EXPECT_EQ("  ", fmt::format("{:^2}", str));
 }
 
 TEST_F(rpc_string_Test, format_Value_PrintValue) {
@@ -559,7 +559,7 @@ TEST_F(rpc_string_Test, format_ValueW_PrintValue) {
 }
 
 TEST_F(rpc_string_Test, format_ValueCentered_PrintValueCentered) {
-	const std::string str = FMT_FORMAT("{:^38}", m_str);
+	const std::string str = fmt::format("{:^38}", m_str);
 
 	EXPECT_EQ(" 00000001-0000-0000-c000-000000000046 ", str);
 }

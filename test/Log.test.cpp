@@ -88,7 +88,7 @@ static std::ostream& operator<<(std::ostream& os, const Priority priority) {
 		name = "Trace";
 		break;
 	default:
-		throw std::out_of_range(FMT_FORMAT("priority {}", static_cast<std::underlying_type_t<Priority>>(priority)));
+		throw std::out_of_range(fmt::format("priority {}", static_cast<std::underlying_type_t<Priority>>(priority)));
 	}
 	return os << name;
 }
@@ -150,7 +150,7 @@ std::ostream& operator<<(std::ostream& os, const EventType eventType) {
 		name = "string_ref";
 		break;
 	default:
-		throw std::out_of_range(FMT_FORMAT("eventType {}", static_cast<std::underlying_type_t<EventType>>(eventType)));
+		throw std::out_of_range(fmt::format("eventType {}", static_cast<std::underlying_type_t<EventType>>(eventType)));
 	}
 	return os << name;
 }
@@ -178,7 +178,7 @@ protected:
 		case Priority::kTrace:
 			return "Trace";
 		default:
-			throw std::out_of_range(FMT_FORMAT("priority {}", static_cast<std::underlying_type_t<Priority>>(priority)));
+			throw std::out_of_range(fmt::format("priority {}", static_cast<std::underlying_type_t<Priority>>(priority)));
 		}
 	}
 
@@ -201,7 +201,7 @@ protected:
 
 protected:
 	std::string GetLogEventOutput(const char* const message, const char* const dynamicLogMessage, const std::source_location& loc, const std::uint32_t line) {
-		return FMT_FORMAT("[{}] [{}] {}{}\n\tat {}({}) ({})\n", GetLevelOutput(), GetCurrentThreadId(), message, dynamicLogMessage, loc.file_name(), line, loc.function_name());
+		return fmt::format("[{}] [{}] {}{}\n\tat {}({}) ({})\n", GetLevelOutput(), GetCurrentThreadId(), message, dynamicLogMessage, loc.file_name(), line, loc.function_name());
 	}
 
 	static std::string GetExceptionOutput(const char* const message, const std::source_location& loc, const std::uint32_t line) {
@@ -284,7 +284,7 @@ protected:
 					break;
 				}
 				default:
-					throw std::out_of_range(FMT_FORMAT("eventType {}", static_cast<std::underlying_type_t<EventType>>(eventType)));
+					throw std::out_of_range(fmt::format("eventType {}", static_cast<std::underlying_type_t<EventType>>(eventType)));
 				}
 			});
 		} else {
@@ -336,7 +336,7 @@ protected:
 							break;
 						}
 						default:
-							throw std::out_of_range(FMT_FORMAT("eventType {}", static_cast<std::underlying_type_t<EventType>>(eventType)));
+							throw std::out_of_range(fmt::format("eventType {}", static_cast<std::underlying_type_t<EventType>>(eventType)));
 						}
 					});
 				} else {
@@ -361,7 +361,7 @@ protected:
 							break;
 						}
 						default:
-							throw std::out_of_range(FMT_FORMAT("eventType {}", static_cast<std::underlying_type_t<EventType>>(eventType)));
+							throw std::out_of_range(fmt::format("eventType {}", static_cast<std::underlying_type_t<EventType>>(eventType)));
 						}
 					});
 				}
@@ -383,7 +383,7 @@ protected:
 			logOutput = GetLogEventOutput(!kHResult ? "string& event with string mymessage" : "string& event with string mymessage and error", dynamicLogMessage, location, line);
 			break;
 		default:
-			throw std::out_of_range(FMT_FORMAT("eventType {}", static_cast<std::underlying_type_t<EventType>>(eventType)));
+			throw std::out_of_range(fmt::format("eventType {}", static_cast<std::underlying_type_t<EventType>>(eventType)));
 		}
 
 		if constexpr (kException) {
@@ -496,21 +496,21 @@ INSTANTIATE_TEST_SUITE_P(LogOutputs, LogOutputs_Test,
                          t::Values(EventType::kEvent, EventType::kCharPtr),
                          [](const t::TestParamInfo<LogOutputs_Test::ParamType>& param) {
 	                         // if prefix param.index is missing, source link is not shown in Visual Studio
-	                         return FMT_FORMAT("{}_{}", param.index, t::PrintToString(param.param));
+	                         return fmt::format("{}_{}", param.index, t::PrintToString(param.param));
                          });
 
 INSTANTIATE_TEST_SUITE_P(LogOutputs, LogDebug_Test,
                          t::Values(EventType::kEvent, EventType::kCharPtr),
                          [](const t::TestParamInfo<LogDebug_Test::ParamType>& param) {
 	                         // if prefix param.index is missing, source link is not shown in Visual Studio
-	                         return FMT_FORMAT("{}_{}", param.index, t::PrintToString(param.param));
+	                         return fmt::format("{}_{}", param.index, t::PrintToString(param.param));
                          });
 
 INSTANTIATE_TEST_SUITE_P(LogContexts, LogStringContexts_Test,
                          t::Values(EventType::kString, EventType::kStringRef),
                          [](const t::TestParamInfo<LogStringContexts_Test::ParamType>& param) {
 	                         // if prefix param.index is missing, source link is not shown in Visual Studio
-	                         return FMT_FORMAT("{}_{}", param.index, t::PrintToString(param.param));
+	                         return fmt::format("{}_{}", param.index, t::PrintToString(param.param));
                          });
 
 INSTANTIATE_TEST_SUITE_P(LogOutputsAndPriorites, LogAll_Test,
@@ -524,7 +524,7 @@ INSTANTIATE_TEST_SUITE_P(LogOutputsAndPriorites, LogAll_Test,
                                               Priority::kTrace)),
                          [](const t::TestParamInfo<LogAll_Test::ParamType>& param) {
 	                         // if prefix param.index is missing, source link is not shown in Visual Studio
-	                         return FMT_FORMAT("{:02}_{}_{}", param.index, t::PrintToString(std::get<0>(param.param)), t::PrintToString(std::get<1>(param.param)));
+	                         return fmt::format("{:02}_{}_{}", param.index, t::PrintToString(std::get<0>(param.param)), t::PrintToString(std::get<1>(param.param)));
                          });
 
 
@@ -583,7 +583,7 @@ TEST_F(LogEvent_Test, Event_ErrorLoggingError_PrintDebug) {
 	    .WillOnce(t::Return(ERROR_ALERTED));
 
 #if _DEBUG
-	EXPECT_CALL(m_win32, OutputDebugStringA(t::StartsWith(FMT_FORMAT("Error logging event {}:", evt::Test_Event_String.Id))))
+	EXPECT_CALL(m_win32, OutputDebugStringA(t::StartsWith(fmt::format("Error logging event {}:", evt::Test_Event_String.Id))))
 	    .InSequence(seq);
 #endif
 

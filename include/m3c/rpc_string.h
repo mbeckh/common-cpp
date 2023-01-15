@@ -141,6 +141,12 @@ private:
 	rpc_str_type m_ptr = nullptr;  ///< @brief The native pointer.
 };
 
+template <>
+RPC_STATUS basic_rpc_string<char>::destroy() noexcept;
+
+template <>
+RPC_STATUS basic_rpc_string<wchar_t>::destroy() noexcept;
+
 extern template class basic_rpc_string<char>;
 extern template class basic_rpc_string<wchar_t>;
 

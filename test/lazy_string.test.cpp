@@ -100,7 +100,7 @@ struct CharTNames {
 TYPED_TEST_SUITE(lazy_string_CharT_Test, CharTypes, CharTNames);
 
 INSTANTIATE_TEST_SUITE_P(lazy_string_Test, lazy_string_DataDrivenTest, t::Values(kEmpty, kInline, kString), [](const t::TestParamInfo<lazy_string_DataDrivenTest::ParamType>& param) {
-	return FMT_FORMAT("{:03}_{}", param.index, param.param == kEmpty ? "Empty" : (param.param == kInline ? "Inline" : "String"));
+	return fmt::format("{:03}_{}", param.index, param.param == kEmpty ? "Empty" : (param.param == kInline ? "Inline" : "String"));
 });
 
 TEST_F(lazy_string_Test, ctor_DefaultChar_IsEmpty) {
@@ -1749,7 +1749,7 @@ TYPED_TEST(lazy_string_CharT_Test, format_EmptyCentered_PrintCentered) {
 	constexpr TypeParam kValue[] = {'\0'};
 
 	basic_lazy_string<16, TypeParam> arg(kValue);
-	EXPECT_EQ("   ", FMT_FORMAT("{:^3}", arg));
+	EXPECT_EQ("   ", fmt::format("{:^3}", arg));
 }
 
 TYPED_TEST(lazy_string_CharT_Test, format_Default_Print) {
@@ -1770,7 +1770,7 @@ TYPED_TEST(lazy_string_CharT_Test, format_Centered_PrintCentered) {
 	constexpr TypeParam kValue[] = {'T', 'e', 's', 't', '\0'};
 
 	basic_lazy_string<16, TypeParam> arg(kValue);
-	EXPECT_EQ(" Test ", FMT_FORMAT("{:^6}", arg));
+	EXPECT_EQ(" Test ", fmt::format("{:^6}", arg));
 }
 
 
@@ -1822,7 +1822,7 @@ TYPED_TEST(lazy_string_CharT_Test, LogEvent_Empty_LogEmpty) {
 	constexpr TypeParam kEmptyString[] = {'\0'};
 	basic_lazy_string<16, TypeParam> arg;
 
-	EXPECT_CALL(log, Debug(t::_, FMT_FORMAT(kLogPattern<TypeParam>, "")));
+	EXPECT_CALL(log, Debug(t::_, fmt::format(kLogPattern<TypeParam>, "")));
 	EXPECT_CALL(log, Event(kLogEvent<TypeParam>.Id, t::_, t::_, 2));
 	EXPECT_CALL(log, EventArg(0, sizeof(kEmptyString), m4t::PointerAs<TypeParam>(t::StrEq(kEmptyString))));
 	EXPECT_CALL(log, EventArg(1, sizeof(char), m4t::PointeeAs<char>('\t')));
@@ -1835,7 +1835,7 @@ TYPED_TEST(lazy_string_CharT_Test, LogEvent_Value_LogValue) {
 	constexpr TypeParam kValue[] = {'T', 'e', 's', 't', '\0'};
 	basic_lazy_string<16, TypeParam> arg(kValue);
 
-	EXPECT_CALL(log, Debug(t::_, FMT_FORMAT(kLogPattern<TypeParam>, "Test")));
+	EXPECT_CALL(log, Debug(t::_, fmt::format(kLogPattern<TypeParam>, "Test")));
 	EXPECT_CALL(log, Event(kLogEvent<TypeParam>.Id, t::_, t::_, 2));
 	EXPECT_CALL(log, EventArg(0, sizeof(kValue), m4t::PointerAs<TypeParam>(t::StrEq(kValue))));
 	EXPECT_CALL(log, EventArg(1, sizeof(char), m4t::PointeeAs<char>('\t')));
@@ -1852,7 +1852,7 @@ TYPED_TEST(lazy_string_CharT_Test, LogException_Empty_LogEmpty) {
 
 		t::Sequence seqString;
 		t::Sequence seqEvent;
-		EXPECT_CALL(log, Debug(t::_, FMT_FORMAT(kLogPattern<TypeParam>, ""))).InSequence(seqString);
+		EXPECT_CALL(log, Debug(t::_, fmt::format(kLogPattern<TypeParam>, ""))).InSequence(seqString);
 		EXPECT_CALL(log, Debug(t::_, "~Log~")).InSequence(seqString);
 		EXPECT_CALL(log, Event(kLogEvent<TypeParam>.Id, t::_, t::_, 2)).InSequence(seqEvent);
 		EXPECT_CALL(log, EventArg(0, sizeof(kEmptyString), m4t::PointerAs<TypeParam>(t::StrEq(kEmptyString)))).InSequence(seqEvent);
@@ -1874,7 +1874,7 @@ TYPED_TEST(lazy_string_CharT_Test, LogException_Value_LogValue) {
 
 		t::Sequence seqString;
 		t::Sequence seqEvent;
-		EXPECT_CALL(log, Debug(t::_, FMT_FORMAT(kLogPattern<TypeParam>, "Test"))).InSequence(seqString);
+		EXPECT_CALL(log, Debug(t::_, fmt::format(kLogPattern<TypeParam>, "Test"))).InSequence(seqString);
 		EXPECT_CALL(log, Debug(t::_, "~Log~")).InSequence(seqString);
 		EXPECT_CALL(log, Event(kLogEvent<TypeParam>.Id, t::_, t::_, 2)).InSequence(seqEvent);
 		EXPECT_CALL(log, EventArg(0, sizeof(kValue), m4t::PointerAs<TypeParam>(t::StrEq(kValue)))).InSequence(seqEvent);
