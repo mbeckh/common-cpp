@@ -5,13 +5,17 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-    paths-ignore:
-      - '**/*.md'
-      - '**/*.txt'
-  schedule:
-    - cron: '21 8 4 * *'
+  workflow_dispatch:
+
+permissions: {}
 
 jobs:
-  build:
+  codeql:
+    name: CodeQL
     uses: mbeckh/cmake-utils/.github/workflows/run-codeql.yml@v1
     secrets: inherit
+    permissions:
+      actions: write
+      contents: read
+      packages: write
+      security-events: write

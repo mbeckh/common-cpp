@@ -766,7 +766,7 @@ TEST_F(com_heap_ptr_Test, format_Empty_PrintNullptr) {
 TEST_F(com_heap_ptr_Test, format_EmptyCentered_PrintNullptrCentered) {
 	com_heap_ptr<int> arg;
 
-	EXPECT_EQ(" 0x0 ", FMT_FORMAT("{:^5}", arg));
+	EXPECT_EQ(" 0x0 ", fmt::format("{:^5}", arg));
 }
 
 TEST_F(com_heap_ptr_Test, format_Value_PrintPointer) {
@@ -793,10 +793,10 @@ TEST_F(com_heap_ptr_Test, format_ValueCentered_PrintPointerCentered) {
 	com_heap_ptr<int> arg(7);
 	const void* const expectPtr = arg.get();
 
-	const std::string str = FMT_FORMAT("{:^20}", arg);
+	const std::string str = fmt::format("{:^20}", arg);
 
 	EXPECT_EQ(20, str.length());
-	EXPECT_EQ(FMT_FORMAT("{:^20}", expectPtr), str);
+	EXPECT_EQ(fmt::format("{:^20}", expectPtr), str);
 	EXPECT_THAT(str, m4t::MatchesRegex("\\s+0x[0-9a-f]+\\s+"));
 }
 
@@ -816,7 +816,7 @@ TEST_F(com_heap_ptr_Test, LogString_Empty_LogNullptr) {
 TEST_F(com_heap_ptr_Test, LogStrimg_Value_LogPointer) {
 	com_heap_ptr<int> arg(7);
 
-	EXPECT_CALL(m_log, Debug(t::_, FMT_FORMAT("{}\t", fmt::ptr(arg.get()))));
+	EXPECT_CALL(m_log, Debug(t::_, fmt::format("{}\t", fmt::ptr(arg.get()))));
 
 	Log::Info("{}{}", arg, '\t');
 }
@@ -835,7 +835,7 @@ TEST_F(com_heap_ptr_Test, LogEvent_Empty_LogNullptr) {
 TEST_F(com_heap_ptr_Test, LogEvent_Value_LogPointer) {
 	com_heap_ptr<int> arg;
 
-	EXPECT_CALL(m_log, Debug(t::_, FMT_FORMAT("ptr={}\t", fmt::ptr(arg.get()))));
+	EXPECT_CALL(m_log, Debug(t::_, fmt::format("ptr={}\t", fmt::ptr(arg.get()))));
 	EXPECT_CALL(m_log, Event(evt::Test_LogPtr.Id, t::_, t::_, 2));
 	EXPECT_CALL(m_log, EventArg(0, sizeof(void*), m4t::PointeeAs<void*>(arg.get())));
 	EXPECT_CALL(m_log, EventArg(1, sizeof(char), m4t::PointeeAs<char>('\t')));
@@ -868,7 +868,7 @@ TEST_F(com_heap_ptr_Test, LogException_Value_LogPointer) {
 
 		t::Sequence seqString;
 		t::Sequence seqEvent;
-		EXPECT_CALL(m_log, Debug(t::_, FMT_FORMAT("ptr={}\t", fmt::ptr(arg.get())))).InSequence(seqString);
+		EXPECT_CALL(m_log, Debug(t::_, fmt::format("ptr={}\t", fmt::ptr(arg.get())))).InSequence(seqString);
 		EXPECT_CALL(m_log, Debug(t::_, "~Log~")).InSequence(seqString);
 		EXPECT_CALL(m_log, Event(evt::Test_LogPtr.Id, t::_, t::_, 2)).InSequence(seqEvent);
 		EXPECT_CALL(m_log, EventArg(0, sizeof(void*), m4t::PointeeAs<void*>(arg.get()))).InSequence(seqEvent);

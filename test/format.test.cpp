@@ -179,7 +179,7 @@ TEST_F(format_Test, GUID_DefaultW_Print) {
 TEST_F(format_Test, GUID_Centered_PrintCentered) {
 	constexpr GUID kGuid = {0xa5063846, 0xd67, 0x4140, {0x85, 0x62, 0xaf, 0x1a, 0xaf, 0x99, 0xa3, 0x41}};
 
-	const std::string str = FMT_FORMAT("{:^38}", kGuid);
+	const std::string str = fmt::format("{:^38}", kGuid);
 
 	EXPECT_EQ(" a5063846-0d67-4140-8562-af1aaf99a341 ", str);
 }
@@ -205,7 +205,7 @@ TEST_F(format_Test, GUID_ErrorCentered_LogAndPrintFallbackCentered) {
 	    .WillRepeatedly(t::Return(RPC_S_INVALID_ARG));
 	EXPECT_CALL(m_log, Event(evt::FormatUuid_R.Id, DTGM_ARG3));
 
-	const std::string str = FMT_FORMAT("{:^38}", kGuid);
+	const std::string str = fmt::format("{:^38}", kGuid);
 
 	EXPECT_EQ(" a5063846-0d67-4140-8562-af1aaf99a341 ", str);
 }
@@ -234,7 +234,7 @@ TEST_F(format_Test, FILETIME_DefaultW_Print) {
 TEST_F(format_Test, FILETIME_Centered_PrintCentered) {
 	constexpr FILETIME kFileTime = {.dwLowDateTime = 2907012345, .dwHighDateTime = 30123456};
 
-	const std::string str = FMT_FORMAT("{:^26}", kFileTime);
+	const std::string str = fmt::format("{:^26}", kFileTime);
 
 	EXPECT_EQ(" 2010-12-27T12:22:06.950Z ", str);
 }
@@ -260,7 +260,7 @@ TEST_F(format_Test, FILETIME_ErrorCentered_LogAndPrintFallbackCentered) {
 	    .WillRepeatedly(m4t::SetLastErrorAndReturn(ERROR_DIRECTORY, FALSE));
 	EXPECT_CALL(m_log, Event(evt::FormatFileTime_E.Id, DTGM_ARG3));
 
-	const std::string str = FMT_FORMAT("{:^26}", kFileTime);
+	const std::string str = fmt::format("{:^26}", kFileTime);
 
 	EXPECT_EQ("    129379261269507321    ", str);
 }
@@ -289,7 +289,7 @@ TEST_F(format_Test, SYSTEMTIME_DefaultW_Print) {
 TEST_F(format_Test, SYSTEMTIME_Centered_PrintCentered) {
 	constexpr SYSTEMTIME kSystemTime = {.wYear = 2021, .wMonth = 7, .wDayOfWeek = 6, .wDay = 31, .wHour = 14, .wMinute = 31, .wSecond = 26, .wMilliseconds = 379};
 
-	const std::string str = FMT_FORMAT("{:^26}", kSystemTime);
+	const std::string str = fmt::format("{:^26}", kSystemTime);
 
 	EXPECT_EQ(" 2021-07-31T14:31:26.379Z ", str);
 }
@@ -333,7 +333,7 @@ TEST_F(format_Test, SID_Centered_PrintCentered) {
 	                       .additionalSubAuthorities = {DOMAIN_ALIAS_RID_POWER_USERS}};
 
 	const SID& arg = kSid.sid;
-	const std::string str = FMT_FORMAT("{:^14}", arg);
+	const std::string str = fmt::format("{:^14}", arg);
 
 	EXPECT_EQ(" S-1-5-32-547 ", str);
 }
@@ -369,7 +369,7 @@ TEST_F(format_Test, SID_ErrorCentered_LogAndPrintFallbackCentered) {
 	EXPECT_CALL(m_log, Event(evt::FormatSid_E.Id, DTGM_ARG3));
 
 	const SID& arg = kSid.sid;
-	const std::string str = FMT_FORMAT("{:^14}", arg);
+	const std::string str = fmt::format("{:^14}", arg);
 
 	EXPECT_EQ(" S-1-5-32-547 ", str);
 }
@@ -400,7 +400,7 @@ TEST_F(format_Test, win32error_DefaultW_Print) {
 
 TEST_F(format_Test, win32error_Centered_PrintCentered) {
 	const std::string str = m4t::WithLocale("en-US", [] {
-		return FMT_FORMAT("{:^78}", win32_error(ERROR_ABANDON_HIBERFILE));
+		return fmt::format("{:^78}", win32_error(ERROR_ABANDON_HIBERFILE));
 	});
 
 	EXPECT_EQ(" A valid hibernation file has been invalidated and should be abandoned. (787) ", str);
@@ -426,7 +426,7 @@ TEST_F(format_Test, win32error_ErrorCentered_LogAndPrintFallbackCentered) {
 	EXPECT_CALL(m_log, Event(evt::FormatMessageId_E.Id, DTGM_ARG3));
 
 	const std::string str = m4t::WithLocale("en-US", [] {
-		return FMT_FORMAT("{:^78}", win32_error(ERROR_ABANDON_HIBERFILE));
+		return fmt::format("{:^78}", win32_error(ERROR_ABANDON_HIBERFILE));
 	});
 	EXPECT_EQ("                                <Error> (787)                                 ", str);
 }
@@ -467,7 +467,7 @@ TEST_F(format_Test, win32error_DynamicBufferFreeError_LogAndPrint) {
 	EXPECT_CALL(m_log, Event(evt::MemoryLeak_E.Id, DTGM_ARG3));
 
 	const std::string str = m4t::WithLocale("en-US", [] {
-		return FMT_FORMAT("{}", win32_error(ERROR_ABANDON_HIBERFILE));
+		return fmt::format("{}", win32_error(ERROR_ABANDON_HIBERFILE));
 	});
 	EXPECT_EQ("A valid hibernation file has been invalidated and should be abandoned. (787)", str);
 }
@@ -507,7 +507,7 @@ TEST_F(format_Test, rpcstatus_DefaultW_Print) {
 
 TEST_F(format_Test, rpcstatus_Centered_PrintCentered) {
 	const std::string str = m4t::WithLocale("en-US", [] {
-		return FMT_FORMAT("{:^76}", rpc_status(RPC_S_OUT_OF_MEMORY));
+		return fmt::format("{:^76}", rpc_status(RPC_S_OUT_OF_MEMORY));
 	});
 
 	EXPECT_EQ(" Not enough memory resources are available to complete this operation. (14) ", str);
@@ -533,7 +533,7 @@ TEST_F(format_Test, hresult_DefaultW_Print) {
 }
 TEST_F(format_Test, hresult_Centered_PrintCentered) {
 	const std::string str = m4t::WithLocale("en-US", [] {
-		return FMT_FORMAT("{:^32}", hresult(E_ABORT));
+		return fmt::format("{:^32}", hresult(E_ABORT));
 	});
 
 	EXPECT_EQ(" Operation aborted (0x80004004) ", str);
@@ -608,7 +608,7 @@ TEST_F(format_Test, PROPVARIANT_IsUInt32Centered_PrintUI4Centered) {
 	PROPVARIANT arg;
 	InitPropVariantFromUInt32(897, &arg);
 
-	const std::string str = FMT_FORMAT("{:^12}", arg);
+	const std::string str = fmt::format("{:^12}", arg);
 
 	EXPECT_EQ(" (UI4: 897) ", str);
 }
@@ -617,7 +617,7 @@ TEST_F(format_Test, PROPVARIANT_IsEmptyAsType_PrintType) {
 	PROPVARIANT arg;
 	PropVariantInit(&arg);
 
-	const std::string str = FMT_FORMAT("{:t}", arg);
+	const std::string str = fmt::format("{:t}", arg);
 
 	EXPECT_EQ("EMPTY", str);
 }
@@ -627,7 +627,7 @@ TEST_F(format_Test, PROPVARIANT_IsCurrencyAsType_PrintType) {
 	arg.vt = VT_CY;
 	arg.cyVal.Hi = 42;
 
-	const std::string str = FMT_FORMAT("{:t}", arg);
+	const std::string str = fmt::format("{:t}", arg);
 
 	EXPECT_EQ("CY", str);
 }
@@ -636,7 +636,7 @@ TEST_F(format_Test, PROPVARIANT_IsUInt32AsType_PrintType) {
 	PROPVARIANT arg;
 	InitPropVariantFromUInt32(897, &arg);
 
-	const std::string str = FMT_FORMAT("{:t;}", arg);
+	const std::string str = fmt::format("{:t;}", arg);
 
 	EXPECT_EQ("UI4", str);
 }
@@ -645,7 +645,7 @@ TEST_F(format_Test, PROPVARIANT_IsUInt32AsTypeCentered_PrintTypeCentered) {
 	PROPVARIANT arg;
 	InitPropVariantFromUInt32(897, &arg);
 
-	const std::string str = FMT_FORMAT("{:t;^5}", arg);
+	const std::string str = fmt::format("{:t;^5}", arg);
 
 	EXPECT_EQ(" UI4 ", str);
 }
@@ -654,7 +654,7 @@ TEST_F(format_Test, PROPVARIANT_IsEmptyAsValue_PrintValue) {
 	PROPVARIANT arg;
 	PropVariantInit(&arg);
 
-	const std::string str = FMT_FORMAT("{:v}", arg);
+	const std::string str = fmt::format("{:v}", arg);
 
 	EXPECT_EQ("", str);
 }
@@ -664,7 +664,7 @@ TEST_F(format_Test, PROPVARIANT_IsCurrencyAsValue_PrintValue) {
 	arg.vt = VT_CY;
 	arg.cyVal.Hi = 42;
 
-	const std::string str = FMT_FORMAT("{:v}", arg);
+	const std::string str = fmt::format("{:v}", arg);
 
 	EXPECT_EQ("<?>", str);
 }
@@ -673,7 +673,7 @@ TEST_F(format_Test, PROPVARIANT_IsUInt32AsValue_PrintValue) {
 	PROPVARIANT arg;
 	InitPropVariantFromUInt32(897, &arg);
 
-	const std::string str = FMT_FORMAT("{:v;}", arg);
+	const std::string str = fmt::format("{:v;}", arg);
 
 	EXPECT_EQ("897", str);
 }
@@ -682,7 +682,7 @@ TEST_F(format_Test, PROPVARIANT_IsUInt32AsValueCentered_PrintValueCentered) {
 	PROPVARIANT arg;
 	InitPropVariantFromUInt32(897, &arg);
 
-	const std::string str = FMT_FORMAT("{:v;^5}", arg);
+	const std::string str = fmt::format("{:v;^5}", arg);
 
 	EXPECT_EQ(" 897 ", str);
 }
@@ -717,7 +717,7 @@ TEST_F(format_Test, IUnknown_Empty_PrintNull) {
 TEST_F(format_Test, IUnknown_EmptyCentered_PrintNullCentered) {
 	com_ptr<IUnknown> ptr;
 
-	const std::string str = FMT_FORMAT("{:^40}", fmt_ptr(ptr.get()));
+	const std::string str = fmt::format("{:^40}", fmt_ptr(ptr.get()));
 
 	EXPECT_EQ(40, str.size());
 	EXPECT_THAT(str, m4t::MatchesRegex("\\s+\\(ptr=0x0, ref=0\\)\\s+"));
@@ -726,7 +726,7 @@ TEST_F(format_Test, IUnknown_EmptyCentered_PrintNullCentered) {
 TEST_F(format_Test, IUnknown_EmptyAsPointer_PrintPointer) {
 	com_ptr<IUnknown> ptr;
 
-	const std::string str = FMT_FORMAT("{:p;}", fmt_ptr(ptr.get()));
+	const std::string str = fmt::format("{:p;}", fmt_ptr(ptr.get()));
 
 	EXPECT_EQ("0x0", str);
 }
@@ -734,7 +734,7 @@ TEST_F(format_Test, IUnknown_EmptyAsPointer_PrintPointer) {
 TEST_F(format_Test, IUnknown_EmptyAsRef_PrintRef) {
 	com_ptr<IUnknown> ptr;
 
-	const std::string str = FMT_FORMAT("{:r;}", fmt_ptr(ptr.get()));
+	const std::string str = fmt::format("{:r;}", fmt_ptr(ptr.get()));
 
 	EXPECT_EQ("0", str);
 }
@@ -759,7 +759,7 @@ TEST_F(format_Test, IUnknown_Value_Print) {
 		str = fmt::to_string(fmt_ptr(ptr.get()));
 		m_check.Call();
 	}
-	EXPECT_EQ(FMT_FORMAT("(ptr={}, ref=2)", fmt::ptr(&object)), str);
+	EXPECT_EQ(fmt::format("(ptr={}, ref=2)", fmt::ptr(&object)), str);
 	EXPECT_THAT(str, m4t::MatchesRegex("\\(ptr=0x[0-9a-f]+, ref=2\\)"));
 	COM_MOCK_VERIFY(object);
 }
@@ -783,7 +783,7 @@ TEST_F(format_Test, IUnknown_ValueW_Print) {
 		str = fmt::to_wstring(fmt_ptr(ptr.get()));
 		m_check.Call();
 	}
-	EXPECT_EQ(FMT_FORMAT(L"(ptr={}, ref=2)", fmt::ptr(&object)), str);
+	EXPECT_EQ(fmt::format(L"(ptr={}, ref=2)", fmt::ptr(&object)), str);
 	EXPECT_THAT(str, m4t::MatchesRegex(L"\\(ptr=0x[0-9a-f]+, ref=2\\)"));
 	COM_MOCK_VERIFY(object);
 }
@@ -804,7 +804,7 @@ TEST_F(format_Test, IUnknown_ValueCentered_PrintCentered) {
 	{
 		com_ptr<IUnknown> ptr(&object);
 		m_check.Call();
-		str = FMT_FORMAT("{:^40}", fmt_ptr(ptr.get()));
+		str = fmt::format("{:^40}", fmt_ptr(ptr.get()));
 		m_check.Call();
 	}
 	EXPECT_EQ(40, str.size());
@@ -826,7 +826,7 @@ TEST_F(format_Test, IUnknown_ValueAsPointer_PrintPointer) {
 	{
 		com_ptr<IUnknown> ptr(&object);
 		m_check.Call();
-		str = FMT_FORMAT("{:p;}", fmt_ptr(ptr.get()));
+		str = fmt::format("{:p;}", fmt_ptr(ptr.get()));
 		m_check.Call();
 	}
 	EXPECT_EQ(fmt::to_string(fmt::ptr(&object)), str);
@@ -848,7 +848,7 @@ TEST_F(format_Test, IUnknown_ValueAsPointerW_PrintPointer) {
 	{
 		com_ptr<IUnknown> ptr(&object);
 		m_check.Call();
-		str = FMT_FORMAT(L"{:p;}", fmt_ptr(ptr.get()));
+		str = fmt::format(L"{:p;}", fmt_ptr(ptr.get()));
 		m_check.Call();
 	}
 	EXPECT_EQ(fmt::to_wstring(fmt::ptr(&object)), str);
@@ -872,7 +872,7 @@ TEST_F(format_Test, IUnknown_ValueAsRef_PrintRef) {
 	{
 		com_ptr<IUnknown> ptr(&object);
 		m_check.Call();
-		str = FMT_FORMAT("{:r;}", fmt_ptr(ptr.get()));
+		str = fmt::format("{:r;}", fmt_ptr(ptr.get()));
 		m_check.Call();
 	}
 	EXPECT_EQ("2", str);
@@ -895,7 +895,7 @@ TEST_F(format_Test, IUnknown_ValueAsRefW_PrintRef) {
 	{
 		com_ptr<IUnknown> ptr(&object);
 		m_check.Call();
-		str = FMT_FORMAT(L"{:r;}", fmt_ptr(ptr.get()));
+		str = fmt::format(L"{:r;}", fmt_ptr(ptr.get()));
 		m_check.Call();
 	}
 	EXPECT_EQ(L"2", str);
@@ -918,7 +918,7 @@ TEST_F(format_Test, IUnknown_ValueAsRefAsHex_PrintRefHex) {
 	{
 		com_ptr<IUnknown> ptr(&object);
 		m_check.Call();
-		str = FMT_FORMAT("{:r;#04x}", fmt_ptr(ptr.get()));
+		str = fmt::format("{:r;#04x}", fmt_ptr(ptr.get()));
 		m_check.Call();
 	}
 	EXPECT_EQ("0x02", str);
@@ -941,7 +941,7 @@ TEST_F(format_Test, IStream_Empty_PrintNull) {
 TEST_F(format_Test, IStream_EmptyCentered_PrintNullCentered) {
 	com_ptr<IStream> ptr;
 
-	const std::string str = FMT_FORMAT("{:^40}", fmt_ptr(ptr.get()));
+	const std::string str = fmt::format("{:^40}", fmt_ptr(ptr.get()));
 
 	EXPECT_EQ(40, str.size());
 	EXPECT_THAT(str, m4t::MatchesRegex("\\s+\\(<Empty>, ptr=0x0, ref=0\\)\\s+"));
@@ -950,7 +950,7 @@ TEST_F(format_Test, IStream_EmptyCentered_PrintNullCentered) {
 TEST_F(format_Test, IStream_EmptyAsName_PrintName) {
 	com_ptr<IStream> ptr;
 
-	const std::string str = FMT_FORMAT("{:n;}", fmt_ptr(ptr.get()));
+	const std::string str = fmt::format("{:n;}", fmt_ptr(ptr.get()));
 
 	EXPECT_EQ("<Empty>", str);
 }
@@ -958,7 +958,7 @@ TEST_F(format_Test, IStream_EmptyAsName_PrintName) {
 TEST_F(format_Test, IStream_EmptyAsPointer_PrintPointer) {
 	com_ptr<IStream> ptr;
 
-	const std::string str = FMT_FORMAT("{:p;}", fmt_ptr(ptr.get()));
+	const std::string str = fmt::format("{:p;}", fmt_ptr(ptr.get()));
 
 	EXPECT_EQ("0x0", str);
 }
@@ -966,7 +966,7 @@ TEST_F(format_Test, IStream_EmptyAsPointer_PrintPointer) {
 TEST_F(format_Test, IStream_EmptyAsRef_PrintRef) {
 	com_ptr<IStream> ptr;
 
-	const std::string str = FMT_FORMAT("{:r;}", fmt_ptr(ptr.get()));
+	const std::string str = fmt::format("{:r;}", fmt_ptr(ptr.get()));
 
 	EXPECT_EQ("0", str);
 }
@@ -992,7 +992,7 @@ TEST_F(format_Test, IStream_Value_PrintName) {
 		m_check.Call();
 	}
 
-	EXPECT_EQ(FMT_FORMAT("(test.dat, ptr={}, ref=2)", fmt::ptr(&object)), str);
+	EXPECT_EQ(fmt::format("(test.dat, ptr={}, ref=2)", fmt::ptr(&object)), str);
 	EXPECT_THAT(str, m4t::MatchesRegex("\\(test.dat, ptr=0x[0-9a-f]+, ref=2\\)"));
 	COM_MOCK_VERIFY(object);
 }
@@ -1018,7 +1018,7 @@ TEST_F(format_Test, IStream_ValueW_PrintName) {
 		m_check.Call();
 	}
 
-	EXPECT_EQ(FMT_FORMAT(L"(test.dat, ptr={}, ref=2)", fmt::ptr(&object)), str);
+	EXPECT_EQ(fmt::format(L"(test.dat, ptr={}, ref=2)", fmt::ptr(&object)), str);
 	EXPECT_THAT(str, m4t::MatchesRegex(L"\\(test.dat, ptr=0x[0-9a-f]+, ref=2\\)"));
 	COM_MOCK_VERIFY(object);
 }
@@ -1065,7 +1065,7 @@ TEST_F(format_Test, IStream_ValueCentered_PrintNameCentered) {
 	{
 		com_ptr<IStream> ptr(&object);
 		m_check.Call();
-		str = FMT_FORMAT("{:^60}", fmt_ptr(ptr.get()));
+		str = fmt::format("{:^60}", fmt_ptr(ptr.get()));
 		m_check.Call();
 	}
 
@@ -1116,7 +1116,7 @@ TEST_F(format_Test, IStream_ValueAsName_PrintName) {
 	{
 		com_ptr<IStream> ptr(&object);
 		m_check.Call();
-		str = FMT_FORMAT("{:n;}", fmt_ptr(ptr.get()));
+		str = fmt::format("{:n;}", fmt_ptr(ptr.get()));
 		m_check.Call();
 	}
 
@@ -1139,7 +1139,7 @@ TEST_F(format_Test, IStream_ValueAsNameW_PrintName) {
 	{
 		com_ptr<IStream> ptr(&object);
 		m_check.Call();
-		str = FMT_FORMAT(L"{:n;}", fmt_ptr(ptr.get()));
+		str = fmt::format(L"{:n;}", fmt_ptr(ptr.get()));
 		m_check.Call();
 	}
 
@@ -1161,7 +1161,7 @@ TEST_F(format_Test, IStream_ValueAsPointer_PrintPointer) {
 	{
 		com_ptr<IStream> ptr(&object);
 		m_check.Call();
-		str = FMT_FORMAT("{:p;}", fmt_ptr(ptr.get()));
+		str = fmt::format("{:p;}", fmt_ptr(ptr.get()));
 		m_check.Call();
 	}
 
@@ -1184,7 +1184,7 @@ TEST_F(format_Test, IStream_ValueAsPointerW_PrintPointer) {
 	{
 		com_ptr<IStream> ptr(&object);
 		m_check.Call();
-		str = FMT_FORMAT(L"{:p;}", fmt_ptr(ptr.get()));
+		str = fmt::format(L"{:p;}", fmt_ptr(ptr.get()));
 		m_check.Call();
 	}
 
@@ -1209,7 +1209,7 @@ TEST_F(format_Test, IStream_ValueAsRef_PrintRef) {
 	{
 		com_ptr<IStream> ptr(&object);
 		m_check.Call();
-		str = FMT_FORMAT("{:r;}", fmt_ptr(ptr.get()));
+		str = fmt::format("{:r;}", fmt_ptr(ptr.get()));
 		m_check.Call();
 	}
 
@@ -1233,7 +1233,7 @@ TEST_F(format_Test, IStream_ValueAsRefW_PrintRef) {
 	{
 		com_ptr<IStream> ptr(&object);
 		m_check.Call();
-		str = FMT_FORMAT(L"{:r;}", fmt_ptr(ptr.get()));
+		str = fmt::format(L"{:r;}", fmt_ptr(ptr.get()));
 		m_check.Call();
 	}
 
@@ -1278,7 +1278,7 @@ TEST_F(format_Test, PROPERTYKEY_Error_PrintFallback) {
 TEST_F(format_Test, PROPERTYKEY_IsValueCentered_PrintNameCentered) {
 	REFPROPERTYKEY arg = PKEY_Contact_BusinessAddress;
 
-	const std::string str = FMT_FORMAT("{:^32}", arg);
+	const std::string str = fmt::format("{:^32}", arg);
 
 	EXPECT_EQ(" System.Contact.BusinessAddress ", str);
 }
@@ -1291,7 +1291,7 @@ TEST_F(format_Test, PROPERTYKEY_ErrorCentered_PrintFallbackCentered) {
 	    .WillOnce(t::Return(E_ACCESSDENIED));
 	EXPECT_CALL(m_log, Event(evt::FormatPropertyKey_H.Id, DTGM_ARG3));
 
-	const std::string str = FMT_FORMAT("{:^38}", arg);
+	const std::string str = fmt::format("{:^38}", arg);
 
 	EXPECT_EQ(" 730fb6dd-cf7c-426b-a03f-bd166cc9ee24 ", str);
 }
@@ -1320,7 +1320,7 @@ TEST_F(format_Test, WICRect_DefaultW_PrintDimensions) {
 TEST_F(format_Test, WICRect_AsHex_PrintDimensions) {
 	const WICRect arg = {10, 20, 320, 160};
 
-	const std::string str = FMT_FORMAT("{:03x}", arg);
+	const std::string str = fmt::format("{:03x}", arg);
 
 	EXPECT_EQ("(@(00a, 014) / 140 x 0a0)", str);
 }
@@ -1328,7 +1328,7 @@ TEST_F(format_Test, WICRect_AsHex_PrintDimensions) {
 TEST_F(format_Test, WICRect_X_PrintX) {
 	const WICRect arg = {10, 20, 320, 160};
 
-	const std::string str = FMT_FORMAT("{:x}", arg);
+	const std::string str = fmt::format("{:x}", arg);
 
 	EXPECT_EQ("10", str);
 }
@@ -1336,7 +1336,7 @@ TEST_F(format_Test, WICRect_X_PrintX) {
 TEST_F(format_Test, WICRect_Y_PrintY) {
 	const WICRect arg = {10, 20, 320, 160};
 
-	const std::string str = FMT_FORMAT("{:y}", arg);
+	const std::string str = fmt::format("{:y}", arg);
 
 	EXPECT_EQ("20", str);
 }
@@ -1344,7 +1344,7 @@ TEST_F(format_Test, WICRect_Y_PrintY) {
 TEST_F(format_Test, WICRect_Width_PrintWidth) {
 	const WICRect arg = {10, 20, 320, 160};
 
-	const std::string str = FMT_FORMAT("{:w}", arg);
+	const std::string str = fmt::format("{:w}", arg);
 
 	EXPECT_EQ("320", str);
 }
@@ -1352,7 +1352,7 @@ TEST_F(format_Test, WICRect_Width_PrintWidth) {
 TEST_F(format_Test, WICRect_Height_PrintHeight) {
 	const WICRect arg = {10, 20, 320, 160};
 
-	const std::string str = FMT_FORMAT("{:h}", arg);
+	const std::string str = fmt::format("{:h}", arg);
 
 	EXPECT_EQ("160", str);
 }

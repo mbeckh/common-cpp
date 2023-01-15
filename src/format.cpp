@@ -199,7 +199,7 @@ std::basic_string<CharT> fmt::formatter<GUID, CharT>::to_string(const GUID& arg)
 	if (status != RPC_S_OK) {
 		[[unlikely]];
 		m3c::Log::ErrorOnce(m3c::evt::FormatUuid_R, arg, m3c::rpc_status(status));
-		return FMT_FORMAT(
+		return fmt::format(
 		    m3c::SelectString<CharT>(M3C_SELECT_STRING("{:08x}-{:04x}-{:04x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}")),
 		    arg.Data1, arg.Data2, arg.Data3, arg.Data4[0], arg.Data4[1], arg.Data4[2], arg.Data4[3], arg.Data4[4], arg.Data4[5], arg.Data4[6], arg.Data4[7]);  // NOLINT(readability-magic-numbers): Fixed GUID format.
 	}
@@ -232,7 +232,7 @@ template struct fmt::formatter<FILETIME, wchar_t>;
 
 template <typename CharT>
 std::basic_string<CharT> fmt::formatter<SYSTEMTIME, CharT>::to_string(const SYSTEMTIME& arg) {
-	return FMT_FORMAT(
+	return fmt::format(
 	    m3c::SelectString<CharT>(M3C_SELECT_STRING("{:04}-{:02}-{:02}T{:02}:{:02}:{:02}.{:03}Z")),
 	    arg.wYear, arg.wMonth, arg.wDay, arg.wHour, arg.wMinute, arg.wSecond, arg.wMilliseconds);
 }
@@ -261,7 +261,7 @@ std::basic_string<CharT> fmt::formatter<SID, CharT>::to_string(const SID& arg) {
 		                                | (static_cast<std::uint64_t>(arg.IdentifierAuthority.Value[3]) << 16)
 		                                | (static_cast<std::uint64_t>(arg.IdentifierAuthority.Value[4]) << 8)
 		                                | static_cast<std::uint64_t>(arg.IdentifierAuthority.Value[5]);
-		return FMT_FORMAT(
+		return fmt::format(
 		    m3c::SelectString<CharT>(M3C_SELECT_STRING("S-{}-{}-{}")),
 		    arg.Revision, authority, fmt::join(std::span(arg.SubAuthority, arg.SubAuthorityCount), m3c::SelectString<CharT>(M3C_SELECT_STRING("-"))));
 	}
@@ -353,11 +353,11 @@ template <m3c::AnyOf<m3c::win32_error, m3c::hresult, m3c::rpc_status> T, typenam
 std::basic_string<CharT> fmt::formatter<T, CharT>::to_string(const T& arg) {
 	const auto& code = arg.code();
 	if constexpr (std::is_same_v<T, m3c::hresult>) {
-		return FMT_FORMAT(
+		return fmt::format(
 		    m3c::SelectString<CharT>(M3C_SELECT_STRING("{} (0x{:X})")),
 		    m3c::FormatSystemErrorCode<CharT>(code), static_cast<std::make_unsigned_t<HRESULT>>(code));
 	} else {
-		return FMT_FORMAT(
+		return fmt::format(
 		    m3c::SelectString<CharT>(M3C_SELECT_STRING("{} ({})")),
 		    m3c::FormatSystemErrorCode<CharT>(code), code);
 	}
@@ -454,7 +454,7 @@ std::basic_string<CharT> BaseVariantFormatter<T, CharT>::to_string(const T& arg)
 			if (m_presentation == 'v') {
 				return EncodingTraits<wchar_t, CharT>::Encode(pwsz.get());
 			}
-			return FMT_FORMAT(
+			return fmt::format(
 			    SelectString<CharT>(M3C_SELECT_STRING("({}: {})")),
 			    fmt_encode(vt), fmt_encode(pwsz.get()));
 		}
@@ -466,7 +466,7 @@ std::basic_string<CharT> BaseVariantFormatter<T, CharT>::to_string(const T& arg)
 		}
 		return SelectString<CharT>(M3C_SELECT_STRING("<?>"));
 	}
-	return FMT_FORMAT(SelectString<CharT>(M3C_SELECT_STRING("({})")), fmt_encode(vt));
+	return fmt::format(SelectString<CharT>(M3C_SELECT_STRING("({})")), fmt_encode(vt));
 }
 
 template struct BaseVariantFormatter<VARIANT, char>;

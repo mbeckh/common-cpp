@@ -1,13 +1,14 @@
 {
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg-configuration.schema.json",
   "default-registry": {
     "kind": "builtin",
-    "baseline": "48cc0c71ed61be1c0e3c9543dd0f2b997037d1c9"
+    "baseline": "5bb5f3923a33d862b25c18fd4514e08c74c698e1"
   },
   "registries": [
     {
       "kind": "git",
       "repository": "https://github.com/mbeckh/vcpkg-registry.git",
-      "baseline": "3968e6edc820dc3d666b3d3383f096b1998eb8e7",
+      "baseline": "746f302490c57682b329fa6dadebace52f35ec94",
       "packages": [ "common-cpp-testing", "detours", "detours-gmock", "fmt", "gtest" ]
     }
   ]

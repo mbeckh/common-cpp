@@ -19,19 +19,19 @@ limitations under the License.
 #include "m3c/LogArgs.h"
 
 void operator>>(const VARIANT& arg, _Inout_ m3c::LogFormatArgs& formatArgs) {
-	formatArgs + FMT_FORMAT("{:t}", arg) + FMT_FORMAT("{:v}", arg);
+	formatArgs + fmt::format("{:t}", arg) + fmt::format("{:v}", arg);
 }
 
 void operator>>(const VARIANT& arg, _Inout_ m3c::LogEventArgs& eventArgs) {
-	eventArgs + FMT_FORMAT("{:t}", arg) + FMT_FORMAT(L"{:v}", arg);
+	eventArgs + fmt::format("{:t}", arg) + fmt::format(L"{:v}", arg);
 }
 
 void operator>>(const PROPVARIANT& arg, _Inout_ m3c::LogFormatArgs& formatArgs) {
-	formatArgs + FMT_FORMAT("{:t}", arg) + FMT_FORMAT("{:v}", arg);
+	formatArgs + fmt::format("{:t}", arg) + fmt::format("{:v}", arg);
 }
 
 void operator>>(const PROPVARIANT& arg, _Inout_ m3c::LogEventArgs& eventArgs) {
-	eventArgs + FMT_FORMAT("{:t}", arg) + FMT_FORMAT(L"{:v}", arg);
+	eventArgs + fmt::format("{:t}", arg) + fmt::format(L"{:v}", arg);
 }
 
 void operator>>(const PROPERTYKEY& arg, _Inout_ m3c::LogEventArgs& eventArgs) {

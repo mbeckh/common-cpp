@@ -34,6 +34,9 @@ limitations under the License.
 
 namespace m3c {
 
+template <typename T, std::derived_from<internal::AbstractComObject> C, typename... Args>
+[[nodiscard]] com_ptr<T> make_com(Args&&... args);
+
 namespace internal {
 
 /// @brief Base class with common static helper methods.
@@ -54,6 +57,21 @@ protected:
 	/// @param iid The `IID` to query.
 	/// @param p The native result COM pointer.
 	static void QueryInterface(_In_ IUnknown* pUnknown, const IID& iid, _Outptr_ void** p);
+};
+
+/// @brief Marker class for restricting access to private constructor of com_ptr.
+struct com_ptr_private {
+private:
+	constexpr com_ptr_private() noexcept = default;
+	com_ptr_private(const com_ptr_private&) = delete;
+	com_ptr_private(com_ptr_private&&) = delete;
+	constexpr ~com_ptr_private() noexcept = default;
+
+	com_ptr_private operator=(const com_ptr_private&) = delete;
+	com_ptr_private operator=(com_ptr_private&&) = delete;
+
+	template <typename T, std::derived_from<internal::AbstractComObject> C, typename... Args>
+	friend com_ptr<T> m3c::make_com(Args&&... args);
 };
 
 }  // namespace internal
@@ -99,11 +117,10 @@ public:
 		com_add_ref();
 	}
 
-private:
 	/// @brief Assigns an interface pointer without increasing the reference count.
 	/// This constructor is required for `make_com`.
 	/// @param p The native pointer.
-	[[nodiscard]] explicit com_ptr(_In_ internal::AbstractComObject* const p)
+	[[nodiscard]] explicit com_ptr(const internal::com_ptr_private /* unused*/, _In_ internal::AbstractComObject* const p)
 	    : m_ptr(p->QueryInterface<T>()) {
 		// empty
 	}
@@ -282,9 +299,6 @@ private:
 private:
 	T* m_ptr = nullptr;  ///< @brief The native pointer wrapped by this class.
 
-	template <typename P, std::derived_from<internal::AbstractComObject> C, typename... Args>
-	friend com_ptr<P> make_com(Args&&...);
-
 	template <typename P>
 	friend void operator>>(const com_ptr<P>&, _Inout_ LogFormatArgs&);
 
@@ -417,7 +431,7 @@ template <typename T, std::derived_from<internal::AbstractComObject> C, typename
 	});
 	// constructor calls QueryInterface internally so that the correct COM pointer is stored.
 	// Please note: COM interface inheritance is somewhat different from usual OO inheritance.
-	return com_ptr<T>(pObject);
+	return com_ptr<T>({}, pObject);
 }
 
 

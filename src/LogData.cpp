@@ -1194,13 +1194,13 @@ public:
 	/// @brief Add type and value to log arguments.
 	/// @param formatArgs The formatter arguments.
 	void operator>>(_Inout_ LogFormatArgs& formatArgs) const {
-		formatArgs + VariantTypeToString(m_vt) + FMT_FORMAT("{:v}", m_variant);
+		formatArgs + VariantTypeToString(m_vt) + fmt::format("{:v}", m_variant);
 	}
 
 	/// @brief Add type and value to log arguments.
 	/// @param eventArgs The event arguments.
 	void operator>>(_Inout_ LogEventArgs& eventArgs) const {
-		eventArgs + VariantTypeToString(m_vt) + FMT_FORMAT(L"{:v}", m_variant);
+		eventArgs + VariantTypeToString(m_vt) + fmt::format(L"{:v}", m_variant);
 	}
 
 private:
